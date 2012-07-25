@@ -1,0 +1,7 @@
+{% load i18n %}
+{% trans "Hi" %} {{ user.username }},
+{% blocktrans %}
+we are writing to inform you that your account has just expired. 
+
+Cheers.
+{% endblocktrans %}

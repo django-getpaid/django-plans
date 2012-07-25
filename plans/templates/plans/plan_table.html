@@ -1,0 +1,87 @@
+{% load i18n %}
+
+<table class="plan_table">
+    <thead>
+    <tr>
+        <th></th>
+        {% for plan in plan_list %}
+            <th class="plan_header {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+                <span class="plan_name">{{  plan.name }}</span>
+                <span class="plan_description">{{ plan.description }}</span>
+                {% if plan == userplan.plan %}
+                    <span class="current current_plan">{% trans "your current plan" %}</span>
+                {% endif %}
+            </th>
+        {% endfor %}
+    </tr>
+
+    </thead>
+    <tbody>
+    {% for quota_row in plan_table %}
+        <tr class="quota_row">
+
+            <th class="quota_header"><span class="quota_name">{{ quota_row.0.name }}</span>
+                <span class="quota_description">{{ quota_row.0.description }}</span>
+            </th>
+
+            {% for plan_quota in quota_row.1 %}
+
+                <td class="{% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+                    {% ifnotequal plan_quota None %}
+                        {% if quota_row.0.is_boolean %}
+                            {% if plan_quota.value %} + {% else %} - {% endif %}
+                        {% else %}
+                            {% if plan_quota.value == None %}{% trans 'no limit' %}{% else %}{{ plan_quota.value }} {{ quota_row.0.unit }}{% endif %}
+                        {% endif %}
+                    {% endifnotequal %}
+                </td>
+            {% endfor %}
+
+        </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+    <tr>
+        <th></th>
+        <th colspan="{{ plan_list|length }}" class="periods_footer">{% trans 'Pricings' %}</th>
+    </tr>
+
+    <tr>
+        <th></th>
+        {% for plan in plan_list %}
+            <th class="planpricing_footer {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+
+                {% if plan.available %}
+
+                <ul>
+                    {% for plan_pricing in plan.planpricing_set.all %}
+                        <li>
+                        <span class="plan_pricing_name">{{ plan_pricing.pricing.name }}</span>
+                        <span class="plan_pricing_period">({% ifequal plan userplan.plan %}+{% endifequal %}{{ plan_pricing.pricing.period }} {% trans "days" %})</span>
+                        <span class="plan_pricing_price">{{ plan_pricing.price }}&nbsp;{{ CURRENCY }}<sup>*</sup></span>
+                        <a href="{% url create_order_plan pk=plan_pricing.pk %}" class="buy">{% trans "Buy" %}</a>
+
+                    {% endfor %}
+                </ul>
+
+                   {% else %}
+                     <span class="plan_not_available">
+                    {% url upgrade_plan as upgrade_url %}
+                    {% blocktrans %}
+                        This plan is not available anymore and cannot be extended.<p>
+                        You need to upgrade your account to any of <a href="{{ upgrade_url }}">currently available plans</a>.
+                    {% endblocktrans %}
+                    </span>
+
+                {% endif %}
+            </th>
+        {% endfor %}
+    </tr>
+
+    </tfoot>
+</table>
+
+<p style="text-align: right;">
+    *) {% trans "Net prices" %}
+
+</p>

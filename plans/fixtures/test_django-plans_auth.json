@@ -1,0 +1,38 @@
+[
+    {
+        "pk": 1, 
+        "model": "auth.user", 
+        "fields": {
+            "username": "test1", 
+            "first_name": "", 
+            "last_name": "", 
+            "is_active": true, 
+            "is_superuser": true, 
+            "is_staff": true, 
+            "last_login": "2012-07-24T12:15:10Z", 
+            "groups": [], 
+            "user_permissions": [], 
+            "password": "pbkdf2_sha256$10000$45IiQoRadJaI$dq8bbHCHkm5CsSvtMcO1Ydf5ZTv4OkzXt2n1QVhJSB8=", 
+            "email": "cypreess@gmail.com", 
+            "date_joined": "2012-04-23T20:40:46Z"
+        }
+    }, 
+    {
+        "pk": 19, 
+        "model": "auth.user", 
+        "fields": {
+            "username": "test2", 
+            "first_name": "", 
+            "last_name": "", 
+            "is_active": true, 
+            "is_superuser": false, 
+            "is_staff": false, 
+            "last_login": "2012-07-24T12:50:47Z", 
+            "groups": [], 
+            "user_permissions": [], 
+            "password": "pbkdf2_sha256$10000$sKLEVfTvViuz$kOK50zy365p7GN1N09cNRh2ANoiIhZMz9cwxzRLk0yc=", 
+            "email": "cypreess@gmail.com", 
+            "date_joined": "2012-07-24T12:50:47Z"
+        }
+    }
+]
