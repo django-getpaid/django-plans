@@ -15,7 +15,7 @@ Example::
 
 
 ``DEFAULT_FROM_EMAIL``
---------------
+----------------------
 
 **Required**
 
@@ -28,6 +28,7 @@ This is the default mail ``FROM`` value for sending system notifications.
 
 This settings switches invoice counting per days, month or year basis. It requires to
 provide one of following string format:
+
  * ``daily``
  * ``monthly``
  * ``annually``
@@ -66,6 +67,25 @@ This example for invoice issued on ``March 5th, 2010``, with sequential number `
 .. warning::
 
    Full number of an invoice is saved with the Invoice object. Changing this value in settings will affect only newly created invoices.
+
+
+``ISSUER_DATA``
+---------------
+**Required**
+
+You need to define a dictionary that will store information needed to issue an invoice. Fill dict fields as in an example.
+
+Example::
+
+    ISSUER_DATA = {
+
+        "issuer_name": "Joe Doe Company",
+        "issuer_street": "Django street, 34",
+        "issuer_zipcode": "123-3444",
+        "issuer_city": "Djangoko",
+        "issuer_country": "Djangoland",
+        "issuer_tax_number": "1222233334444555",
+        }
 
 
 

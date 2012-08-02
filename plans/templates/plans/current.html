@@ -16,30 +16,13 @@
   
 
         <li>{% trans "State" %}: {% if userplan.active %} {% trans "active" %} {% else %} {% trans "expired" %} {% endif %}
-        <li>{% trans "Expire" %}: {{ userplan.expire }} <a href="{% url extend_plan %}">{% trans "extend" %}</a>
-        <li>{% trans "Plan" %}: {{ userplan.plan.name }} 
-                 
+        <li>{% trans "Expire" %}: {{ userplan.expire }}
+        <li>{% trans "Plan" %}: {{ userplan.plan.name }}
                 <a href="{% url upgrade_plan %}">{% trans "upgrade" %}</a>
-        <li>{% trans "Quotas" %}: 
-                <ul> 
-                        {% for quota in quotas %}
-                        <li> {{ quota.quota.name }} ({{ quota.quota.description }}) - 
-                        
-                        {% if quota.quota.is_boolean %}
 
-                                {% if quota.value %} {% trans "yes" %} {% else %} {% trans "no" %} {% endif %}
-                        
-                        {% else %}
-                                {{ quota.value }} {{ quota.quota.unit }}
-                        {% endif %}
-                        
-                        {% endfor %}
-                    
-                        
-                </ul>
 </ul>
 
-
+{% include "plans/plan_table.html" %}
 
 </body>
 </html>

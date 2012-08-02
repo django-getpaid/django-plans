@@ -15,7 +15,7 @@ from datetime import date, timedelta
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from transmeta import TransMeta
 import logging
-from mydjango.enum import Enumeration
+from plans.enum import Enumeration
 
 accounts_logger = logging.getLogger('accounts')
 
@@ -276,7 +276,9 @@ class Invoice(models.Model):
     """
     Single invoice document.
     """
-    INVOICE_TYPES = Enumeration([(1, 'INVOICE', _('Invoice')),
+
+    INVOICE_TYPES = Enumeration([
+        (1, 'INVOICE', _('Invoice')),
         (2, 'DUPLICATE', _('Invoice Duplicate')),
         (3, 'PROFORMA', _('Pro Forma Invoice')),
 

@@ -5,7 +5,7 @@
 
 Welcome to django-plans's documentation!
 ========================================
-Django-plans is plug&play app for managing plans with quotas and accounts expiration.
+Django-plans is a pluggable app for managing pricing plans with quotas and accounts expiration.
 
 
 
@@ -14,7 +14,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-
+   installation
    settings
    plans
    invoicing
