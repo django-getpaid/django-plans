@@ -1,0 +1,5 @@
+Django==1.4.1
+django-ordered-model==0.1
+-e git://github.com/bearstech/django-transmeta.git@bc0ea153c727fe923fc24e595d1074143175e7ac#egg=django_transmeta-dev
+vatnumber==1.0
+-e git://github.com/bradleyayers/suds-htj.git@234e9c7dfcd3b2def61b8f718bb5947ccf0818f3#egg=suds-dev

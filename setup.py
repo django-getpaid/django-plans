@@ -5,7 +5,7 @@ from distutils.core import setup
 setup(
     name='django-plans',
     version='0.1',
-    description='Allows Django accounts to have plans with expirations and parameters.',
+    description='Pluggable django app for managing pricing plans with quotas and accounts expiration',
     author='Krzysztof Dorosz',
     author_email='cypreess@gmail.com',
     url='https://bitbucket.org/cypreess/django-plans',
@@ -21,4 +21,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
+    install_requires=['django', 'vatnumber', 'django-ordered-model'],
+    dependency_links=[  'git://github.com/bearstech/django-transmeta.git#egg=django-transmeta',
+                        'git://github.com/bradleyayers/suds-htj.git#egg=suds-htj']
 )
