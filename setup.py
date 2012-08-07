@@ -1,18 +1,21 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-from distutils.core import setup
- 
+from setuptools import find_packages, setup
+
+with open('README.rst') as file:
+    long_description = file.read()
+
 setup(
     name='django-plans',
     version='0.1',
     description='Pluggable django app for managing pricing plans with quotas and accounts expiration',
+    long_description=long_description,
     author='Krzysztof Dorosz',
     author_email='cypreess@gmail.com',
-    url='https://bitbucket.org/cypreess/django-plans',
-    packages=[
-        'plans',
-        'plans.tests',
-    ],
+    url='https://github.com/cypreess/django-plans',
+    license='MIT',
+
+    packages=find_packages(),
     classifiers=[
         'Development Status :: 4 - Beta',
         'Framework :: Django',

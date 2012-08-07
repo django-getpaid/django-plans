@@ -1,5 +1,4 @@
 from decimal import Decimal
-from unittest import TestCase
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.contrib.auth.models import User
