@@ -223,7 +223,8 @@ class OrderView(DetailView):
         context['invoices_proforma'] = self.object.get_invoices_proforma()
         context['invoices'] = self.object.get_invoices()
 
-
+        context['printable_documents'] = self.object.get_all_invoices()
+        context['INVOICE_TYPES'] = Invoice.INVOICE_TYPES
         return context
 
     def get_queryset(self):
@@ -231,7 +232,7 @@ class OrderView(DetailView):
 
 class OrderListView(ListView):
     model = Order
-    paginate_by = 2
+    paginate_by = 10
     def get_context_data(self, **kwargs):
         context = super(OrderListView, self).get_context_data(**kwargs)
         self.CURRENCY = getattr(settings, 'CURRENCY', None)

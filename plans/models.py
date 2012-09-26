@@ -1,21 +1,22 @@
-from collections import defaultdict
 from decimal import Decimal
+from django.utils import translation
 import re
 from django.core.urlresolvers import reverse
 from django.template.base import Template
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, pgettext_lazy
 from django.db import models
 from ordered_model.models import OrderedModel
 import vatnumber
 from model_fields import CountryField
-from django.core import mail
-from django.template import loader, Context
+from django.template import Context
 from django.conf import settings
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from transmeta import TransMeta
 import logging
+from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
+from plans.signals import order_completed, account_activated, account_expired
 
 accounts_logger = logging.getLogger('accounts')
 
@@ -97,71 +98,47 @@ class UserPlan(models.Model):
         for quota in self.plan.planquota_set.all():
             quotas[quota]
 
-    def extend_account(self, plan_pricing):
+    def extend_account(self, plan, pricing):
+        was_active = self.active
         self.active = True
-        if self.plan == plan_pricing.plan:
+        if self.plan == plan:
             if self.expire > date.today():
-                self.expire += timedelta(days=plan_pricing.pricing.period)
+                self.expire += timedelta(days=pricing.period)
             else:
-                self.expire = date.today() + timedelta(days=plan_pricing.pricing.period)
+                self.expire = date.today() + timedelta(days=pricing.period)
         else:
-            self.plan = plan_pricing.plan
-            self.expire = date.today() + timedelta(days=plan_pricing.pricing.period)
+            self.plan = plan
+            self.expire = date.today() + timedelta(days=pricing.period)
         self.save()
 
         accounts_logger.info(u"Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
-            self.user, self.user.pk, plan_pricing.pricing.period, plan_pricing.plan, plan_pricing.plan.pk))
+            self.user, self.user.pk, pricing.period, plan, plan.pk))
 
-        #TODO: dynamically change a language of e-mail depending on user language 
+        mail_context = Context({ 'user': self.user, 'userplan': self, 'plan': plan, 'pricing': pricing})
+        send_template_email([self.user.email],'mail/extend_account_title.txt', 'mail/extend_account_body.txt', mail_context, get_user_language(self.user))
 
-        mail_title_template = loader.get_template('mail/extend_account_title.txt')
-        mail_body_template = loader.get_template('mail/extend_account_body.txt')
-        mail_context = Context(
-                {'user': self.user, 'userplan': self, 'plan_pricing': plan_pricing, 'plan': plan_pricing.plan,
-                 'pricing': plan_pricing.pricing})
-
-        try:
-            email_from = getattr(settings, 'DEFAULT_FROM_EMAIL')
-        except AttributeError:
-            raise ImproperlyConfigured('DEFAULT_FROM_EMAIL setting needed for sending e-mails')
-
-        mail.send_mail(mail_title_template.render(mail_context), mail_body_template.render(mail_context), email_from,
-            [self.user.email])
+        if not was_active:
+            account_activated.send(sender=self, user=self.user)
 
     def expire_account(self):
         """manages account expiration"""
+
         self.active = False
         self.save()
         accounts_logger.info(u"Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
-        #TODO: dynamically change a language of e-mail depending on user language 
-        mail_title_template = loader.get_template('mail/expired_account_title.txt')
-        mail_body_template = loader.get_template('mail/expired_account_body.txt')
-        mail_context = Context({'user': self.user, 'userplan': self})
 
-        try:
-            email_from = getattr(settings, 'DEFAULT_FROM_EMAIL')
-        except AttributeError:
-            raise ImproperlyConfigured('DEFAULT_FROM_EMAIL setting needed for sending e-mails')
+        mail_context = Context({ 'user': self.user, 'userplan': self })
+        send_template_email([self.user.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
+            mail_context, get_user_language(self.user))
 
-        mail.send_mail(mail_title_template.render(mail_context), mail_body_template.render(mail_context), email_from,
-            [self.user.email])
+        account_expired.send(sender=self, user=self.user)
 
     def remind_expire_soon(self):
         """reminds about soon account expiration"""
-        accounts_logger.info(u"Expire reminder for an account '%s' [id=%d] has been sent - %d days left." % (
-            self.user, self.user.pk, (self.expire - date.today()).days))
-        #TODO: dynamically change a language of e-mail depending on user language 
-        mail_title_template = loader.get_template('mail/remind_expire_title.txt')
-        mail_body_template = loader.get_template('mail/remind_expire_body.txt')
+
         mail_context = Context({'user': self.user, 'userplan': self, 'days': (self.expire - date.today()).days})
-
-        try:
-            email_from = getattr(settings, 'DEFAULT_FROM_EMAIL')
-        except AttributeError:
-            raise ImproperlyConfigured('DEFAULT_FROM_EMAIL setting needed for sending e-mails')
-
-        mail.send_mail(mail_title_template.render(mail_context), mail_body_template.render(mail_context), email_from,
-            [self.user.email])
+        send_template_email([self.user.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
+            mail_context, get_user_language(self.user))
 
 
 class Pricing(models.Model):
@@ -227,7 +204,6 @@ class PlanQuota(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey('auth.User', verbose_name=_('user'))
-#    pricing = models.ForeignKey('PlanPricing', verbose_name=_('plan pricing'))
     plan = models.ForeignKey('Plan', verbose_name=_('plan'), related_name="plan_order")
     pricing = models.ForeignKey('Pricing', verbose_name=_('pricing'))
     created = models.DateTimeField(_('created'), auto_now_add=True, db_index=True)
@@ -237,12 +213,25 @@ class Order(models.Model):
         blank=True) # Tax=None is when tax is not applicable
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
 
+    def complete_order(self):
+        if self.completed is  None:
+            self.user.userplan.extend_account(self.plan, self.pricing)
+            self.completed = datetime.now()
+            self.save()
+            order_completed.send(self)
+            return True
+        else:
+            return False
+
 
     def get_invoices_proforma(self):
         return Invoice.proforma.filter(order=self)
 
     def get_invoices(self):
         return Invoice.invoices.filter(order=self)
+
+    def get_all_invoices(self):
+        return self.invoice_set.order_by('issued', 'issued_duplicate', 'pk')
 
     def total(self):
         if self.tax is not None:
@@ -278,9 +267,9 @@ class Invoice(models.Model):
     """
 
     INVOICE_TYPES = Enumeration([
-        (1, 'INVOICE', _('Invoice')),
-        (2, 'DUPLICATE', _('Invoice Duplicate')),
-        (3, 'PROFORMA', _('Pro Forma Invoice')),
+        (1, 'INVOICE', _(u'Invoice')),
+        (2, 'DUPLICATE', _(u'Invoice Duplicate')),
+        (3, 'PROFORMA', pgettext_lazy(u'proforma', u'Order confirmation')),
 
     ])
 
@@ -349,9 +338,6 @@ class Invoice(models.Model):
     issuer_country = CountryField(verbose_name=_("Country"), default='PL')
     issuer_tax_number = models.CharField(max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
 
-    #    def save(self, force_insert=False, force_update=False, using=None):
-    #
-    #        super(Invoice, self).save(force_insert, force_update, using)
     def __unicode__(self):
         return self.full_number
 
@@ -459,6 +445,42 @@ class Invoice(models.Model):
         self.currency = order.currency
         self.item_description = unicode(_("Plan")) + u" %s (%s " % (order.plan.name, order.pricing.period)  + unicode(_("days")) + u")"
 
+    @classmethod
+    def create(cls, order, invoice_type):
+        try:
+            billing_info = BillingInfo.objects.get(user=order.user)
+        except BillingInfo.DoesNotExist:
+            return
+
+        day = date.today()
+        invoice = cls(issued=day, selling_date=day, payment_date=day + timedelta(days=14)) #FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
+        invoice.type = invoice_type
+        invoice.copy_from_order(order)
+        invoice.set_issuer_invoice_data()
+        invoice.set_buyer_invoice_data(billing_info)
+        invoice.clean()
+        invoice.save()
+
+
+    def send_invoice_by_email(self):
+        language_code = get_user_language(self.user)
+
+        if language_code is not None:
+            translation.activate(language_code)
+        mail_context = Context({'user': self.user,
+                                'invoice_type' : unicode(self.get_type_display()),
+                                'invoice_number': self.get_full_number(),
+                                'order' : self.order.id,
+                                'url' : self.get_absolute_url(),
+                                })
+        if language_code is not None:
+            translation.deactivate()
+        send_template_email([self.user.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt', mail_context, language_code)
+
+
+
 
 #noinspection PyUnresolvedReferences
 import plans.listeners
+
+

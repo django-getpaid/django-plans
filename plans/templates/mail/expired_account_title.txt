@@ -1,2 +1,1 @@
-{% load i18n %}
-{% trans "You account has expired" %}
+{% load i18n %}{% blocktrans %}Your account {{ user }} has just expired{% endblocktrans %}

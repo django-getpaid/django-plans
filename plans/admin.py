@@ -24,7 +24,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ('user', "created", "completed", "amount", "currency", "pricing")
 
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('full_number', "issued", "total_net", "tax", "buyer_name", "buyer_city", "buyer_tax_number")
+    list_display = ('full_number', "issued", "total_net", "currency", "tax", "buyer_name", "buyer_city", "buyer_tax_number")
 
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)
