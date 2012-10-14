@@ -5,7 +5,7 @@
 http://{{ site_domain }}{{ url }}
 {% endblocktrans %}
 
-{% trans "Payment for the order can be made using page" %}:
+{% trans "Details of the order can be see on:" %}:
 http://{{ site_domain }}{% url order pk=order %}
 
 {% trans "Thank you" %}
