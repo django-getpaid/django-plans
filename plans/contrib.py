@@ -51,4 +51,4 @@ def get_user_language(user):
     """
     return_value = {}
     user_language.send(sender=user, user=user, return_value=return_value)
-    return return_value['language']
+    return return_value.get('language')
