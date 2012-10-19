@@ -1,3 +1,13 @@
+
+from decimal import Decimal
+
+try:
+    import suds
+except ImportError:
+    suds = None
+
+import vatnumber
+
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
@@ -11,15 +21,11 @@ from django.views.generic.detail import DetailView
 #from django_xhtml2pdf.utils import render_to_pdf_response
 from django.views.generic.edit import DeleteView, ModelFormMixin
 from django.views.generic.list import ListView
-import suds
-import vatnumber
 
 #from mydjango.views import UserCreateView, UserUpdateView, UserDeleteView
 
 from models import UserPlan, PlanQuota, PlanPricing, Plan, Order, BillingInfo
 from forms import OrderForm, BillingInfoForm
-
-from decimal import Decimal
 
 # Create your views here.
 from plans.forms import CreateOrderForm
@@ -45,7 +51,7 @@ class PlanTableMixin(object):
         """
 
         # Retrieve all quotas that are used by any ``Plan`` in ``plan_list``
-        quota_list = Quota.objects.all().filter(planquota__plan__in = plan_list).distinct()
+        quota_list = Quota.objects.all().filter(planquota__plan__in=plan_list).distinct()
 
         # Create random access dict that for every ``Plan`` map ``Quota`` -> ``PlanQuota``
         plan_quotas_dic = {}
@@ -132,7 +138,12 @@ class CreateOrderView(CreateView):
 
         VAT_COUNTRY = getattr(settings, 'VAT_COUNTRY', None)
 
-        if billing_info and VAT_COUNTRY is not None and VAT_COUNTRY != billing_info.country and len(billing_info.tax_number) > 4 :
+        if (billing_info
+            and suds
+            and VAT_COUNTRY is not None
+            and VAT_COUNTRY != billing_info.country
+            and len(billing_info.tax_number) > 4):
+
             vies_session_key = "vies %s %s" % (billing_info.country, billing_info.tax_number)
             vies = self.request.session.get(vies_session_key, None)
             if vies is None:
@@ -142,7 +153,7 @@ class CreateOrderView(CreateView):
                     pass
                 self.request.session['vies_session_key'] = vies
 
-            if vies :
+            if vies:
                 self.tax = None
 
         if self.tax is not None:
