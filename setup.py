@@ -25,6 +25,8 @@ setup(
         'Programming Language :: Python',
     ],
     install_requires=['django', 'vatnumber', 'django-ordered-model'],
-    dependency_links=[  'git://github.com/bearstech/django-transmeta.git#egg=django-transmeta',
-                        'git://github.com/bradleyayers/suds-htj.git#egg=suds-htj']
+    dependency_links=['git://github.com/bearstech/django-transmeta.git',
+                      'git://github.com/bradleyayers/suds-htj.git'],
+    include_package_data=True,
+    zip_safe=False,
 )

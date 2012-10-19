@@ -2,3 +2,4 @@ include *.txt
 include README.rst
 include AUTHORS
 recursive-include plans/templates *
+recursive-include plans/fixtures *
