@@ -147,3 +147,24 @@ Example::
 .. warning::
 
     This option is suitable only to use for European countries.
+
+
+
+``PLAN_DEFAULT_GRACE_PERIOD``
+
+**Optional**
+
+How many days activate a default plan for a new account.
+
+Default: 30
+
+Example::
+
+    PLAN_DEFAULT_GRACE_PERIOD = 30
+
+
+
+.. note::
+
+    Default plan should be selected using site admin. Set default flag to one of available plans.
+

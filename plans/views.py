@@ -14,7 +14,6 @@ from django.views.generic.list import ListView
 import suds
 import vatnumber
 
-#from mydjango.views import UserCreateView, UserUpdateView, UserDeleteView
 
 from models import UserPlan, PlanQuota, PlanPricing, Plan, Order, BillingInfo
 from forms import OrderForm, BillingInfoForm

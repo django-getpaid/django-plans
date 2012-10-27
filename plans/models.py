@@ -23,10 +23,9 @@ accounts_logger = logging.getLogger('accounts')
 # Create your models here.
 
 class Plan(OrderedModel):
-
-
     name = models.CharField(_('name'), max_length=100)
     description = models.TextField(_('description'), blank=True)
+    default = models.BooleanField(default=False, db_index=True)
     available = models.BooleanField(_('available'), default=False, db_index=True)
     created = models.DateTimeField(_('created'), auto_now_add=True, db_index=True)
     customized = models.ForeignKey('auth.User', null=True, blank=True, verbose_name=_('customized'))
@@ -36,6 +35,10 @@ class Plan(OrderedModel):
     class Meta:
         translate = ('name', 'description', )
         ordering = ('order',)
+
+    @classmethod
+    def get_default_plan(cls):
+       return cls.objects.filter(default=True)[0]
 
     def __unicode__(self):
         if self.available:
