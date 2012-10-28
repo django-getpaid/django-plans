@@ -1,5 +1,10 @@
 from django.dispatch import Signal
 
+order_started = Signal()
+order_started.__doc__ = """
+Sent after order was started (awaiting payment)
+"""
+
 order_completed = Signal()
 order_completed.__doc__ = """
 Sent after order was completed (payment accepted, account extended)

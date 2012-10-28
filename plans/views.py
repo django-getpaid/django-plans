@@ -23,6 +23,7 @@ from decimal import Decimal
 # Create your views here.
 from plans.forms import CreateOrderForm
 from plans.models import Quota, Invoice
+from plans.signals import order_started
 
 class PlanTableMixin(object):
     def get_plan_table(self, plan_list):
@@ -199,6 +200,7 @@ class CreateOrderView(CreateView):
         self.object.tax = self.tax
         self.object.currency = self.CURRENCY
         self.object.save()
+        order_started.send(sender=self.object)
         return super(ModelFormMixin, self).form_valid(form)
 
 
