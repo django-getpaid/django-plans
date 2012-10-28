@@ -24,3 +24,7 @@ account_activated = Signal(providing_args=['user'])
 account_activated.__doc__ = """
 Sent on account activation after expiration
 """
+account_change_plan = Signal(providing_args=['user'])
+account_change_plan.__doc__ = """
+Sent on account when plan was changed after order completion
+"""

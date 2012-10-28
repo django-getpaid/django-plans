@@ -16,7 +16,7 @@ from transmeta import TransMeta
 import logging
 from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
-from plans.signals import order_completed, account_activated, account_expired
+from plans.signals import order_completed, account_activated, account_expired, account_change_plan
 
 accounts_logger = logging.getLogger('accounts')
 
@@ -110,6 +110,7 @@ class UserPlan(models.Model):
             else:
                 self.expire = date.today() + timedelta(days=pricing.period)
         else:
+            account_change_plan.send(sender=self, user=self.user)
             self.plan = plan
             self.expire = date.today() + timedelta(days=pricing.period)
         self.save()
