@@ -77,7 +77,7 @@
     <link rel="stylesheet" href="{{ STATIC_URL }}css/xxx.css">
 
 </head>
-<body style="width: 960px; margin: 0 auto;">
+<body style="width: 960px; margin: 0 auto;" onload="window.print();">
 {% if logo_url %}
     <img src="{{ logo_url }}" alt="company logo">
 {% endif %}
@@ -88,8 +88,11 @@
     </h1>
 
     <p> <label><span class="pl">Data wystawienia:</span> <span class="en">Issued</span></label> {{ invoice.issued|date:"Y-m-d" }}</p>
-
+    {% if invoice.type != 3 %}{# Not a PROFORMA #}
     <p> <label><span class="pl">Data sprzedaży:</span> <span class="en">Date of order</span></label> {{ invoice.selling_date|date:"Y-m-d" }}</p>
+    {% else %}
+        <p>&nbsp;</p>
+    {% endif %}
 </div>
 
 <table style="width: 100%; margin-bottom: 40px; font-size: 12px;" >

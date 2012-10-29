@@ -68,6 +68,21 @@ This example for invoice issued on ``March 5th, 2010``, with sequential number `
 
    Full number of an invoice is saved with the Invoice object. Changing this value in settings will affect only newly created invoices.
 
+``INVOICE_LOGO_URL``
+--------------------
+
+**Optional**
+
+URL of logo image that should be placed in an invoice. It will be available in invoice template as ``{{ logo_url }}`` context variable.
+
+Default: ``None``
+
+Example::
+
+    INVOICE_LOGO_URL = STATIC_URL + 'my_logo.png'
+
+
+
 
 ``ISSUER_DATA``
 ---------------

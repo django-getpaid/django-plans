@@ -318,6 +318,11 @@ class InvoiceDetailView(DetailView):
     template_name='plans/invoice_preview.html'
     model = Invoice
 
+    def get_context_data(self, **kwargs):
+        context = super(InvoiceDetailView, self).get_context_data(**kwargs)
+        context['logo_url'] = getattr(settings, 'INVOICE_LOGO_URL', None)
+        return context
+
     def get_queryset(self):
         return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user)
 
