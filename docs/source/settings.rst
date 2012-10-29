@@ -183,3 +183,15 @@ Example::
 
     Default plan should be selected using site admin. Set default flag to one of available plans.
 
+``INVOICE_PROJECT_NAME``
+
+**Required**
+
+Name of service that will be used in the purchase item name of an invoice.
+
+Default: ``u''``
+
+
+Example::
+
+    INVOICE_PROJECT_NAME = u'MyService.com'

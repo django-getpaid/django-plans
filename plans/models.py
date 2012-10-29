@@ -447,7 +447,14 @@ class Invoice(models.Model):
         self.tax_total = order.total() - order.amount
         self.tax = order.tax
         self.currency = order.currency
-        self.item_description = unicode(_("Plan")) + u" %s (%s " % (order.plan.name, order.pricing.period)  + unicode(_("days")) + u")"
+        self.item_description = u"%s - %s %s (%d %s)" % (
+            getattr(settings, 'INVOICE_PROJECT_NAME', ''),
+            unicode(_("Plan")),
+            order.plan.name,
+            order.pricing.period,
+            unicode(_("days")),
+
+        )
 
     @classmethod
     def create(cls, order, invoice_type):
