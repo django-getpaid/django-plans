@@ -3,11 +3,15 @@ Templates
 
 Account expiration warnings
 ---------------------------
-Via the ``plans.context_processors.expiration`` this module allows
-to display in any template a message when:
+Via the ``plans.context_processors.account_status`` this module allows
+to get information in any template about:
+* user account has expired (``{{ ACCOUNT_EXPIRED }}``),
+* user account is not active (``{{ ACCOUNT_NOT_ACTIVE }}``),
+* user account will expire soon (``{{ EXPIRE_IN_DAYS }}``),
+* an URL of account extend action (``{{ EXTEND_URL }}``),
+* an URL of account activate action (``{{ ACTIVATE_URL }}``).
 
-* user account has expired,
-* user account will expire soon.
+It requires middleware ``plans.middleware.UserPlanMiddleware`` to be active.
 
 First you need to add a context processor to your settings, e.g.::
 
@@ -18,7 +22,7 @@ First you need to add a context processor to your settings, e.g.::
 
 The context processor is defined as follows:
 
-.. autofunction:: plans.context_processors.expiration
+.. autofunction:: plans.context_processors.account_status
 
 What you might want to do now is to create a custom ``expiration_messages.html`` template::
 
@@ -27,11 +31,19 @@ What you might want to do now is to create a custom ``expiration_messages.html``
 
     {% if ACCOUNT_EXPIRED %}
         <div class="messages_permanent error">
-            {% blocktrans with extend_url=EXTEND_URL %}
-                Your account has expired. You need to <a href="{{ extend_url }}">extend your account now</a> in order to use it.
+            {% blocktrans with url=EXTEND_URL %}
+                Your account has expired. Your photos will not display. After <a href="{{ url }}">extending your account</a> all your photos will available again.
             {% endblocktrans %}
         </div>
     {% else %}
+
+        {% if ACCOUNT_NOT_ACTIVE %}
+            <div class="messages_permanent warning">
+            {% blocktrans with url=ACTIVATE_URL %}
+                Your account is not active. Possibly you are over some limits. Try to <a href="{{ url }}">activate your account</a> to make your photos available again.
+            {% endblocktrans %}
+            </div>
+        {% endif %}
 
         {% if EXPIRE_IN_DAYS >= 0 and EXPIRE_IN_DAYS <= 14 %}
             <div class="messages_permanent warning">
@@ -42,6 +54,10 @@ What you might want to do now is to create a custom ``expiration_messages.html``
         {% endif %}
 
     {% endif %}
+
+
+
+
 
 
 
