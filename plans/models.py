@@ -16,7 +16,8 @@ from transmeta import TransMeta
 import logging
 from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
-from plans.signals import order_completed, account_activated, account_expired, account_change_plan
+from plans.signals import order_completed, account_activated, account_expired, account_change_plan, account_deactivated
+from validators import account_full_validation
 
 accounts_logger = logging.getLogger('accounts')
 
@@ -96,14 +97,26 @@ class UserPlan(models.Model):
     def __unicode__(self):
         return "%s [%s]" % (self.user, self.plan)
 
+
+    def is_active(self):
+        return self.active
+
+    def is_expired(self):
+        return self.expire < date.today()
+
+
     def quotas(self):
         quotas = {}
         for quota in self.plan.planquota_set.all():
             quotas[quota]
 
-    def extend_account(self, plan, pricing):
-        was_active = self.active
+    def activate_account(self):
         self.active = True
+        self.save()
+
+    def extend_account(self, plan, pricing):
+        was_active = self.is_active()
+
         if self.plan == plan:
             if self.expire > date.today():
                 self.expire += timedelta(days=pricing.period)
@@ -113,7 +126,18 @@ class UserPlan(models.Model):
             account_change_plan.send(sender=self, user=self.user)
             self.plan = plan
             self.expire = date.today() + timedelta(days=pricing.period)
+
+        self.active = True
         self.save()
+        errors = account_full_validation(self.user)
+        if errors:
+            self.active = False
+            self.save()
+
+        if was_active and not self.is_active():
+            account_deactivated.send(sender=self, user=self.user)
+        elif not was_active and self.is_active():
+            account_activated.send(sender=self, user=self.user)
 
         accounts_logger.info(u"Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
             self.user, self.user.pk, pricing.period, plan, plan.pk))
@@ -121,8 +145,8 @@ class UserPlan(models.Model):
         mail_context = Context({ 'user': self.user, 'userplan': self, 'plan': plan, 'pricing': pricing})
         send_template_email([self.user.email],'mail/extend_account_title.txt', 'mail/extend_account_body.txt', mail_context, get_user_language(self.user))
 
-        if not was_active:
-            account_activated.send(sender=self, user=self.user)
+
+
 
     def expire_account(self):
         """manages account expiration"""
@@ -135,7 +159,9 @@ class UserPlan(models.Model):
         send_template_email([self.user.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
             mail_context, get_user_language(self.user))
 
+        account_deactivated.send(sender=self, user=self.user)
         account_expired.send(sender=self, user=self.user)
+
 
     def remind_expire_soon(self):
         """reminds about soon account expiration"""

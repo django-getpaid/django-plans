@@ -18,11 +18,17 @@ user_language.__doc__ = """Sent to receive information about language for user a
 
 account_expired = Signal(providing_args=['user'])
 account_expired.__doc__ = """
-Sent on account expiration.
+Sent on account expiration. This signal is send regardless ``account_deactivated`` it only means that account has expired due to plan expire date limit.
 """
+
+account_deactivated = Signal(providing_args=['user'])
+account_deactivated.__doc__ = """
+Sent on account deactivation, account is not operational (it could be not expired, but does not meet quota limits).
+"""
+
 account_activated = Signal(providing_args=['user'])
 account_activated.__doc__ = """
-Sent on account activation after expiration
+Sent on account activation, account is now fully operational.
 """
 account_change_plan = Signal(providing_args=['user'])
 account_change_plan.__doc__ = """

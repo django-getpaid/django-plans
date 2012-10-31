@@ -1,3 +1,4 @@
+import datetime
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
@@ -23,7 +24,30 @@ from decimal import Decimal
 # Create your views here.
 from plans.forms import CreateOrderForm
 from plans.models import Quota, Invoice
-from plans.signals import order_started
+from plans.signals import order_started, account_activated
+from plans.validators import account_full_validation
+
+class AccountActivationView(TemplateView):
+    template_name = 'plans/account_activation.html'
+
+    def get_context_data(self, **kwargs):
+        user_plan = self.request.user.userplan
+        if user_plan.active == True or user_plan.expire < datetime.date.today():
+            raise Http404()
+
+        context = super(AccountActivationView, self).get_context_data(**kwargs)
+        errors = account_full_validation(self.request.user)
+        if errors:
+            for error in errors:
+                for e in error.messages:
+                    messages.error(self.request, e)
+            context['SUCCESSFUL'] = False
+        else:
+            user_plan.activate_account()
+            messages.success(self.request, _("Your account is now active"))
+            context['SUCCESSFUL'] = True
+            account_activated.send(sender=self,user=self.request.user)
+        return context
 
 class PlanTableMixin(object):
     def get_plan_table(self, plan_list):
@@ -245,6 +269,26 @@ class OrderListView(ListView):
 
     def get_queryset(self):
         return super(OrderListView, self).get_queryset().filter(user=self.request.user).select_related('plan', 'pricing', )
+
+class OrderPaymentReturnView(DetailView):
+    """
+    This view is a fallback from any payments processor. It allows just to set additional message
+    context and redirect to Order view itself.
+    """
+    model = Order
+    status = None
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.status == 'success':
+            messages.success(self.request, _('Thank you for placing a payment. It will be processed as soon as possible.'))
+        elif self.status == 'failure':
+            messages.error(self.request, _('Payment was not completed correctly. Please repeat payment process.'))
+
+        return HttpResponseRedirect(self.object.get_absolute_url())
+
+
+    def get_queryset(self):
+        return super(OrderPaymentReturnView, self).get_queryset().filter(user=self.request.user)
 
 
 class BillingInfoRedirectView(RedirectView):
