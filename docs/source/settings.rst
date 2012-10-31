@@ -7,7 +7,7 @@ Configuration via `settings`
 
 **Required**
 
-Three letter code for system currency. Should be always capitalized.
+Three letter code for system currency. Should always be capitalized.
 
 Example::
 
@@ -84,6 +84,24 @@ Example::
 
 
 
+``INVOICE_PROJECT_NAME``
+------------------------
+
+**Required**
+
+Name of service that will be used in the purchase item name of an invoice.
+
+Default: ``u''``
+
+
+Example::
+
+    INVOICE_PROJECT_NAME = u'MyService.com'
+
+
+
+
+
 ``ISSUER_DATA``
 ---------------
 **Required**
@@ -125,6 +143,50 @@ User will receive notification before 7 , 3 and 1 day to account expire.
 
 
 
+
+
+
+``PLAN_DEFAULT_GRACE_PERIOD``
+-----------------------------
+
+**Optional**
+
+How many days activate a default plan for a new account.
+
+Default: 30
+
+Example::
+
+    PLAN_DEFAULT_GRACE_PERIOD = 30
+
+
+
+.. note::
+
+    Default plan should be selected using site admin. Set default flag to one of available plans.
+
+
+
+``PLAN_ACTIVATION_VALIDATORS``
+------------------------------
+
+**Optional**
+
+A dict that stores mapping ``"Quota codename" : "validator object"``. Validators are used to check if user account
+can be activated for the given plan. Account cannot exceed certain limits introduced by quota.
+
+Given account will be activated only if calling all validators that are defined with his new plan does not raise any ValidationError. If account cannot be activated user will be noticed after logging with information that account needs activation.
+
+Example::
+
+
+    PLAN_ACTIVATION_VALIDATORS = {
+        'CAN_DO_SOMETHING' :  'myproject.validators.can_do_something_validator',
+        'MAX_STORAGE' :  'myproject.validators.max_storage_validator',
+    }
+
+
+
 ``TAX``
 -------
 
@@ -163,35 +225,3 @@ Example::
 
     This option is suitable only to use for European countries.
 
-
-
-``PLAN_DEFAULT_GRACE_PERIOD``
-
-**Optional**
-
-How many days activate a default plan for a new account.
-
-Default: 30
-
-Example::
-
-    PLAN_DEFAULT_GRACE_PERIOD = 30
-
-
-
-.. note::
-
-    Default plan should be selected using site admin. Set default flag to one of available plans.
-
-``INVOICE_PROJECT_NAME``
-
-**Required**
-
-Name of service that will be used in the purchase item name of an invoice.
-
-Default: ``u''``
-
-
-Example::
-
-    INVOICE_PROJECT_NAME = u'MyService.com'
