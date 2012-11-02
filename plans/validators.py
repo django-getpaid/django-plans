@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from plans.importer import import_name
 from plans.quota import get_user_quota
 
 class QuotaValidator(object):
@@ -12,10 +13,6 @@ class QuotaValidator(object):
         quotas = get_user_quota(user)
         return quotas.get(self.code, None)
 
-def import_name(name):
-    components = name.split('.')
-    mod = __import__('.'.join(components[0:-1]), globals(), locals(), [components[-1]] )
-    return getattr(mod, components[-1])
 
 
 

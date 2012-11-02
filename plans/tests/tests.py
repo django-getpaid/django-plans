@@ -10,7 +10,7 @@ from django.core import mail
 from django.db.models import Q
 
 # ./manage.py loaddata test_user test_plans_plan test_plans_billinginfo test_plans_userplan test_plan_pricing test_plans_quota test_plans_planpricing test_plans_planquota test_plans_order
-from plans.plan_switch import PlanSwitchPolicy, StandardPlanSwitchPolicy
+from plans.plan_change import PlanChangePolicy
 
 class PlansTestCase(TestCase):
 #    fixtures = ['test_user', 'test_plan.json']
@@ -348,59 +348,10 @@ class OrderTestCase(TestCase):
         self.assertEqual(o.total(), Decimal('151.29'))
 
 
-class PlanSwitchPolicyTestCase(TestCase):
-    fixtures = ['test_django-plans_auth', 'test_django-plans_plans']
-
+class PlanChangePolicyTestCase(TestCase):
     def setUp(self):
-        self.policy = PlanSwitchPolicy()
+        self.policy = PlanChangePolicy()
 
     def test_calculate_day_cost(self):
-
         plan = Plan.objects.get(pk=5)
-        self.assertEqual(self.policy._calculate_day_cost(plan, 13), Decimal('6.67'))
-        self.assertEqual(self.policy._calculate_day_cost(plan, 33), Decimal('6.67'))
-        self.assertEqual(self.policy._calculate_day_cost(plan, 190), Decimal('2.22'))
-        self.assertEqual(self.policy._calculate_day_cost(plan, 370), Decimal('2.19'))
-
-    def test_get_switch_price(self):
-        planA = Plan.objects.get(pk=3)
-        planB = Plan.objects.get(pk=4)
-        self.assertEqual(self.policy.get_switch_price(planA, planB, 56), Decimal('21.84'))
-        self.assertEqual(self.policy.get_switch_price(planB, planA, 56), None)
-
-    def test_get_switch_price2(self):
-        planA = Plan.objects.get(pk=3)
-        planB = Plan.objects.get(pk=4)
-        self.assertEqual(self.policy.get_switch_price(planA, planB, 181), Decimal('50.68'))
-        self.assertEqual(self.policy.get_switch_price(planB, planA, 181), None)
-
-class StandardPlanSwitchPolicyTestCase(TestCase):
-    fixtures = ['test_django-plans_auth', 'test_django-plans_plans']
-
-    def setUp(self):
-        self.policy = StandardPlanSwitchPolicy()
-
-    def test_get_switch_price(self):
-        planA = Plan.objects.get(pk=3)
-        planB = Plan.objects.get(pk=4)
-        self.assertEqual(self.policy.get_switch_price(planA, planB, 56), Decimal('24.02'))
-        self.assertEqual(self.policy.get_switch_price(planB, planA, 56), None)
-
-    def test_get_switch_price2(self):
-        planA = Plan.objects.get(pk=3)
-        planB = Plan.objects.get(pk=4)
-        self.assertEqual(self.policy.get_switch_price(planA, planB, 181), Decimal('55.75'))
-        self.assertEqual(self.policy.get_switch_price(planB, planA, 181), None)
-
-
-    def test_custom_policy(self):
-        class CustomPolicy(StandardPlanSwitchPolicy):
-            UPGRADE_CHARGE = Decimal('14.0')
-            DOWNGRADE_CHARGE = Decimal('13.0')
-        policy = CustomPolicy()
-
-        planA = Plan.objects.get(pk=3)
-        planB = Plan.objects.get(pk=4)
-        self.assertEqual(policy.get_switch_price(planA, planB, 181), Decimal('69.75'))
-        self.assertEqual(policy.get_switch_price(planB, planA, 181), Decimal('13.0'))
-
+        self.assertEqual(self.policy._calculate_day_cost(plan, 13), Decimal('86.67'))

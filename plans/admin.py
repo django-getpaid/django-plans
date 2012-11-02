@@ -17,11 +17,20 @@ class PlanAdmin(OrderedModelAdmin):
     list_display = ('name',   'description', 'customized', 'default', 'available', 'created', 'move_up_down_links')
     inlines = (PlanPricingInline, PlanQuotaInline)
 
+    def queryset(self, request):
+        return super(PlanAdmin, self).queryset(request).select_related('customized')
+
+
 class BillingInfoAdmin(admin.ModelAdmin):
     list_display = ('user', 'name',  'street', 'zipcode', 'city', 'country')
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('user', "created", "completed", "amount", "currency", "pricing")
+    list_filter = ( 'user', 'valid' )
+    list_display = ('user', "created", "valid", "completed", "amount", "currency", "plan", "pricing")
+
+    def queryset(self, request):
+        return super(OrderAdmin, self).queryset(request).select_related('plan', 'pricing', 'user')
+
 
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ('full_number', "issued", "total_net", "currency", "tax", "buyer_name", "buyer_city", "buyer_tax_number")

@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-class PlanSwitchPolicy(object):
+class PlanChangePolicy(object):
 
     def _calculate_day_cost(self, plan, period):
         """
@@ -25,10 +25,13 @@ class PlanSwitchPolicy(object):
         else:
             return period * day_cost_diff
 
-    def get_switch_price(self, plan_old, plan_new, period):
+    def get_change_price(self, plan_old, plan_new, period):
         """
         Calculates total price of plan change. Returns None if no payment is required.
         """
+        if period < 1:
+            return None
+
         plan_old_day_cost = self._calculate_day_cost(plan_old, period)
         plan_new_day_cost = self._calculate_day_cost(plan_new, period)
 
@@ -39,7 +42,7 @@ class PlanSwitchPolicy(object):
 
 
 
-class StandardPlanSwitchPolicy(PlanSwitchPolicy):
+class StandardPlanChangePolicy(PlanChangePolicy):
     """
     This plan switch policy follows the rules:
     * user can downgrade a plan for free if the plan is cheaper or have exact the same price

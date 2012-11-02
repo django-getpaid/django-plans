@@ -236,13 +236,14 @@ class PlanQuota(models.Model):
 class Order(models.Model):
     user = models.ForeignKey('auth.User', verbose_name=_('user'))
     plan = models.ForeignKey('Plan', verbose_name=_('plan'), related_name="plan_order")
-    pricing = models.ForeignKey('Pricing', verbose_name=_('pricing'))
+    pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_('pricing')) #if pricing is None the order is upgrade plan, not buy new pricing
     created = models.DateTimeField(_('created'), auto_now_add=True, db_index=True)
     completed = models.DateTimeField(_('completed'), null=True, blank=True, db_index=True)
     amount = models.DecimalField(_('amount'), max_digits=7, decimal_places=2, db_index=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
         blank=True) # Tax=None is when tax is not applicable
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
+    valid = models.BooleanField(_('Valid'), default=True) #if False, means that Order was payed, but was not valid to be realised in account, need human intervention
 
     def complete_order(self):
         if self.completed is  None:
