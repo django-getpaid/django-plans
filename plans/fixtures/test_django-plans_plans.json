@@ -1,46 +1,49 @@
 [
     {
-        "pk": 3, 
-        "model": "plans.plan", 
+        "pk": 3,
+        "model": "plans.plan",
         "fields": {
-            "available": true, 
-            "name_pl": "Standard", 
-            "created": "2012-05-05T15:24:44.966Z", 
-            "customized": null, 
-            "description_en": "Plan for small company", 
-            "description_pl": "Abonament dla ma\u0142ej firmy", 
-            "name_en": "Standard", 
+            "default" : true,
+            "available": true,
+            "name_pl": "Standard",
+            "created": "2012-05-05T15:24:44.966Z",
+            "customized": null,
+            "description_en": "Plan for small company",
+            "description_pl": "Abonament dla ma\u0142ej firmy",
+            "name_en": "Standard",
             "order": 0
         }
-    }, 
+    },
     {
-        "pk": 4, 
-        "model": "plans.plan", 
+        "pk": 4,
+        "model": "plans.plan",
         "fields": {
-            "available": true, 
-            "name_pl": "Premium", 
-            "created": "2012-05-05T15:36:31.671Z", 
-            "customized": null, 
-            "description_en": "For better use", 
-            "description_pl": "Dla wymagaj\u0105cych", 
-            "name_en": "Premium", 
+            "available": true,
+            "name_pl": "Premium",
+            "created": "2012-05-05T15:36:31.671Z",
+            "customized": null,
+            "description_en": "For better use",
+            "description_pl": "Dla wymagaj\u0105cych",
+            "name_en": "Premium",
             "order": 1
         }
-    }, 
+    },
     {
-        "pk": 5, 
-        "model": "plans.plan", 
+        "pk": 5,
+        "model": "plans.plan",
         "fields": {
-            "available": true, 
-            "name_pl": "PRO", 
-            "created": "2012-07-12T13:07:23.038Z", 
-            "customized": null, 
-            "description_en": "Professional plan", 
-            "description_pl": "Plan dla profesjonalistow", 
-            "name_en": "PRO", 
+            "available": true,
+            "name_pl": "PRO",
+            "created": "2012-07-12T13:07:23.038Z",
+            "customized": null,
+            "description_en": "Professional plan",
+            "description_pl": "Plan dla profesjonalistow",
+            "name_en": "PRO",
             "order": 2
         }
-    }, 
+    },
+
+
     {
         "pk": 6, 
         "model": "plans.plan", 
@@ -72,491 +75,497 @@
             "name_en": "Custom 2", 
             "order": 5
         }
-    }, 
+    },
+
+
+
     {
-        "pk": 6, 
-        "model": "plans.billinginfo", 
+        "pk": 6,
+        "model": "plans.billinginfo",
         "fields": {
-            "city": "Krak\u00f3w", 
-            "name": "Spolka Sp z o.o.", 
-            "country": "PL", 
-            "zipcode": "12-234", 
-            "street": "Sloneczna 15", 
+            "city": "Krak\u00f3w",
+            "name": "Spolka Sp z o.o.",
+            "country": "PL",
+            "zipcode": "12-234",
+            "street": "Sloneczna 15",
             "user": [
                 "test1"
-            ], 
+            ],
             "tax_number": "PL5521465632"
         }
-    }, 
+    },
+
     {
-        "pk": 3, 
-        "model": "plans.userplan", 
+        "pk": 1,
+        "model": "plans.pricing",
         "fields": {
-            "active": true, 
-            "expire": "2012-07-12", 
-            "user": [
-                "test1"
-            ], 
-            "plan": 3
-        }
-    }, 
-    {
-        "pk": 4, 
-        "model": "plans.userplan", 
-        "fields": {
-            "active": true, 
-            "expire": "2012-07-24", 
-            "user": [
-                "test2"
-            ], 
-            "plan": 8
-        }
-    }, 
-    {
-        "pk": 1, 
-        "model": "plans.pricing", 
-        "fields": {
-            "name_en": "monthly", 
-            "period": 30, 
+            "name_en": "monthly",
+            "period": 30,
             "name_pl": "miesi\u0119czny"
         }
-    }, 
+    },
+
+
+
+
+
+
     {
-        "pk": 2, 
-        "model": "plans.pricing", 
+        "pk": 2,
+        "model": "plans.pricing",
         "fields": {
-            "name_en": "half-year", 
-            "period": 180, 
+            "name_en": "half-year",
+            "period": 180,
             "name_pl": "p\u00f3\u0142roczny"
         }
-    }, 
+    },
     {
-        "pk": 3, 
-        "model": "plans.pricing", 
+        "pk": 3,
+        "model": "plans.pricing",
         "fields": {
-            "name_en": "year", 
-            "period": 365, 
+            "name_en": "year",
+            "period": 365,
             "name_pl": "roczny"
         }
-    }, 
+    },
     {
-        "pk": 3, 
-        "model": "plans.quota", 
+        "pk": 3,
+        "model": "plans.quota",
         "fields": {
-            "unit_pl": "", 
-            "name_pl": "W\u0142asny znak wodny", 
-            "unit_en": "", 
-            "description_en": "Allows to customize watermark text", 
-            "order": 0, 
-            "name_en": "Custom watermark", 
-            "description_pl": "Pozwala ustawi\u0107 w\u0142asny tekst dla znaku wodnego", 
-            "codename": "CUSTOM_WATERMARK", 
+            "unit_pl": "",
+            "name_pl": "W\u0142asny znak wodny",
+            "unit_en": "",
+            "description_en": "Allows to customize watermark text",
+            "order": 0,
+            "name_en": "Custom watermark",
+            "description_pl": "Pozwala ustawi\u0107 w\u0142asny tekst dla znaku wodnego",
+            "codename": "CUSTOM_WATERMARK",
             "is_boolean": true
         }
-    }, 
+    },
     {
-        "pk": 4, 
-        "model": "plans.quota", 
+        "pk": 4,
+        "model": "plans.quota",
         "fields": {
-            "unit_pl": "MB", 
-            "name_pl": "Pojemno\u015b\u0107", 
-            "unit_en": "MB", 
-            "description_en": "Total storage space for photos", 
-            "order": 1, 
-            "name_en": "Storage space", 
-            "description_pl": "Ilo\u015b\u0107 MB miejsca na zdj\u0119cia", 
-            "codename": "MAX_STORAGE", 
+            "unit_pl": "MB",
+            "name_pl": "Pojemno\u015b\u0107",
+            "unit_en": "MB",
+            "description_en": "Total storage space for photos",
+            "order": 1,
+            "name_en": "Storage space",
+            "description_pl": "Ilo\u015b\u0107 MB miejsca na zdj\u0119cia",
+            "codename": "MAX_STORAGE",
             "is_boolean": false
         }
-    }, 
+    },
     {
-        "pk": 1, 
-        "model": "plans.quota", 
+        "pk": 1,
+        "model": "plans.quota",
         "fields": {
-            "unit_pl": "", 
-            "name_pl": "Liczba galerii", 
-            "unit_en": "", 
-            "description_en": "Number of separate galleries you can have on your account.", 
-            "order": 2, 
-            "name_en": "Galleries count", 
-            "description_pl": "Liczba osobnych galerii, kt\u00f3rych mo\u017cesz utworzy\u0107 jednocze\u015bnie na koncie.", 
-            "codename": "MAX_GALLERIES_COUNT", 
+            "unit_pl": "",
+            "name_pl": "Liczba galerii",
+            "unit_en": "",
+            "description_en": "Number of separate galleries you can have on your account.",
+            "order": 2,
+            "name_en": "Galleries count",
+            "description_pl": "Liczba osobnych galerii, kt\u00f3rych mo\u017cesz utworzy\u0107 jednocze\u015bnie na koncie.",
+            "codename": "MAX_GALLERIES_COUNT",
             "is_boolean": false
         }
-    }, 
+    },
     {
-        "pk": 5, 
-        "model": "plans.quota", 
+        "pk": 5,
+        "model": "plans.quota",
         "fields": {
-            "unit_pl": "", 
-            "name_pl": "Should not be visible", 
-            "unit_en": "", 
-            "description_en": "Should not be visible", 
-            "order": 3, 
-            "name_en": "Should not be visible", 
-            "description_pl": "Should not be visible", 
-            "codename": "NOT_USED_QUOTA", 
+            "unit_pl": "",
+            "name_pl": "Should not be visible",
+            "unit_en": "",
+            "description_en": "Should not be visible",
+            "order": 3,
+            "name_en": "Should not be visible",
+            "description_pl": "Should not be visible",
+            "codename": "NOT_USED_QUOTA",
             "is_boolean": false
         }
-    }, 
+    },
     {
-        "pk": 2, 
-        "model": "plans.quota", 
+        "pk": 2,
+        "model": "plans.quota",
         "fields": {
-            "unit_pl": "", 
-            "name_pl": "Liczba zdj\u0119\u0107 w galerii", 
-            "unit_en": "", 
-            "description_en": "Total count of photos in each gallery.", 
-            "order": 4, 
-            "name_en": "Photos number in gallery", 
-            "description_pl": "Maksymalna liczba zdj\u0119\u0107 w pojedynczej galerii", 
-            "codename": "MAX_PHOTOS_PER_GALLERY", 
+            "unit_pl": "",
+            "name_pl": "Liczba zdj\u0119\u0107 w galerii",
+            "unit_en": "",
+            "description_en": "Total count of photos in each gallery.",
+            "order": 4,
+            "name_en": "Photos number in gallery",
+            "description_pl": "Maksymalna liczba zdj\u0119\u0107 w pojedynczej galerii",
+            "codename": "MAX_PHOTOS_PER_GALLERY",
             "is_boolean": false
         }
-    }, 
+    },
+
+
+
+
+
+
     {
-        "pk": 1, 
-        "model": "plans.planpricing", 
+        "pk": 1,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "10.00", 
-            "plan": 3, 
+            "price": "10.00",
+            "plan": 3,
             "pricing": 1
         }
-    }, 
+    },
     {
-        "pk": 4, 
-        "model": "plans.planpricing", 
+        "pk": 1,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "20.00", 
-            "plan": 4, 
+            "price": "10.00",
+            "plan": 1,
             "pricing": 1
         }
-    }, 
+    },
     {
-        "pk": 7, 
-        "model": "plans.planpricing", 
+        "pk": 4,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "200.00", 
-            "plan": 5, 
+            "price": "20.00",
+            "plan": 4,
             "pricing": 1
         }
-    }, 
+    },
     {
-        "pk": 10, 
-        "model": "plans.planpricing", 
+        "pk": 7,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "11.00", 
-            "plan": 6, 
+            "price": "200.00",
+            "plan": 5,
             "pricing": 1
         }
-    }, 
+    },
     {
-        "pk": 16, 
-        "model": "plans.planpricing", 
+        "pk": 10,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "1.00", 
-            "plan": 8, 
+            "price": "11.00",
+            "plan": 6,
             "pricing": 1
         }
-    }, 
+    },
     {
-        "pk": 2, 
-        "model": "plans.planpricing", 
+        "pk": 16,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "50.00", 
-            "plan": 3, 
+            "price": "1.00",
+            "plan": 8,
+            "pricing": 1
+        }
+    },
+    {
+        "pk": 2,
+        "model": "plans.planpricing",
+        "fields": {
+            "price": "50.00",
+            "plan": 3,
             "pricing": 2
         }
-    }, 
+    },
     {
-        "pk": 5, 
-        "model": "plans.planpricing", 
+        "pk": 5,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "100.00", 
-            "plan": 4, 
+            "price": "100.00",
+            "plan": 4,
             "pricing": 2
         }
-    }, 
+    },
     {
-        "pk": 8, 
-        "model": "plans.planpricing", 
+        "pk": 8,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "400.00", 
-            "plan": 5, 
+            "price": "400.00",
+            "plan": 5,
             "pricing": 2
         }
-    }, 
+    },
     {
-        "pk": 11, 
-        "model": "plans.planpricing", 
+        "pk": 11,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "22.00", 
-            "plan": 6, 
+            "price": "22.00",
+            "plan": 6,
             "pricing": 2
         }
-    }, 
+    },
     {
-        "pk": 17, 
-        "model": "plans.planpricing", 
+        "pk": 17,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "2.00", 
-            "plan": 8, 
+            "price": "2.00",
+            "plan": 8,
             "pricing": 2
         }
-    }, 
+    },
     {
-        "pk": 6, 
-        "model": "plans.planpricing", 
+        "pk": 6,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "180.00", 
-            "plan": 4, 
+            "price": "180.00",
+            "plan": 4,
             "pricing": 3
         }
-    }, 
+    },
     {
-        "pk": 9, 
-        "model": "plans.planpricing", 
+        "pk": 9,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "800.00", 
-            "plan": 5, 
+            "price": "800.00",
+            "plan": 5,
             "pricing": 3
         }
-    }, 
+    },
     {
-        "pk": 12, 
-        "model": "plans.planpricing", 
+        "pk": 12,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "33.00", 
-            "plan": 6, 
+            "price": "33.00",
+            "plan": 6,
             "pricing": 3
         }
-    }, 
+    },
     {
-        "pk": 3, 
-        "model": "plans.planpricing", 
+        "pk": 3,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "90.00", 
-            "plan": 3, 
+            "price": "90.00",
+            "plan": 3,
             "pricing": 3
         }
-    }, 
+    },
     {
-        "pk": 18, 
-        "model": "plans.planpricing", 
+        "pk": 18,
+        "model": "plans.planpricing",
         "fields": {
-            "price": "3.00", 
-            "plan": 8, 
+            "price": "3.00",
+            "plan": 8,
             "pricing": 3
         }
-    }, 
+    },
     {
-        "pk": 1, 
-        "model": "plans.planquota", 
+        "pk": 1,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 3, 
-            "value": 3, 
+            "plan": 3,
+            "value": 3,
             "quota": 1
         }
-    }, 
+    },
     {
-        "pk": 3, 
-        "model": "plans.planquota", 
+        "pk": 3,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 4, 
-            "value": 15, 
+            "plan": 4,
+            "value": 15,
             "quota": 1
         }
-    }, 
+    },
     {
-        "pk": 4, 
-        "model": "plans.planquota", 
+        "pk": 4,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 4, 
-            "value": 10, 
+            "plan": 4,
+            "value": 10,
             "quota": 2
         }
-    }, 
+    },
     {
-        "pk": 5, 
-        "model": "plans.planquota", 
+        "pk": 5,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 4, 
-            "value": 200, 
+            "plan": 4,
+            "value": 200,
             "quota": 4
         }
-    }, 
+    },
     {
-        "pk": 6, 
-        "model": "plans.planquota", 
+        "pk": 6,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 3, 
-            "value": 1, 
+            "plan": 3,
+            "value": 1,
             "quota": 3
         }
-    }, 
+    },
     {
-        "pk": 7, 
-        "model": "plans.planquota", 
+        "pk": 7,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 5, 
-            "value": 1000, 
+            "plan": 5,
+            "value": 1000,
             "quota": 4
         }
-    }, 
+    },
     {
-        "pk": 2, 
-        "model": "plans.planquota", 
+        "pk": 2,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 3, 
-            "value": null, 
+            "plan": 3,
+            "value": null,
             "quota": 2
         }
-    }, 
+    },
     {
-        "pk": 8, 
-        "model": "plans.planquota", 
+        "pk": 8,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 6, 
-            "value": 1, 
+            "plan": 6,
+            "value": 1,
             "quota": 1
         }
-    }, 
+    },
     {
-        "pk": 9, 
-        "model": "plans.planquota", 
+        "pk": 9,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 6, 
-            "value": 2, 
+            "plan": 6,
+            "value": 2,
             "quota": 2
         }
-    }, 
+    },
     {
-        "pk": 10, 
-        "model": "plans.planquota", 
+        "pk": 10,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 6, 
-            "value": 3, 
+            "plan": 6,
+            "value": 3,
             "quota": 3
         }
-    }, 
+    },
     {
-        "pk": 11, 
-        "model": "plans.planquota", 
+        "pk": 11,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 6, 
-            "value": 4, 
+            "plan": 6,
+            "value": 4,
             "quota": 4
         }
-    }, 
+    },
     {
-        "pk": 13, 
-        "model": "plans.planquota", 
+        "pk": 13,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 4, 
-            "value": 1, 
+            "plan": 4,
+            "value": 1,
             "quota": 3
         }
-    }, 
+    },
     {
-        "pk": 14, 
-        "model": "plans.planquota", 
+        "pk": 14,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 5, 
-            "value": 1, 
+            "plan": 5,
+            "value": 1,
             "quota": 3
         }
-    }, 
+    },
     {
-        "pk": 15, 
-        "model": "plans.planquota", 
+        "pk": 15,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 5, 
-            "value": 15, 
+            "plan": 5,
+            "value": 15,
             "quota": 2
         }
-    }, 
+    },
     {
-        "pk": 16, 
-        "model": "plans.planquota", 
+        "pk": 16,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 8, 
-            "value": 1, 
+            "plan": 8,
+            "value": 1,
             "quota": 3
         }
-    }, 
+    },
     {
-        "pk": 17, 
-        "model": "plans.planquota", 
+        "pk": 17,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 8, 
-            "value": 123, 
+            "plan": 8,
+            "value": 123,
             "quota": 4
         }
-    }, 
+    },
     {
-        "pk": 18, 
-        "model": "plans.planquota", 
+        "pk": 18,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 8, 
-            "value": 13, 
+            "plan": 8,
+            "value": 13,
             "quota": 1
         }
-    }, 
+    },
     {
-        "pk": 19, 
-        "model": "plans.planquota", 
+        "pk": 19,
+        "model": "plans.planquota",
         "fields": {
-            "plan": 8, 
-            "value": 12, 
+            "plan": 8,
+            "value": 12,
             "quota": 2
         }
-    }, 
+    },
     {
-        "pk": 3, 
-        "model": "plans.order", 
+        "pk": 3,
+        "model": "plans.order",
         "fields": {
-            "created": "2012-07-14T18:58:23.710Z", 
-            "completed": null, 
-            "tax": "23.00", 
-            "currency": "PLN", 
-            "amount": "10.00", 
-            "pricing": 1, 
-            "plan": 3, 
+            "created": "2012-07-14T18:58:23.710Z",
+            "completed": null,
+            "tax": "23.00",
+            "currency": "PLN",
+            "amount": "10.00",
+            "pricing": 1,
+            "plan": 3,
             "user": [
                 "test1"
             ]
         }
-    }, 
+    },
     {
-        "pk": 2, 
-        "model": "plans.order", 
+        "pk": 2,
+        "model": "plans.order",
         "fields": {
-            "created": "2012-07-14T18:28:19.836Z", 
-            "completed": null, 
-            "tax": "23.00", 
-            "currency": "PLN", 
-            "amount": "200.00", 
-            "pricing": 1, 
-            "plan": 5, 
+            "created": "2012-07-14T18:28:19.836Z",
+            "completed": null,
+            "tax": "23.00",
+            "currency": "PLN",
+            "amount": "200.00",
+            "pricing": 1,
+            "plan": 5,
             "user": [
                 "test1"
             ]
         }
-    }, 
+    },
     {
-        "pk": 1, 
-        "model": "plans.order", 
+        "pk": 1,
+        "model": "plans.order",
         "fields": {
-            "created": "2012-07-14T18:27:20.492Z", 
-            "completed": null, 
-            "tax": "23.00", 
-            "currency": "PLN", 
-            "amount": "200.00", 
-            "pricing": 1, 
-            "plan": 5, 
+            "created": "2012-07-14T18:27:20.492Z",
+            "completed": null,
+            "tax": "23.00",
+            "currency": "PLN",
+            "amount": "200.00",
+            "pricing": 1,
+            "plan": 5,
             "user": [
                 "test1"
             ]
         }
     }
+
+
+
+
+
 ]

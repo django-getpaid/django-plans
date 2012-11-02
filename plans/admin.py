@@ -14,7 +14,7 @@ class QuotaAdmin(OrderedModelAdmin):
 
 class PlanAdmin(OrderedModelAdmin):
     list_filter = ( 'available', 'customized' )
-    list_display = ('name',   'description', 'customized', 'available', 'created', 'move_up_down_links')
+    list_display = ('name',   'description', 'customized', 'default', 'available', 'created', 'move_up_down_links')
     inlines = (PlanPricingInline, PlanQuotaInline)
 
 class BillingInfoAdmin(admin.ModelAdmin):

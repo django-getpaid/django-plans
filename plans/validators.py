@@ -29,10 +29,8 @@ def account_full_validation(user):
     validators = getattr(settings, 'PLAN_ACTIVATION_VALIDATORS', {})
     errors = []
     for quota in quotas:
-        print quota
         if validators.has_key(quota):
             validator = import_name(validators[quota])
-            print validator
             try:
                 validator(user)
             except ValidationError, e:

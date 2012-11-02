@@ -129,6 +129,8 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+    'ordered_model',
+    'django_extensions',
     'plans',
 
 )
@@ -170,3 +172,4 @@ ISSUER_DATA = {
 
 CURRENCY = 'PLN'
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

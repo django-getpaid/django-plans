@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.utils import translation
+from pytz import utc
 import re
 from django.core.urlresolvers import reverse
 from django.template.base import Template
@@ -246,7 +247,7 @@ class Order(models.Model):
     def complete_order(self):
         if self.completed is  None:
             self.user.userplan.extend_account(self.plan, self.pricing)
-            self.completed = datetime.now()
+            self.completed = datetime.utcnow().replace(tzinfo=utc)
             self.save()
             order_completed.send(self)
             return True
