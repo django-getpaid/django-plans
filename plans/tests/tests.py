@@ -10,7 +10,7 @@ from django.core import mail
 from django.db.models import Q
 
 # ./manage.py loaddata test_user test_plans_plan test_plans_billinginfo test_plans_userplan test_plan_pricing test_plans_quota test_plans_planpricing test_plans_planquota test_plans_order
-from plans.plan_change import PlanChangePolicy
+from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 
 class PlansTestCase(TestCase):
 #    fixtures = ['test_user', 'test_plan.json']
@@ -349,9 +349,43 @@ class OrderTestCase(TestCase):
 
 
 class PlanChangePolicyTestCase(TestCase):
+    fixtures = ['test_django-plans_auth', 'test_django-plans_plans']
+
     def setUp(self):
         self.policy = PlanChangePolicy()
 
     def test_calculate_day_cost(self):
         plan = Plan.objects.get(pk=5)
-        self.assertEqual(self.policy._calculate_day_cost(plan, 13), Decimal('86.67'))
+        self.assertEqual(self.policy._calculate_day_cost(plan, 13), Decimal('6.67'))
+
+    def test_get_change_price(self):
+        p1 = Plan.objects.get(pk=3)
+        p2 = Plan.objects.get(pk=4)
+        self.assertEqual(self.policy.get_change_price(p1, p2, 23), Decimal('8.97'))
+        self.assertEqual(self.policy.get_change_price(p2, p1, 23), None)
+
+    def test_get_change_price1(self):
+        p1 = Plan.objects.get(pk=3)
+        p2 = Plan.objects.get(pk=4)
+        self.assertEqual(self.policy.get_change_price(p1, p2, 53), Decimal('20.67'))
+        self.assertEqual(self.policy.get_change_price(p2, p1, 53), None)
+
+    def test_get_change_price2(self):
+        p1 = Plan.objects.get(pk=3)
+        p2 = Plan.objects.get(pk=4)
+        self.assertEqual(self.policy.get_change_price(p1, p2, -53), None)
+        self.assertEqual(self.policy.get_change_price(p1, p2, 0), None)
+
+
+class StandardPlanChangePolicyTestCase(TestCase):
+    fixtures = ['test_django-plans_auth', 'test_django-plans_plans']
+
+    def setUp(self):
+        self.policy = StandardPlanChangePolicy()
+
+
+    def test_get_change_price(self):
+        p1 = Plan.objects.get(pk=3)
+        p2 = Plan.objects.get(pk=4)
+        self.assertEqual(self.policy.get_change_price(p1, p2, 23), Decimal('9.87'))
+        self.assertEqual(self.policy.get_change_price(p2, p1, 23), None)
