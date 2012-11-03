@@ -43,10 +43,7 @@ class Plan(OrderedModel):
        return cls.objects.filter(default=True)[0]
 
     def __unicode__(self):
-        if self.available:
-            return "* %s" % (self.name)
-        else:
-            return "%s" % (self.name)
+        return "%s" % (self.name)
 
 
 class BillingInfo(models.Model):
@@ -116,38 +113,69 @@ class UserPlan(models.Model):
         self.save()
 
     def extend_account(self, plan, pricing):
+        """
+        Manages extending account after plan or pricing order
+        :param plan:
+        :param pricing: if pricing is None then account will be only upgraded
+        :return:
+        """
         was_active = self.is_active()
+        status = False      #if extending account was successful?
 
-        if self.plan == plan:
-            if self.expire > date.today():
-                self.expire += timedelta(days=pricing.period)
-            else:
-                self.expire = date.today() + timedelta(days=pricing.period)
-        else:
-            account_change_plan.send(sender=self, user=self.user)
+        if pricing is None:
+            # Process a plan change request (downgrade or upgrade)
+            # No account activation or extending at this point
             self.plan = plan
-            self.expire = date.today() + timedelta(days=pricing.period)
-
-        self.active = True
-        self.save()
-        errors = account_full_validation(self.user)
-        if errors:
-            self.active = False
             self.save()
+            account_change_plan.send(sender=self, user=self.user)
+            mail_context = Context({ 'user': self.user, 'userplan': self, 'plan': plan})
+            send_template_email([self.user.email],'mail/change_plan_title.txt', 'mail/change_plan_body.txt', mail_context, get_user_language(self.user))
+            accounts_logger.info(u"Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (
+            self.user, self.user.pk, plan, plan.pk))
+            status = True
+        else:
+            # Processing standard account extending procedure
+            if self.plan == plan:
+                status = True
+                if self.expire > date.today():
+                    self.expire += timedelta(days=pricing.period)
+                else:
+                    self.expire = date.today() + timedelta(days=pricing.period)
 
-        if was_active and not self.is_active():
-            account_deactivated.send(sender=self, user=self.user)
-        elif not was_active and self.is_active():
-            account_activated.send(sender=self, user=self.user)
+            else:
+                if self.expire > date.today():
+                    status = False
+                    accounts_logger.warning(u"Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
+                        self.user, self.user.pk, plan, plan.pk))
 
-        accounts_logger.info(u"Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
-            self.user, self.user.pk, pricing.period, plan, plan.pk))
+                else:
+                    status = True
+                    account_change_plan.send(sender=self, user=self.user)
+                    self.plan = plan
+                    self.expire = date.today() + timedelta(days=pricing.period)
 
-        mail_context = Context({ 'user': self.user, 'userplan': self, 'plan': plan, 'pricing': pricing})
-        send_template_email([self.user.email],'mail/extend_account_title.txt', 'mail/extend_account_body.txt', mail_context, get_user_language(self.user))
+            if status:
+                self.active = True
+                self.save()
+                accounts_logger.info(u"Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
+                    self.user, self.user.pk, pricing.period, plan, plan.pk))
+                mail_context = Context({ 'user': self.user, 'userplan': self, 'plan': plan, 'pricing': pricing})
+                send_template_email([self.user.email],'mail/extend_account_title.txt', 'mail/extend_account_body.txt', mail_context, get_user_language(self.user))
 
 
 
+        if status:
+            errors = account_full_validation(self.user)
+            if errors:
+                self.active = False
+                self.save()
+
+            if was_active and not self.is_active():
+                account_deactivated.send(sender=self, user=self.user)
+            elif not was_active and self.is_active():
+                account_activated.send(sender=self, user=self.user)
+
+        return status
 
     def expire_account(self):
         """manages account expiration"""
@@ -234,6 +262,17 @@ class PlanQuota(models.Model):
 
 
 class Order(models.Model):
+
+
+    STATUS=Enumeration([
+        (1, 'NEW', pgettext_lazy(u'Order status', u'new')),
+        (2, 'COMPLETED', pgettext_lazy(u'Order status', u'completed')),
+        (3, 'NOT_VALID', pgettext_lazy(u'Order status', u'not valid')),
+        (4, 'CANCELED', pgettext_lazy(u'Order status', u'canceled')),
+        (5, 'RETURNED', pgettext_lazy(u'Order status', u'returned')),
+
+    ])
+
     user = models.ForeignKey('auth.User', verbose_name=_('user'))
     plan = models.ForeignKey('Plan', verbose_name=_('plan'), related_name="plan_order")
     pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_('pricing')) #if pricing is None the order is upgrade plan, not buy new pricing
@@ -243,12 +282,18 @@ class Order(models.Model):
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
         blank=True) # Tax=None is when tax is not applicable
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
-    valid = models.BooleanField(_('Valid'), default=True) #if False, means that Order was payed, but was not valid to be realised in account, need human intervention
+    status = models.IntegerField(_('Status'), choices=STATUS, default=STATUS.NEW)
+
+
 
     def complete_order(self):
         if self.completed is  None:
-            self.user.userplan.extend_account(self.plan, self.pricing)
+            status = self.user.userplan.extend_account(self.plan, self.pricing)
             self.completed = datetime.utcnow().replace(tzinfo=utc)
+            if status:
+                self.status = Order.STATUS.COMPLETED
+            else:
+                self.status = Order.STATUS.NOT_VALID
             self.save()
             order_completed.send(self)
             return True
@@ -475,14 +520,22 @@ class Invoice(models.Model):
         self.tax_total = order.total() - order.amount
         self.tax = order.tax
         self.currency = order.currency
-        self.item_description = u"%s - %s %s (%d %s)" % (
-            getattr(settings, 'INVOICE_PROJECT_NAME', ''),
-            unicode(_("Plan")),
-            order.plan.name,
-            order.pricing.period,
-            unicode(_("days")),
+        if order.pricing:
+            self.item_description = u"%s - %s %s (%d %s)" % (
+                getattr(settings, 'INVOICE_PROJECT_NAME', ''),
+                unicode(_("Plan")),
+                order.plan.name,
+                order.pricing.period,
+                unicode(_("days")),
 
-        )
+            )
+        else:
+            self.item_description = u"%s - %s %s (%s)" % (
+                getattr(settings, 'INVOICE_PROJECT_NAME', ''),
+                unicode(_("Plan")),
+                order.plan.name,
+                u'upgrade',
+                )
 
     @classmethod
     def create(cls, order, invoice_type):
@@ -517,7 +570,8 @@ class Invoice(models.Model):
         send_template_email([self.user.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt', mail_context, language_code)
 
 
-
+    def is_tax_applicable(self):
+        return not self.tax is None
 
 #noinspection PyUnresolvedReferences
 import plans.listeners

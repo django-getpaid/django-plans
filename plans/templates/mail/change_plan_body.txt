@@ -1,0 +1,9 @@
+{% load i18n %}{% autoescape off %}
+{% trans "Hi" %} {% firstof user.get_full_name user.username %},
+
+{% blocktrans with plan_name=plan.name expire=userplan.expire %}Your current plan is {{ plan_name }} and it will expire on {{ expire }}. {% endblocktrans %}
+
+{% trans "Thank you" %}
+--
+{% blocktrans %}The Team at {{ site_name }}{% endblocktrans %}
+{% endautoescape %}

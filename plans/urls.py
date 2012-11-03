@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.conf.urls.defaults import patterns, include, url
 from plans.models import Invoice
-from plans.views import PDFDetailView, CreateOrderView, OrderListView, InvoiceDetailView, AccountActivationView, OrderPaymentReturnView, CurrentPlanView, UpgradePlanView, OrderView, BillingInfoRedirectView, BillingInfoCreateView, BillingInfoUpdateView, BillingInfoDeleteView, CreateOrderPlanChangeView
+from plans.views import PDFDetailView, CreateOrderView, OrderListView, InvoiceDetailView, AccountActivationView, OrderPaymentReturnView, CurrentPlanView, UpgradePlanView, OrderView, BillingInfoRedirectView, BillingInfoCreateView, BillingInfoUpdateView, BillingInfoDeleteView, CreateOrderPlanChangeView,  ChangePlanView
 
 urlpatterns = patterns('',
 
@@ -12,6 +12,8 @@ urlpatterns = patterns('',
     url(r'^upgrade/$', login_required(UpgradePlanView.as_view()), name='upgrade_plan'),
     url(r'^order/extend/new/(?P<pk>\d+)/$', login_required(CreateOrderView.as_view()), name='create_order_plan'),
     url(r'^order/upgrade/new/(?P<pk>\d+)/$', login_required(CreateOrderPlanChangeView.as_view()), name='create_order_plan_change'),
+    url(r'^change/(?P<pk>\d+)/$', login_required(ChangePlanView.as_view()), name='change_plan'),
+
 
     url(r'^order/$', login_required(OrderListView.as_view()), name='order_list'),
 

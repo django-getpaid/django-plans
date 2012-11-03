@@ -84,11 +84,11 @@
 
 <div style="float:right; text-align: right;">
     <h1>
-         <label><span class="pl invoice_header">{% if invoice.type == 1 %}Faktura VAT nr{% endif %}{% if invoice.type == 3 %}Faktura PROFORMA nr{% endif %}{% if invoice.type == 2 %}Faktura VAT DUPLIKAT nr{% endif %}</span> <span class="en">{% if invoice.type == 1 %}Invoice ID{% endif %}{% if invoice.type == 3 %}Order confirmation ID{% endif %}{% if invoice.type == 2 %}Invoice (duplicate) ID{% endif %}</span></label> <span id="full_number">{{ invoice.full_number }}</span>
+         <label><span class="pl invoice_header">{% if invoice.type == invoice.INVOICE_TYPES.INVOICE %}Faktura VAT nr{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}Faktura PROFORMA nr{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.DUPLICATE %}Faktura VAT DUPLIKAT nr{% endif %}</span> <span class="en">{% if invoice.type == invoice.INVOICE_TYPES.INVOICE %}Invoice ID{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}Order confirmation ID{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.DUPLICATE %}Invoice (duplicate) ID{% endif %}</span></label> <span id="full_number">{{ invoice.full_number }}</span>
     </h1>
 
     <p> <label><span class="pl">Data wystawienia:</span> <span class="en">Issued</span></label> {{ invoice.issued|date:"Y-m-d" }}</p>
-    {% if invoice.type != 3 %}{# Not a PROFORMA #}
+    {% if invoice.type != invoice.INVOICE_TYPES.PROFORMA %}{# Not a PROFORMA #}
     <p> <label><span class="pl">Data sprzedaży:</span> <span class="en">Date of order</span></label> {{ invoice.selling_date|date:"Y-m-d" }}</p>
     {% else %}
         <p>&nbsp;</p>
@@ -195,8 +195,8 @@
         <td class="number">{{ invoice.rebate|floatformat:2 }}&nbsp;%</td>
         {%  endif %}
         <td class="number">{{ invoice.total_net|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
-        <td class="number">{{ invoice.tax|floatformat:2 }}&nbsp;%</td>
-        <td class="number">{{ invoice.tax_total|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
+        <td class="number">{% if invoice.is_tax_applicable %}{{ invoice.tax|floatformat:2 }}&nbsp;%{% else %}<span class="pl">np</span><br><span class="en">n/a</span>{% endif %}</td>
+        <td class="number">{% if invoice.is_tax_applicable %}{{ invoice.tax_total|floatformat:2 }}&nbsp;{{ invoice.currency }}{% else %}<span class="pl">np</span><br><span class="en">n/a</span>{% endif %}</td>
         <td class="number">{{ invoice.total|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
     </tr>
     </tbody>
@@ -204,22 +204,22 @@
     <tr>
         <td colspan="{% if invoice.rebate %}6{% else %}5{%  endif %}" style="background-color: #EEE;"><label><span class="pl">Razem:</span><span class="en">Total</span></label>  </td>
         <td>{{ invoice.total_net|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
-        <td>{{ invoice.tax|floatformat:2 }}&nbsp;%</td>
-        <td>{{ invoice.tax_total|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
+        <td>{% if invoice.is_tax_applicable %}{{ invoice.tax|floatformat:2 }}&nbsp;%{% else %}<span class="pl">np</span><br><span class="en">n/a</span>{% endif %}</td>
+        <td>{% if invoice.is_tax_applicable %}{{ invoice.tax_total|floatformat:2 }}&nbsp;{{ invoice.currency }}{% else %}<span class="pl">np</span><br><span class="en">n/a</span>{% endif %}</td>
         <td>{{ invoice.total|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
     </tr>
     </tfoot>
 </table>
 <div style="width: 100%;">
 
-        {% if invoice.type != 3 %}
+        {% if invoice.type != invoice.INVOICE_TYPES.PROFORMA %}
         <strong><label><span class="pl">Sposób zapłaty:</span><span class="en">Payment</span></label></strong>  <label><span class="pl">płatność elektroniczna</span>  <span class="en">electronic payment</span></label><br><br>
        {% endif %}
 
 
         <strong><label><span class="pl">Termin zapłaty:</span><span class="en">Payment till</span></label></strong>
 
-    {% if invoice.type == 3 %}
+    {% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}
 
 
     {% else %}
@@ -228,8 +228,14 @@
 
     {{ invoice.payment_date|date:"Y-m-d" }}
     <br><br>
+    <hr>
+    {% if invoice.type == invoice.INVOICE_TYPES.INVOICE or invoice.type == invoice.INVOICE_TYPES.DUPLICATE %}
+        <p>
+            VAT pokrywa odbiorca.
+        </p>
+    {% endif %}
 
-    {% if invoice.type == 3 %}<hr><span class="pl">Ten dokument <strong>nie jest</strong> fakturą VAT (nie jest dokumentem księgowym).</span><span class="en">This document <strong>is not</strong> an invoice.</span> {% endif %}
+    {% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}<p><span class="pl">Ten dokument <strong>nie jest</strong> fakturą VAT (nie jest dokumentem księgowym).</span><span class="en">This document <strong>is not</strong> an invoice.</span></p> {% endif %}
 </div>
 </body>
 </html>

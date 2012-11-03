@@ -2,14 +2,13 @@ import datetime
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
-from django.views.generic import TemplateView, FormView, RedirectView, CreateView, UpdateView
+from django.views.generic import TemplateView, FormView, RedirectView, CreateView, UpdateView, View
 from django.db.models import Q
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.conf import settings
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.detail import DetailView
-#from django_xhtml2pdf.utils import render_to_pdf_response
 from django.views.generic.edit import DeleteView, ModelFormMixin
 from django.views.generic.list import ListView
 import suds
@@ -141,6 +140,37 @@ class CurrentPlanView(UpgradePlanView):
 #
 
 
+class ChangePlanView(View):
+    """
+    A view for instant changing user plan when it does not require additional payment.
+    Plan can be changed without payment when:
+    * user can enable this plan (it is available and if it is customized it is for him,
+    * plan is different from the current one that user have,
+    * within current change plan policy this does not require any additional payment (None)
+
+    It always redirects to ``upgrade_plan`` url as this is a potential only one place from
+    where change plan could be invoked.
+    """
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponseRedirect(reverse('upgrade_plan'))
+
+    def post(self, request, *args, **kwargs):
+        plan = get_object_or_404(Plan, Q(pk=kwargs['pk']) & Q(available=True) & ( Q(customized = request.user) | Q(customized__isnull=True)))
+        if request.user.userplan.plan != plan:
+            policy = import_name(getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy'))()
+
+            period = (request.user_plan.expire - datetime.date.today()).days
+            price = policy.get_change_price(request.user_plan.plan, plan, period)
+
+            if price is None:
+                request.user.userplan.extend_account(plan, None)
+                messages.success(request, _("Your plan has been successfully changed"))
+            else:
+                return HttpResponseForbidden()
+
+
+        return HttpResponseRedirect(reverse('upgrade_plan'))
 
 
 class CreateOrderView(CreateView):
@@ -183,7 +213,14 @@ class CreateOrderView(CreateView):
 
     def get_all_context(self):
         self.plan_pricing = get_object_or_404(PlanPricing.objects.all().select_related('plan', 'pricing'),
-            Q(pk=self.kwargs['pk']) & Q(plan__available=True) & Q(plan=self.request.user_plan.plan) & ( Q(plan__customized = self.request.user) | Q(plan__customized__isnull=True)))
+            Q(pk=self.kwargs['pk']) & Q(plan__available=True)  & ( Q(plan__customized = self.request.user) | Q(plan__customized__isnull=True)))
+
+
+        if not self.request.user_plan.is_expired() and  self.request.user_plan.plan != self.plan_pricing.plan:
+            raise Http404
+
+        self.plan = self.plan_pricing.plan
+        self.pricing = self.plan_pricing.pricing
 
     def get_billing_info(self):
         try:
@@ -222,13 +259,7 @@ class CreateOrderView(CreateView):
         return context
 
     def form_valid(self, form):
-        self.get_all_context()
-        self.get_billing_info()
-        self.get_currency()
-        self.get_tax()
-
-        self.recalculate(self.plan_pricing.price, self.tax, self.billing_info)
-
+        self.get_context_data()
         self.object = form.save(commit=False)
         self.object.user = self.request.user
         self.object.plan = self.plan
@@ -247,9 +278,10 @@ class CreateOrderPlanChangeView(CreateOrderView):
 
     def get_all_context(self):
         self.plan = get_object_or_404(Plan, Q(pk=self.kwargs['pk']) & Q(available=True) & ( Q(customized = self.request.user) | Q(customized__isnull=True)))
+        self.pricing = None
 
     def get_policy(self):
-        policy_class = getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_switch.StandardPlanChangePolicy')
+        policy_class = getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy')
         return import_name(policy_class)()
 
     def get_context_data(self, **kwargs):
@@ -271,9 +303,7 @@ class CreateOrderPlanChangeView(CreateOrderView):
 
             self.recalculate(self.price, self.tax, self.billing_info)
             context['plan_pricing'] = None
-
             context['pricing'] = None
-
             context['billing_info'] = self.billing_info
             context['CURRENCY'] = self.CURRENCY
             context['tax'] = self.tax

@@ -46,17 +46,22 @@
         <th colspan="{{ plan_list|length }}" class="periods_footer">{% trans 'Pricings' %}</th>
     </tr>
 
-
+    <tr>
+        <th></th>
+        {% for plan in plan_list %}
+        <th class="planpricing_footer {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+            {% if plan != userplan.plan and not userplan.is_expired %}
+                <a href="{% url create_order_plan_change pk=plan.id %}" class="change_plan">{% trans "Change" %}</a>{% endif %}
+        </th>
+        {% endfor %}
+    </tr>
 
     <tr>
         <th></th>
         {% for plan in plan_list %}
             <th class="planpricing_footer {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
 
-                {% if plan != userplan.plan %}
-                    <a href="{% url create_order_plan_change pk=plan.id %}" class="change_plan">{% trans "Change" %}</a>
 
-                {% endif %}
                 {% if plan.available %}
                 <ul>
                     {% for plan_pricing in plan.planpricing_set.all %}
@@ -64,7 +69,7 @@
                         <span class="plan_pricing_name">{{ plan_pricing.pricing.name }}</span>
                         <span class="plan_pricing_period">({% ifequal plan userplan.plan %}+{% endifequal %}{{ plan_pricing.pricing.period }} {% trans "days" %})</span>
                         <span class="plan_pricing_price">{{ plan_pricing.price }}&nbsp;{{ CURRENCY }}<sup>*</sup></span>
-                        {% if plan_pricing.plan == userplan.plan %}
+                        {% if plan_pricing.plan == userplan.plan or userplan.is_expired %}
                         <a href="{% url create_order_plan pk=plan_pricing.pk %}" class="buy">{% trans "Buy" %}</a>
                         {% endif %}
                     {% endfor %}
