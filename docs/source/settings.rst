@@ -123,6 +123,18 @@ Example::
 
 
 
+
+``ORDER_EXPIRATION``
+--------------------
+
+**Optional**
+
+A number of days that an Order is valid (e.g. to made a payment). This value is only used in ``is_ready_for_payment()`` method for django-getpaid integration. This value has no effect on processing paid orders. Even if payment will be processed after ``ORDER_EXPIRATION`` period, it will be processed normally.
+
+Default: ``14``
+
+
+
 ``PLAN_EXPIRATION_REMIND``
 --------------------------
 

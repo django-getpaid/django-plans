@@ -284,7 +284,8 @@ class Order(models.Model):
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
     status = models.IntegerField(_('Status'), choices=STATUS, default=STATUS.NEW)
 
-
+    def is_ready_for_payment(self):
+        return self.status == self.STATUS.NEW and (datetime.utcnow().replace(tzinfo=utc) - self.created).days < getattr(settings, 'ORDER_EXPIRATION', 14)
 
     def complete_order(self):
         if self.completed is  None:
