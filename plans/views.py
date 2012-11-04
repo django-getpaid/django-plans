@@ -42,10 +42,10 @@ class AccountActivationView(TemplateView):
                     messages.error(self.request, e)
             context['SUCCESSFUL'] = False
         else:
-            user_plan.activate_account()
+            user_plan.activate()
             messages.success(self.request, _("Your account is now active"))
             context['SUCCESSFUL'] = True
-            account_activated.send(sender=self,user=self.request.user)
+
         return context
 
 class PlanTableMixin(object):

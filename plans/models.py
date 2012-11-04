@@ -102,15 +102,25 @@ class UserPlan(models.Model):
     def is_expired(self):
         return self.expire < date.today()
 
+    def days_left(self):
+        return (self.expire - date.today()).days
 
     def quotas(self):
         quotas = {}
         for quota in self.plan.planquota_set.all():
             quotas[quota]
 
-    def activate_account(self):
-        self.active = True
-        self.save()
+    def activate(self):
+        if self.active == False:
+            self.active = True
+            self.save()
+            account_activated.send(sender=self,user=self.user)
+
+    def deactivate(self):
+        if self.active == True:
+            self.active = False
+            self.save()
+            account_deactivated.send(sender=self,user=self.user)
 
     def extend_account(self, plan, pricing):
         """
@@ -119,9 +129,8 @@ class UserPlan(models.Model):
         :param pricing: if pricing is None then account will be only upgraded
         :return:
         """
-        was_active = self.is_active()
-        status = False      #if extending account was successful?
 
+        status = False      #if extending account was successful?
         if pricing is None:
             # Process a plan change request (downgrade or upgrade)
             # No account activation or extending at this point
@@ -155,7 +164,6 @@ class UserPlan(models.Model):
                     self.expire = date.today() + timedelta(days=pricing.period)
 
             if status:
-                self.active = True
                 self.save()
                 accounts_logger.info(u"Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
                     self.user, self.user.pk, pricing.period, plan, plan.pk))
@@ -163,32 +171,27 @@ class UserPlan(models.Model):
                 send_template_email([self.user.email],'mail/extend_account_title.txt', 'mail/extend_account_body.txt', mail_context, get_user_language(self.user))
 
 
-
         if status:
             errors = account_full_validation(self.user)
             if errors:
-                self.active = False
-                self.save()
-
-            if was_active and not self.is_active():
-                account_deactivated.send(sender=self, user=self.user)
-            elif not was_active and self.is_active():
-                account_activated.send(sender=self, user=self.user)
+                self.deactivate()
+            else:
+                self.activate()
 
         return status
 
     def expire_account(self):
         """manages account expiration"""
 
-        self.active = False
-        self.save()
+        self.deactivate()
+
         accounts_logger.info(u"Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
 
         mail_context = Context({ 'user': self.user, 'userplan': self })
         send_template_email([self.user.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
             mail_context, get_user_language(self.user))
 
-        account_deactivated.send(sender=self, user=self.user)
+
         account_expired.send(sender=self, user=self.user)
 
 
