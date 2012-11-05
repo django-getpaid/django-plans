@@ -4,7 +4,7 @@
         "model": "plans.plan",
         "fields": {
             "default" : true,
-            "available": true,
+            "available": false,
             "name_pl": "Default Plan",
             "created": "2012-07-12T17:33:30.112Z",
             "customized": null,

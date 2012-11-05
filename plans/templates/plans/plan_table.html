@@ -46,6 +46,8 @@
         <th colspan="{{ plan_list|length }}" class="periods_footer">{% trans 'Pricings' %}</th>
     </tr>
 
+    {% if user.is_authenticated %}
+
     <tr>
         <th></th>
         {% for plan in plan_list %}
@@ -55,6 +57,8 @@
         </th>
         {% endfor %}
     </tr>
+
+    {% endif %}
 
     <tr>
         <th></th>
