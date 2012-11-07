@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+import suds
 import vatnumber
 
 class TaxationPolicy(object):
@@ -83,11 +84,15 @@ class EUTaxationPolicy(TaxationPolicy):
                return self.get_default_tax()
             if self.is_in_EU(country_code):
                 # Company is from other EU country
-                if vat_id and vatnumber.check_vies(vat_id):
+                try:
+                    if vat_id and vatnumber.check_vies(vat_id):
                     # Company is registered in VIES
                     # Charge back
-                    return None
-                else:
+                        return None
+                    else:
+                        return self.get_default_tax()
+                except suds.WebFault:
+                    # If we could not connect to VIES
                     return self.get_default_tax()
             else:
                 # Company is not from EU

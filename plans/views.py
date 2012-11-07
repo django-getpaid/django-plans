@@ -177,29 +177,24 @@ class CreateOrderView(CreateView):
     template_name = "plans/create_order.html"
     form_class = CreateOrderForm
 
-    def recalculate(self, amount, tax, billing_info):
+    def recalculate(self, amount, billing_info):
         """
         Method calculates order details
         """
         self.amount = amount
-        self.tax = tax
 
-        #checking if TAX is notapplicable via VIES
+        tax_session_key = "tax_%s_%s" % (billing_info.country, billing_info.tax_number)
+        tax = self.request.session.get(tax_session_key)
 
-        VAT_COUNTRY = getattr(settings, 'VAT_COUNTRY', None)
-
-        if billing_info and VAT_COUNTRY is not None and VAT_COUNTRY != billing_info.country and len(billing_info.tax_number) > 4 :
-            vies_session_key = "vies %s %s" % (billing_info.country, billing_info.tax_number)
-            vies = self.request.session.get(vies_session_key, None)
-            if vies is None:
-                try:
-                    vies = vatnumber.check_vies(billing_info.tax_number)
-                except suds.WebFault:
-                    pass
-                self.request.session['vies_session_key'] = vies
-
-            if vies :
-                self.tax = None
+        if tax:
+            self.tax = tax[0] #retreiving tax as a tuple to avoid None problems
+        else:
+            taxation_policy = getattr(settings, 'TAXATION_POLICY' , None)
+            if not taxation_policy:
+                raise ImproperlyConfigured('TAXATION_POLICY is not set')
+            taxation_policy = import_name(taxation_policy)()
+            self.tax = taxation_policy.get_tax_rate(billing_info.tax_number, billing_info.country)
+            self.request.session[tax_session_key] = (self.tax, )
 
         if self.tax is not None:
             self.tax_total = (self.amount * (self.tax) / 100).quantize(Decimal('1.00'))
@@ -245,7 +240,7 @@ class CreateOrderView(CreateView):
         self.get_currency()
         self.get_tax()
 
-        self.recalculate(self.plan_pricing.price, self.tax, self.billing_info)
+        self.recalculate(self.plan_pricing.price, self.billing_info)
         context['plan_pricing'] = self.plan_pricing
         context['plan'] = self.plan_pricing.plan
         context['pricing'] = self.plan_pricing.pricing
@@ -301,7 +296,7 @@ class CreateOrderPlanChangeView(CreateOrderView):
             context['FREE_ORDER'] = True
         else:
 
-            self.recalculate(self.price, self.tax, self.billing_info)
+            self.recalculate(self.price, self.billing_info)
             context['plan_pricing'] = None
             context['pricing'] = None
             context['billing_info'] = self.billing_info

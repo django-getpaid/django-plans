@@ -218,6 +218,20 @@ Default: ``None``
    The value ``None`` means "TAX not applicable, rather than value ``Decimal(0)`` which means 0% TAX.
 
 
+
+``TAXATION_POLICY``
+
+**Required**
+
+Class that realises taxation of an order.
+
+Example::
+
+    TAXATION_POLICY='plans.taxation.EUTaxationPolicy'
+
+
+
+
 ``VAT_COUNTRY``
 ---------------
 
