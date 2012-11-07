@@ -5,16 +5,16 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from datetime import date
 from datetime import timedelta
+import mock
 from plans.models import PlanPricing, Invoice, Order, Pricing, Plan
 from django.core import mail
 from django.db.models import Q
-
-# ./manage.py loaddata test_user test_plans_plan test_plans_billinginfo test_plans_userplan test_plan_pricing test_plans_quota test_plans_planpricing test_plans_planquota test_plans_order
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
+from plans.taxation import EUTaxationPolicy
 
 class PlansTestCase(TestCase):
 #    fixtures = ['test_user', 'test_plan.json']
-    fixtures = ['test_django-plans_auth', 'test_django-plans_plans']
+    fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
     def test_extend_account_same_plan_future(self):
         u = User.objects.get(username='test1')
@@ -49,10 +49,12 @@ class PlansTestCase(TestCase):
         Tests if account has been activated
         """
         u = User.objects.get(username='test1')
+        print u.userplan
         u.userplan.expire = date.today() + timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
+        print plan_pricing
         u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
         self.assertEqual(u.userplan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
@@ -79,17 +81,7 @@ class PlansTestCase(TestCase):
 
 
 class TestInvoice(TestCase):
-#    fixtures = ["test_user",
-#                "test_plans_plan",
-#                "test_plans_billinginfo",
-#                "test_plans_userplan",
-#                "test_plan_pricing",
-#                "test_plans_quota",
-#                "test_plans_planpricing",
-#                "test_plans_planquota",
-#                "test_plans_order"]
-#    fixtures = ['test_auth', 'test_plans']
-    fixtures = ['test_django-plans_auth', 'test_django-plans_plans']
+    fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
     def test_get_full_number(self):
         i = Invoice()
@@ -349,7 +341,7 @@ class OrderTestCase(TestCase):
 
 
 class PlanChangePolicyTestCase(TestCase):
-    fixtures = ['test_django-plans_auth', 'test_django-plans_plans']
+    fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
     def setUp(self):
         self.policy = PlanChangePolicy()
@@ -378,7 +370,7 @@ class PlanChangePolicyTestCase(TestCase):
 
 
 class StandardPlanChangePolicyTestCase(TestCase):
-    fixtures = ['test_django-plans_auth', 'test_django-plans_plans']
+    fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
     def setUp(self):
         self.policy = StandardPlanChangePolicy()
@@ -389,3 +381,42 @@ class StandardPlanChangePolicyTestCase(TestCase):
         p2 = Plan.objects.get(pk=4)
         self.assertEqual(self.policy.get_change_price(p1, p2, 23), Decimal('9.87'))
         self.assertEqual(self.policy.get_change_price(p2, p1, 23), None)
+
+
+class EUTaxationPolicyTestCase(TestCase):
+    def setUp(self):
+        self.policy = EUTaxationPolicy()
+
+    def test_none(self):
+        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+            self.assertEqual(self.policy.get_tax_rate(None, None), Decimal('23.0'))
+
+    def test_private_nonEU(self):
+        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+            self.assertEqual(self.policy.get_tax_rate(None, 'RU'), None)
+
+    def test_private_EU_same(self):
+        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+            self.assertEqual(self.policy.get_tax_rate(None, 'PL'), Decimal('23.0'))
+
+    def test_private_EU_notsame(self):
+        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+            self.assertEqual(self.policy.get_tax_rate(None, 'AT'), Decimal('23.0'))
+
+    def test_company_nonEU(self):
+        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+            self.assertEqual(self.policy.get_tax_rate('123456', 'RU'), None)
+
+    def test_company_EU_same(self):
+        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+            self.assertEqual(self.policy.get_tax_rate('123456', 'PL'), Decimal('23.0'))
+
+    @mock.patch("vatnumber.check_vies", lambda x: True)
+    def test_company_EU_notsame_vies_ok(self):
+        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+            self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), None)
+
+    @mock.patch("vatnumber.check_vies", lambda x: False)
+    def test_company_EU_notsame_vies_not_ok(self):
+        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+            self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), Decimal('23.0'))
