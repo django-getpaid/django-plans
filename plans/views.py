@@ -183,7 +183,9 @@ class CreateOrderView(CreateView):
         """
         self.amount = amount
 
-        tax_session_key = "tax_%s_%s" % (billing_info.country, billing_info.tax_number)
+        tax_session_key = "tax_%s_%s" % (getattr(billing_info, 'country', None),
+                                         getattr(billing_info, 'tax_number', None))
+
         tax = self.request.session.get(tax_session_key)
 
         if tax:
