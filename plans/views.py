@@ -184,9 +184,13 @@ class CreateOrderView(CreateView):
         if len( self.CURRENCY) != 3:
             raise ImproperlyConfigured('CURRENCY should be configured as 3-letter currency code.')
 
-        self.tax = getattr(settings, 'TAX', None)
-        if type(self.tax) != Decimal:
-            raise ImproperlyConfigured('TAX should be configured as Decimal instance.')
+
+        try:
+            tax = Decimal(getattr(settings, 'TAX'))
+        except (AttributeError, TypeError):
+            raise ImproperlyConfigured('settings.TAX should be configured as Decimal instance.')
+        else:
+            self.tax = tax
 
     def get_context_data(self, **kwargs):
         context = super(CreateOrderView, self).get_context_data(**kwargs)
