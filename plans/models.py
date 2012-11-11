@@ -39,9 +39,9 @@ class Plan(OrderedModel):
 
     def __unicode__(self):
         if self.available:
-            return "* %s" % (self.name)
+            return u"* %s" % (self.name)
         else:
-            return "%s" % (self.name)
+            return u"%s" % (self.name)
 
 
 class BillingInfo(models.Model):
@@ -91,7 +91,7 @@ class UserPlan(models.Model):
     active = models.BooleanField(_('active'), default=True, db_index=True)
 
     def __unicode__(self):
-        return "%s [%s]" % (self.user, self.plan)
+        return u"%s [%s]" % (self.user, self.plan)
 
     def quotas(self):
         quotas = {}
@@ -171,7 +171,7 @@ class Quota(OrderedModel):
         ordering = ('order',)
 
     def __unicode__(self):
-        return "%s" % (self.codename, )
+        return u"%s" % (self.codename, )
 
 
 class PlanPricingManager(models.Manager):
@@ -187,7 +187,7 @@ class PlanPricing(models.Model):
     objects = PlanPricingManager()
 
     def __unicode__(self):
-        return "%s %s" % (self.plan.name, self.pricing)
+        return u"%s %s" % (self.plan.name, self.pricing)
 
 class PlanQuotaManager(models.Manager):
     def get_query_set(self):
@@ -339,7 +339,7 @@ class Invoice(models.Model):
     issuer_tax_number = models.CharField(max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
 
     def __unicode__(self):
-        return self.full_number
+        return unicode(self.full_number)
 
     def get_absolute_url(self):
         return reverse('invoice_preview_html', kwargs={'pk': self.pk})
