@@ -1,4 +1,6 @@
 import datetime
+from decimal import Decimal
+
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
@@ -11,14 +13,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import DeleteView, ModelFormMixin
 from django.views.generic.list import ListView
-import suds
-import vatnumber
+
 from plans.importer import import_name
 
 from models import UserPlan, PlanQuota, PlanPricing, Plan, Order, BillingInfo
 from forms import OrderForm, BillingInfoForm
-
-from decimal import Decimal
 
 # Create your views here.
 from plans.forms import CreateOrderForm
@@ -68,7 +67,7 @@ class PlanTableMixin(object):
         """
 
         # Retrieve all quotas that are used by any ``Plan`` in ``plan_list``
-        quota_list = Quota.objects.all().filter(planquota__plan__in = plan_list).distinct()
+        quota_list = Quota.objects.all().filter(planquota__plan__in=plan_list).distinct()
 
         # Create random access dict that for every ``Plan`` map ``Quota`` -> ``PlanQuota``
         plan_quotas_dic = {}
@@ -117,11 +116,16 @@ class UpgradePlanView(PlanTableMixin, ListView):
         context = super(UpgradePlanView, self).get_context_data(**kwargs)
 
         if self.request.user.is_authenticated():
-            self.userplan = UserPlan.objects.select_related('plan').get(user=self.request.user)
+            try:
+                self.userplan = UserPlan.objects.get(user=self.request.user).select_related('plan')
+            except UserPlan.DoesNotExist:
+                self.userplan = None
+
             context['userplan'] = self.userplan
+
             try:
                 context['current_userplan_index'] = list(self.object_list).index(self.userplan.plan)
-            except ValueError:
+            except (ValueError, AttributeError):
                 pass
 
         context['plan_table'] = self.get_plan_table(self.object_list)
@@ -234,9 +238,12 @@ class CreateOrderView(CreateView):
             raise ImproperlyConfigured('CURRENCY should be configured as 3-letter currency code.')
 
     def get_tax(self):
-        self.tax = getattr(settings, 'TAX', None)
-        if type(self.tax) != Decimal:
-            raise ImproperlyConfigured('TAX should be configured as Decimal instance.')
+        try:
+            tax = Decimal(getattr(settings, 'TAX'))
+        except (AttributeError, TypeError):
+            raise ImproperlyConfigured('settings.TAX should be configured as Decimal instance.')
+        else:
+            self.tax = tax
 
     def get_context_data(self, **kwargs):
         context = super(CreateOrderView, self).get_context_data(**kwargs)
