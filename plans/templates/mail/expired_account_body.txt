@@ -3,9 +3,6 @@
 
 {% blocktrans %}Your account has just expired.{% endblocktrans %}
 
-{% blocktrans %}Hosting of your images is suspended, but we will keep all your files for next 30 days. If you want to continue to
-use our service please extend your account soon for full service recover.{% endblocktrans %}
-
 {% blocktrans with plan_name=userplan.plan.name %}You can restore your current plan {{ plan_name }} here:{% endblocktrans %}
 http://{{ site_domain }}{% url current_plan %}
 {% blocktrans %}or you can upgrade your plan here:{% endblocktrans %}
