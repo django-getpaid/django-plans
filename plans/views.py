@@ -117,7 +117,7 @@ class UpgradePlanView(PlanTableMixin, ListView):
 
         if self.request.user.is_authenticated():
             try:
-                self.userplan = UserPlan.objects.get(user=self.request.user).select_related('plan')
+                self.userplan = UserPlan.objects.select_related('plan').get(user=self.request.user)
             except UserPlan.DoesNotExist:
                 self.userplan = None
 
@@ -463,6 +463,6 @@ class InvoiceDetailView(DetailView):
         return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user)
 
 
-class PDFDetailView(DetailView):
-    def render_to_response(self, context, **response_kwargs):
-        return render_to_pdf_response(template_name=self.get_template_names()[0], context=context, pdfname=unicode(self.object).replace('/', '_'))
+#class PDFDetailView(DetailView):
+#    def render_to_response(self, context, **response_kwargs):
+#        return render_to_pdf_response(template_name=self.get_template_names()[0], context=context, pdfname=unicode(self.object).replace('/', '_'))
