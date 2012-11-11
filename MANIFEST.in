@@ -1,4 +1,4 @@
-include *.txt
+include *.TXT
 include README.rst
 include AUTHORS
 include CHANGELOG
