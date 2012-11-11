@@ -100,11 +100,16 @@ class UpgradePlanView(PlanTableMixin, ListView):
         context = super(UpgradePlanView, self).get_context_data(**kwargs)
 
         if self.request.user.is_authenticated():
-            self.userplan = UserPlan.objects.select_related('plan').get(user=self.request.user)
+            try:
+                self.userplan = UserPlan.objects.get(user=self.request.user).select_related('plan')
+            except UserPlan.DoesNotExist:
+                self.userplan = None
+
             context['userplan'] = self.userplan
+
             try:
                 context['current_userplan_index'] = list(self.object_list).index(self.userplan.plan)
-            except ValueError:
+            except (ValueError, AttributeError):
                 pass
 
         context['plan_table'] = self.get_plan_table(self.object_list)
