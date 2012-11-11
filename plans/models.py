@@ -277,15 +277,15 @@ class Order(models.Model):
     ])
 
     user = models.ForeignKey('auth.User', verbose_name=_('user'))
-    plan = models.ForeignKey('Plan', verbose_name=_('plan'), related_name="plan_order")
-    pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_('pricing')) #if pricing is None the order is upgrade plan, not buy new pricing
+    plan = models.ForeignKey('plan', verbose_name=_('plan'), related_name="plan_order")
+    pricing = models.ForeignKey('pricing', blank=True, null=True, verbose_name=_('pricing')) #if pricing is None the order is upgrade plan, not buy new pricing
     created = models.DateTimeField(_('created'), auto_now_add=True, db_index=True)
     completed = models.DateTimeField(_('completed'), null=True, blank=True, db_index=True)
     amount = models.DecimalField(_('amount'), max_digits=7, decimal_places=2, db_index=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
         blank=True) # Tax=None is when tax is not applicable
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
-    status = models.IntegerField(_('Status'), choices=STATUS, default=STATUS.NEW)
+    status = models.IntegerField(_('status'), choices=STATUS, default=STATUS.NEW)
 
     def is_ready_for_payment(self):
         return self.status == self.STATUS.NEW and (datetime.utcnow().replace(tzinfo=utc) - self.created).days < getattr(settings, 'ORDER_EXPIRATION', 14)
