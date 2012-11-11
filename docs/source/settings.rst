@@ -7,7 +7,7 @@ Configuration via `settings`
 
 **Required**
 
-Three letter code for system currency. Should be always capitalized.
+Three letter code for system currency. Should always be capitalized.
 
 Example::
 
@@ -68,6 +68,39 @@ This example for invoice issued on ``March 5th, 2010``, with sequential number `
 
    Full number of an invoice is saved with the Invoice object. Changing this value in settings will affect only newly created invoices.
 
+``INVOICE_LOGO_URL``
+--------------------
+
+**Optional**
+
+URL of logo image that should be placed in an invoice. It will be available in invoice template as ``{{ logo_url }}`` context variable.
+
+Default: ``None``
+
+Example::
+
+    INVOICE_LOGO_URL = STATIC_URL + 'my_logo.png'
+
+
+
+
+``INVOICE_PROJECT_NAME``
+------------------------
+
+**Required**
+
+Name of service that will be used in the purchase item name of an invoice.
+
+Default: ``u''``
+
+
+Example::
+
+    INVOICE_PROJECT_NAME = u'MyService.com'
+
+
+
+
 
 ``ISSUER_DATA``
 ---------------
@@ -87,6 +120,18 @@ Example::
         "issuer_tax_number": "1222233334444555",
         }
 
+
+
+
+
+``ORDER_EXPIRATION``
+--------------------
+
+**Optional**
+
+A number of days that an Order is valid (e.g. to made a payment). This value is only used in ``is_ready_for_payment()`` method for django-getpaid integration. This value has no effect on processing paid orders. Even if payment will be processed after ``ORDER_EXPIRATION`` period, it will be processed normally.
+
+Default: ``14``
 
 
 
@@ -110,6 +155,50 @@ User will receive notification before 7 , 3 and 1 day to account expire.
 
 
 
+
+
+
+``PLAN_DEFAULT_GRACE_PERIOD``
+-----------------------------
+
+**Optional**
+
+How many days activate a default plan for a new account.
+
+Default: 30
+
+Example::
+
+    PLAN_DEFAULT_GRACE_PERIOD = 30
+
+
+
+.. note::
+
+    Default plan should be selected using site admin. Set default flag to one of available plans.
+
+
+
+``PLAN_ACTIVATION_VALIDATORS``
+------------------------------
+
+**Optional**
+
+A dict that stores mapping ``"Quota codename" : "validator object"``. Validators are used to check if user account
+can be activated for the given plan. Account cannot exceed certain limits introduced by quota.
+
+Given account will be activated only if calling all validators that are defined with his new plan does not raise any ValidationError. If account cannot be activated user will be noticed after logging with information that account needs activation.
+
+Example::
+
+
+    PLAN_ACTIVATION_VALIDATORS = {
+        'CAN_DO_SOMETHING' :  'myproject.validators.can_do_something_validator',
+        'MAX_STORAGE' :  'myproject.validators.max_storage_validator',
+    }
+
+
+
 ``TAX``
 -------
 
@@ -127,6 +216,20 @@ Default: ``None``
 .. warning::
 
    The value ``None`` means "TAX not applicable, rather than value ``Decimal(0)`` which means 0% TAX.
+
+
+
+``TAXATION_POLICY``
+
+**Required**
+
+Class that realises taxation of an order.
+
+Example::
+
+    TAXATION_POLICY='plans.taxation.EUTaxationPolicy'
+
+
 
 
 ``VAT_COUNTRY``
@@ -147,3 +250,4 @@ Example::
 .. warning::
 
     This option is suitable only to use for European countries.
+

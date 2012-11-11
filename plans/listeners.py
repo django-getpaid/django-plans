@@ -1,7 +1,10 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
-from plans.models import Order, BillingInfo, Invoice
+from pytz import utc
+from plans.models import Order, Invoice, UserPlan, Plan
 from plans.signals import order_completed
 
 @receiver(post_save, sender=Order)
@@ -24,3 +27,9 @@ def send_invoice_by_email(sender, instance, created, **kwargs):
     if created:
         instance.send_invoice_by_email()
 
+
+@receiver(post_save, sender=User)
+def set_default_user_plan(sender, instance, created, **kwargs):
+    if created:
+        default_plan = Plan.get_default_plan()
+        UserPlan.objects.create(user=instance, plan=default_plan, active=True, expire=datetime.utcnow().replace(tzinfo=utc) + timedelta(days=getattr(settings, 'PLAN_DEFAULT_GRACE_PERIOD', 30)))

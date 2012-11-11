@@ -16,6 +16,7 @@ Contents:
 
    installation
    settings
+   middleware
    plans
    invoicing
    templating

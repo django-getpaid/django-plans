@@ -14,9 +14,12 @@ Now you need to configure your project. Add this app to your ``INSTALED_APPS`` s
 
     INSTALLED_APPS += ('plans', )
 
-Define all **required** settings options described in :doc:`settings`.
+Define all **required** settings options described in :doc:`settings`, consider also adding :doc:`middleware` and Context Processor described in :doc:`templating`.
 
-Don't forget to run ``manage.py syncdb`` in your project or run south migration if you use south.
+Don't forget to run ``manage.py syncdb`` in your project. South migrations are not supported at this moment as it is difficult to handle dynamically generated models in South.
+
+
+
 
 Running example project
 -----------------------

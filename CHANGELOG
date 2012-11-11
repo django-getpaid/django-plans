@@ -1,0 +1,7 @@
+django-plans changelog
+
+v. 0.1.1
+========
+
+* Added field default to Plans model - it means that this plan is supposed to be added to every new user. Via south migration 0002
+* Added South migrations

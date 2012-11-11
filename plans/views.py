@@ -1,28 +1,21 @@
 
+import datetime
 from decimal import Decimal
-
-try:
-    import suds
-except ImportError:
-    suds = None
-
-import vatnumber
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
-from django.views.generic import TemplateView, FormView, RedirectView, CreateView, UpdateView
+from django.views.generic import TemplateView, FormView, RedirectView, CreateView, UpdateView, View
 from django.db.models import Q
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.conf import settings
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.detail import DetailView
-#from django_xhtml2pdf.utils import render_to_pdf_response
 from django.views.generic.edit import DeleteView, ModelFormMixin
 from django.views.generic.list import ListView
 
-#from mydjango.views import UserCreateView, UserUpdateView, UserDeleteView
+from plans.importer import import_name
 
 from models import UserPlan, PlanQuota, PlanPricing, Plan, Order, BillingInfo
 from forms import OrderForm, BillingInfoForm
@@ -30,6 +23,30 @@ from forms import OrderForm, BillingInfoForm
 # Create your views here.
 from plans.forms import CreateOrderForm
 from plans.models import Quota, Invoice
+from plans.signals import order_started, account_activated
+from plans.validators import account_full_validation
+
+class AccountActivationView(TemplateView):
+    template_name = 'plans/account_activation.html'
+
+    def get_context_data(self, **kwargs):
+        user_plan = self.request.user.userplan
+        if user_plan.active == True or user_plan.expire < datetime.date.today():
+            raise Http404()
+
+        context = super(AccountActivationView, self).get_context_data(**kwargs)
+        errors = account_full_validation(self.request.user)
+        if errors:
+            for error in errors:
+                for e in error.messages:
+                    messages.error(self.request, e)
+            context['SUCCESSFUL'] = False
+        else:
+            user_plan.activate()
+            messages.success(self.request, _("Your account is now active"))
+            context['SUCCESSFUL'] = True
+
+        return context
 
 class PlanTableMixin(object):
     def get_plan_table(self, plan_list):
@@ -128,38 +145,66 @@ class CurrentPlanView(UpgradePlanView):
 #
 
 
+class ChangePlanView(View):
+    """
+    A view for instant changing user plan when it does not require additional payment.
+    Plan can be changed without payment when:
+    * user can enable this plan (it is available and if it is customized it is for him,
+    * plan is different from the current one that user have,
+    * within current change plan policy this does not require any additional payment (None)
+
+    It always redirects to ``upgrade_plan`` url as this is a potential only one place from
+    where change plan could be invoked.
+    """
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponseRedirect(reverse('upgrade_plan'))
+
+    def post(self, request, *args, **kwargs):
+        plan = get_object_or_404(Plan, Q(pk=kwargs['pk']) & Q(available=True) & ( Q(customized = request.user) | Q(customized__isnull=True)))
+        if request.user.userplan.plan != plan:
+            policy = import_name(getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy'))()
+
+            period = (request.user_plan.expire - datetime.date.today()).days
+            price = policy.get_change_price(request.user_plan.plan, plan, period)
+
+            if price is None:
+                request.user.userplan.extend_account(plan, None)
+                messages.success(request, _("Your plan has been successfully changed"))
+            else:
+                return HttpResponseForbidden()
+
+
+        return HttpResponseRedirect(reverse('upgrade_plan'))
+
+
 class CreateOrderView(CreateView):
     template_name = "plans/create_order.html"
     form_class = CreateOrderForm
 
-    def recalculate(self, amount, tax, billing_info):
+    def recalculate(self, amount, billing_info):
         """
         Method calculates order details
         """
         self.amount = amount
-        self.tax = tax
 
-        #checking if TAX is notapplicable via VIES
+        tax_session_key = "tax_%s_%s" % (getattr(billing_info, 'country', None),
+                                         getattr(billing_info, 'tax_number', None))
 
-        VAT_COUNTRY = getattr(settings, 'VAT_COUNTRY', None)
+        tax = self.request.session.get(tax_session_key)
 
-        if (billing_info
-            and suds
-            and VAT_COUNTRY is not None
-            and VAT_COUNTRY != billing_info.country
-            and len(billing_info.tax_number) > 4):
-
-            vies_session_key = "vies %s %s" % (billing_info.country, billing_info.tax_number)
-            vies = self.request.session.get(vies_session_key, None)
-            if vies is None:
-                try:
-                    vies = vatnumber.check_vies(billing_info.tax_number)
-                except suds.WebFault:
-                    pass
-                self.request.session['vies_session_key'] = vies
-
-            if vies:
-                self.tax = None
+        if tax:
+            self.tax = tax[0] #retreiving tax as a tuple to avoid None problems
+        else:
+            taxation_policy = getattr(settings, 'TAXATION_POLICY' , None)
+            if not taxation_policy:
+                raise ImproperlyConfigured('TAXATION_POLICY is not set')
+            taxation_policy = import_name(taxation_policy)()
+            self.tax = taxation_policy.get_tax_rate(
+                getattr(billing_info, 'tax_number', None),
+                getattr(billing_info, 'country', None),
+            )
+            self.request.session[tax_session_key] = (self.tax, )
 
         if self.tax is not None:
             self.tax_total = (self.amount * (self.tax) / 100).quantize(Decimal('1.00'))
@@ -173,18 +218,27 @@ class CreateOrderView(CreateView):
 
     def get_all_context(self):
         self.plan_pricing = get_object_or_404(PlanPricing.objects.all().select_related('plan', 'pricing'),
-            Q(pk=self.kwargs['pk']) & Q(plan__available=True) & ( Q(plan__customized = self.request.user) |
-            Q(plan__customized__isnull=True)))
+            Q(pk=self.kwargs['pk']) & Q(plan__available=True)  & ( Q(plan__customized = self.request.user) | Q(plan__customized__isnull=True)))
+
+
+        if not self.request.user_plan.is_expired() and  self.request.user_plan.plan != self.plan_pricing.plan:
+            raise Http404
+
+        self.plan = self.plan_pricing.plan
+        self.pricing = self.plan_pricing.pricing
+
+    def get_billing_info(self):
         try:
             self.billing_info = self.request.user.billinginfo
         except BillingInfo.DoesNotExist:
             self.billing_info = None
 
+    def get_currency(self):
         self.CURRENCY = getattr(settings, 'CURRENCY', None)
-        if len( self.CURRENCY) != 3:
+        if len(self.CURRENCY) != 3:
             raise ImproperlyConfigured('CURRENCY should be configured as 3-letter currency code.')
 
-
+    def get_tax(self):
         try:
             tax = Decimal(getattr(settings, 'TAX'))
         except (AttributeError, TypeError):
@@ -195,7 +249,11 @@ class CreateOrderView(CreateView):
     def get_context_data(self, **kwargs):
         context = super(CreateOrderView, self).get_context_data(**kwargs)
         self.get_all_context()
-        self.recalculate(self.plan_pricing.price, self.tax, self.billing_info)
+        self.get_billing_info()
+        self.get_currency()
+        self.get_tax()
+
+        self.recalculate(self.plan_pricing.price, self.billing_info)
         context['plan_pricing'] = self.plan_pricing
         context['plan'] = self.plan_pricing.plan
         context['pricing'] = self.plan_pricing.pricing
@@ -209,18 +267,58 @@ class CreateOrderView(CreateView):
         return context
 
     def form_valid(self, form):
-        self.get_all_context()
-        self.recalculate(self.plan_pricing.price, self.tax, self.billing_info)
-
+        self.get_context_data()
         self.object = form.save(commit=False)
         self.object.user = self.request.user
-        self.object.plan = self.plan_pricing.plan
-        self.object.pricing = self.plan_pricing.pricing
+        self.object.plan = self.plan
+        self.object.pricing = self.pricing
         self.object.amount = self.amount
         self.object.tax = self.tax
         self.object.currency = self.CURRENCY
         self.object.save()
+        order_started.send(sender=self.object)
         return super(ModelFormMixin, self).form_valid(form)
+
+
+class CreateOrderPlanChangeView(CreateOrderView):
+    template_name = "plans/create_order.html"
+    form_class = CreateOrderForm
+
+    def get_all_context(self):
+        self.plan = get_object_or_404(Plan, Q(pk=self.kwargs['pk']) & Q(available=True) & ( Q(customized = self.request.user) | Q(customized__isnull=True)))
+        self.pricing = None
+
+    def get_policy(self):
+        policy_class = getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy')
+        return import_name(policy_class)()
+
+    def get_context_data(self, **kwargs):
+        context = super(CreateOrderView, self).get_context_data(**kwargs)
+
+        self.get_all_context()
+        self.get_billing_info()
+        self.get_currency()
+        self.get_tax()
+
+        self.policy = self.get_policy()
+        self.period = (self.request.user_plan.expire - datetime.date.today()).days
+        self.price = self.policy.get_change_price(self.request.user_plan.plan, self.plan, self.period)
+        context['plan'] = self.plan
+        if self.price is None:
+            context['current_plan'] = self.request.user_plan.plan
+            context['FREE_ORDER'] = True
+        else:
+
+            self.recalculate(self.price, self.billing_info)
+            context['plan_pricing'] = None
+            context['pricing'] = None
+            context['billing_info'] = self.billing_info
+            context['CURRENCY'] = self.CURRENCY
+            context['tax'] = self.tax
+            context['amount'] = self.amount
+            context['tax_total'] = self.tax_total
+            context['total'] = self.total
+        return context
 
 
 class OrderView(DetailView):
@@ -264,6 +362,26 @@ class OrderListView(ListView):
 
     def get_queryset(self):
         return super(OrderListView, self).get_queryset().filter(user=self.request.user).select_related('plan', 'pricing', )
+
+class OrderPaymentReturnView(DetailView):
+    """
+    This view is a fallback from any payments processor. It allows just to set additional message
+    context and redirect to Order view itself.
+    """
+    model = Order
+    status = None
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.status == 'success':
+            messages.success(self.request, _('Thank you for placing a payment. It will be processed as soon as possible.'))
+        elif self.status == 'failure':
+            messages.error(self.request, _('Payment was not completed correctly. Please repeat payment process.'))
+
+        return HttpResponseRedirect(self.object.get_absolute_url())
+
+
+    def get_queryset(self):
+        return super(OrderPaymentReturnView, self).get_queryset().filter(user=self.request.user)
 
 
 class BillingInfoRedirectView(RedirectView):
@@ -336,6 +454,11 @@ class BillingInfoDeleteView(DeleteView):
 class InvoiceDetailView(DetailView):
     template_name='plans/invoice_preview.html'
     model = Invoice
+
+    def get_context_data(self, **kwargs):
+        context = super(InvoiceDetailView, self).get_context_data(**kwargs)
+        context['logo_url'] = getattr(settings, 'INVOICE_LOGO_URL', None)
+        return context
 
     def get_queryset(self):
         return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user)

@@ -11,7 +11,6 @@ django-ordered-model==0.1
 -e hg+https://bitbucket.org/ubernostrum/django-registration@fad7080fe76955e7d0d3c97bc468ea8360260a6b#egg=django_registration-dev
 docutils==0.8.1
 ipython==0.12
--e hg+https://cypreess:lHcUYaWkKjOgFxtGI7MfnpewCs9rNz@bitbucket.org/cypreess/mydjango@67b7db2c99c7198187e8db93147584e47f557e30#egg=mydjango-dev
 pygraphviz==1.1
 wsgiref==0.1.2
 yolk==0.4.3
