@@ -31,11 +31,8 @@ def send_invoice_by_email(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def set_default_user_plan(sender, instance, created, **kwargs):
     if created:
-        try:
-            default_plan = Plan.get_default_plan()
-        except Plan.DoesNotExist:
-            pass
-        else:
+        default_plan = Plan.get_default_plan()
+        if default_plan is not None:
             UserPlan.objects.create(user=instance,
                                     plan=default_plan,
                                     active=True,

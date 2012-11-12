@@ -40,7 +40,10 @@ class Plan(OrderedModel):
 
     @classmethod
     def get_default_plan(cls):
-       return cls.objects.filter(default=True)[0]
+        try:
+            return cls.objects.filter(default=True)[0]
+        except IndexError:
+            return None
 
     def __unicode__(self):
         return u"%s" % (self.name)
