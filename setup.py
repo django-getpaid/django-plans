@@ -7,7 +7,7 @@ with open('README.rst') as file:
 
 setup(
     name='django-plans',
-    version='0.3',
+    version='0.4',
     description='Pluggable django app for managing pricing plans with quotas and accounts expiration',
     long_description=long_description,
     author='Krzysztof Dorosz',
@@ -24,7 +24,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    install_requires=['django', 'vatnumber'],
+    install_requires=['django', 'vatnumber', 'django-countries'],
     dependency_links=['git://github.com/sbrandtb/django-ordered-model.git',
                       'git://github.com/bearstech/django-transmeta.git',
                       'git://github.com/bradleyayers/suds-htj.git'],

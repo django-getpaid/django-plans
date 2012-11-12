@@ -26,7 +26,7 @@ class BillingInfoForm(forms.ModelForm):
         exclude=('user',)
 
     def clean_tax_number(self):
-        self.cleaned_data['tax_number'] = BillingInfo.clean_tax_number(self.cleaned_data['tax_number'], self.cleaned_data['country'])
+        self.cleaned_data['tax_number'] = BillingInfo.clean_tax_number(self.cleaned_data['tax_number'], self.cleaned_data.get('country', None))
         return self.cleaned_data['tax_number']
 
 

@@ -1,7 +1,21 @@
 django-plans changelog
+======================
+
+
+v.0.4
+-----
+
+* Migrating to django-countries. Requires schemamigration.
+
+v.0.3
+-----
+
+* Change plan policy - custom action how to billing change plan (downgrage/upgrade) can be implemented
+* Taxation policy - custom action how to calculate tax can be implemented
+* Dropping south migrations, it should be managed now as a project dependend migrations via SOUTH_MIGRATION_MODULES
 
 v. 0.1.1
-========
+--------
 
 * Added field default to Plans model - it means that this plan is supposed to be added to every new user. Via south migration 0002
 * Added South migrations
