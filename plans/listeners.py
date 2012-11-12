@@ -31,5 +31,13 @@ def send_invoice_by_email(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def set_default_user_plan(sender, instance, created, **kwargs):
     if created:
-        default_plan = Plan.get_default_plan()
-        UserPlan.objects.create(user=instance, plan=default_plan, active=True, expire=datetime.utcnow().replace(tzinfo=utc) + timedelta(days=getattr(settings, 'PLAN_DEFAULT_GRACE_PERIOD', 30)))
+        try:
+            default_plan = Plan.get_default_plan()
+        except Plan.DoesNotExist:
+            pass
+        else:
+            UserPlan.objects.create(user=instance,
+                                    plan=default_plan,
+                                    active=True,
+                                    expire=datetime.utcnow().replace(tzinfo=utc) +
+                                           timedelta(days=getattr(settings, 'PLAN_DEFAULT_GRACE_PERIOD', 30)))
