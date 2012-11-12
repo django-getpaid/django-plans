@@ -1,6 +1,13 @@
 <html>
 <body>
 <h1>django-plans example</h1>
+
+{% block navigation %}
+    <a href="{% url foo_list %}">Foo list</a>
+    <a href="{% url foo_add %}">Foo add</a>
+
+{% endblock %}
+
 {% block body %}{% endblock %}
 </body>
 </html>

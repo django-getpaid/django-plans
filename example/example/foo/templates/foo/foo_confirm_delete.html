@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+    <h2>Sure to delete Foo "{{ object }}"?</h2>
+    <form method="POST">
+        {%  csrf_token %}
+        {{ form.as_table }}
+        <input type="submit">
+    </form>
+
+{% endblock %}
