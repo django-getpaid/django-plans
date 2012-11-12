@@ -452,8 +452,11 @@ class BillingInfoDeleteView(DeleteView):
 
 
 class InvoiceDetailView(DetailView):
-    template_name='plans/invoice_preview.html'
     model = Invoice
+
+    def get_template_names(self):
+        return getattr(settings, 'INVOICE_TEMPLATE', 'plans/invoices/PL_EN.html')
+
 
     def get_context_data(self, **kwargs):
         context = super(InvoiceDetailView, self).get_context_data(**kwargs)
