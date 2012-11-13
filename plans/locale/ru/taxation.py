@@ -1,7 +1,7 @@
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from plans.taxation import TaxationPolicy
 
-class TaxationPolicy(object):
+
+class RussianTaxationPolicy(TaxationPolicy):
     """
     Abstract class for defining taxation policies.
     Taxation policy is a way to handle what tax rate should put on the order, this depends
@@ -15,5 +15,5 @@ class TaxationPolicy(object):
         return getattr(settings, 'VAT_COUNTRY', None)
 
     def get_tax_rate(self, vat_id, country_code):
-        raise NotImplementedError('Method get_tax_rate should be implemented.')
-
+        # TODO
+        return 0

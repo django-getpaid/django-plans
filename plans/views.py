@@ -220,8 +220,8 @@ class CreateOrderView(CreateView):
         self.plan_pricing = get_object_or_404(PlanPricing.objects.all().select_related('plan', 'pricing'),
             Q(pk=self.kwargs['pk']) & Q(plan__available=True)  & ( Q(plan__customized = self.request.user) | Q(plan__customized__isnull=True)))
 
-
-        if not self.request.user_plan.is_expired() and  self.request.user_plan.plan != self.plan_pricing.plan:
+        user_plan = self.request.user_plan
+        if not user_plan.is_expired() and user_plan.plan != self.plan_pricing.plan:
             raise Http404
 
         self.plan = self.plan_pricing.plan
