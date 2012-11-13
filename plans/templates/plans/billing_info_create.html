@@ -1,24 +1,13 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
-   "http://www.w3.org/TR/html4/strict.dtd">
-
-<html lang="en">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>billing_info</title>
-	<meta name="generator" content="TextMate http://macromates.com/">
-	<meta name="author" content="cypreess">
-	<!-- Date: 2012-03-02 -->
-</head>
-<body>
+{% extends 'plans/base.html' %}
+{% block body %}
     {% for message in messages %}
-    	<div class="messages {{ message.tags }}">
+        <div class="messages {{ message.tags }}">
             {{ message }}
-    	</div>
+        </div>
     {% endfor %}
         <form method="post" action="{% url billing_info_create %}">
                 {% csrf_token %}
                 {{ form.as_p }}
                 <input type="submit">
         </form>
-</body>
-</html>
+{% endblock %}

@@ -1,30 +1,23 @@
 {% load i18n %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
-   "http://www.w3.org/TR/html4/strict.dtd">
 
-<html lang="en">
-<head>
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>user_plan</title>
-	
-	<script>
-	        $(function(){
-	              $('.pricing').click(function(){
-	                        $('#pricing_form input#id_plan_pricing').val($(this).attr('pricing_pk'));
-	                        $('#pricing_form').submit();
-	              });
-	        });
-	</script>
-	
-</head>
-<body>
+{% block seo_title %}user_plan{% endblock %}
 
+{% block extra_js %}
+    <script>
+            $(function(){
+                  $('.pricing').click(function(){
+                            $('#pricing_form input#id_plan_pricing').val($(this).attr('pricing_pk'));
+                            $('#pricing_form').submit();
+                  });
+            });
+    </script>
+{% endblock %}
+
+{% block body %}
 <form method="post" action="{% url order_plan %}" id="pricing_form">
-        {% csrf_token %}
-        {{ form.as_p }}
+  {% csrf_token %}
+  {{ form.as_p }}
 </form>
-
 
 {% if userplan.plan.available %}
 <ul>
@@ -64,6 +57,4 @@
         
 {% endif %}
 
-
-</body>
-</html>
+{% endblock %}
