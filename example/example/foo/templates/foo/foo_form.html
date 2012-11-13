@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+    <h2>Add new foo for user {{ user }}</h2>
+    <form method="POST">
+        {%  csrf_token %}
+        {{ form.as_table }}
+        <input type="submit">
+    </form>
+
+{% endblock %}

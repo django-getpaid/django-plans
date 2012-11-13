@@ -1,0 +1,66 @@
+[
+    {
+        "pk":1,
+        "model":"plans.plan",
+        "fields":{
+            "default":true,
+            "available":true,
+            "created":"2012-07-12T17:33:30.112Z",
+            "customized":null,
+            "description_en":"Simple plan",
+            "name_en":"Default",
+            "order":0
+        }
+    },
+
+    {
+        "pk":2,
+        "model":"plans.plan",
+        "fields":{
+            "default":true,
+            "available":true,
+            "created":"2012-07-12T17:33:30.112Z",
+            "customized":null,
+            "description_en":"Plan for pros",
+            "name_en":"Pro",
+            "order":1
+        }
+    },
+
+    {
+        "pk":1,
+        "model":"auth.user",
+        "fields":{
+            "username":"test1",
+            "first_name":"",
+            "last_name":"",
+            "is_active":true,
+            "is_superuser":true,
+            "is_staff":true,
+            "last_login":"2012-11-12T10:45:40.716Z",
+            "groups":[],
+            "user_permissions":[],
+            "password":"pbkdf2_sha256$10000$ctivEUR01xGq$fl7djmAcS7WitwuTqcndUfbi+cUInSaS8iMtKnSayHw=",
+            "email":"test1@test1.com",
+            "date_joined":"2012-11-12T10:45:40.716Z"
+        }
+    },
+    {
+        "pk":2,
+        "model":"auth.user",
+        "fields":{
+            "username":"test2",
+            "first_name":"",
+            "last_name":"",
+            "is_active":true,
+            "is_superuser":true,
+            "is_staff":true,
+            "last_login":"2012-11-12T10:45:53.931Z",
+            "groups":[],
+            "user_permissions":[],
+            "password":"pbkdf2_sha256$10000$beNhUGohojeu$EP8CgR5km6LqhZ5+6Vzk5h2u9/KT730s9+nhTWjZETA=",
+            "email":"test2@test2.com",
+            "date_joined":"2012-11-12T10:45:53.931Z"
+        }
+    }
+]

@@ -27,7 +27,7 @@ urlpatterns = patterns('',
     url(r'^billing/delete/$', login_required(BillingInfoDeleteView.as_view()), name='billing_info_delete'),
     url(r'^invoice/(?P<pk>\d+)/preview/html/$', login_required(InvoiceDetailView.as_view()), name='invoice_preview_html'),
 
-#    url(r'^invoice/(?P<pk>\d+)/preview/pdf/$', login_required(PDFDetailView.as_view(queryset=Invoice.objects.all(), template_name='plans/invoice_preview.html')), name='invoice_preview_pdf'),
+#    url(r'^invoice/(?P<pk>\d+)/preview/pdf/$', login_required(PDFDetailView.as_view(queryset=Invoice.objects.all(), template_name='plans/PL_EN.html')), name='invoice_preview_pdf'),
 
     # url(r'^payment/', login_required(OrderPaymentView.as_view()), name='order_payment'),
 

@@ -72,7 +72,7 @@
                         <li>
                         <span class="plan_pricing_name">{{ plan_pricing.pricing.name }}</span>
                         <span class="plan_pricing_period">({% ifequal plan userplan.plan %}+{% endifequal %}{{ plan_pricing.pricing.period }} {% trans "days" %})</span>
-                        <span class="plan_pricing_price">{{ plan_pricing.price }}&nbsp;{{ CURRENCY }}<sup>*</sup></span>
+                        <span class="plan_pricing_price">{{ plan_pricing.price }}&nbsp;{{ CURRENCY }}</span>
                         {% if plan_pricing.plan == userplan.plan or userplan.is_expired %}
                         <a href="{% url create_order_plan pk=plan_pricing.pk %}" class="buy">{% trans "Buy" %}</a>
                         {% endif %}
@@ -97,6 +97,6 @@
 </table>
 
 <p style="text-align: right;">
-    *) {% trans "Net prices" %}
+    {% trans "Net prices" %}
 
 </p>

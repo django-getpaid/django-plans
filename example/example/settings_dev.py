@@ -1,4 +1,4 @@
-from .settings import *
+from settings import *
 
 MIDDLEWARE_CLASSES += (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -15,7 +15,6 @@ DEBUG_TOOLBAR_CONFIG ={
 
 
 INSTALLED_APPS += (
-    'south',
     'debug_toolbar',
     'django_extensions',
 )
@@ -31,7 +30,7 @@ LOGGING = {
         'file_accounts' : {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(SITE_ROOT, 'log', 'accounts.log'),
+            'filename': os.path.join(SITE_ROOT, 'accounts.log'),
         }
     },
     'loggers': {

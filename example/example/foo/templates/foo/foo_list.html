@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+    <h2>List of Foo items of user {{ user }}</h2>
+    <ol>
+    {% for object in object_list %}
+        <li>{{ object }} (<a href="{% url foo_del pk=object.pk %}">delete</a>)</li>
+    {% empty %}
+        There are no Foo objects for this user.
+    {% endfor %}
+    </ol>
+{% endblock %}

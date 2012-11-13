@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.utils import translation
+from django_countries import CountryField
 from pytz import utc
 import re
 from django.core.urlresolvers import reverse
@@ -8,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _, pgettext_lazy
 from django.db import models
 from ordered_model.models import OrderedModel
 import vatnumber
-from model_fields import CountryField
+#from model_fields import CountryField
 from django.template import Context
 from django.conf import settings
 from datetime import date, timedelta, datetime
@@ -58,13 +59,13 @@ class BillingInfo(models.Model):
     street = models.CharField(_('street'), max_length=200)
     zipcode = models.CharField(_('zip code'), max_length=200)
     city = models.CharField(_('city'), max_length=200)
-    country = CountryField(_("country"), default='PL')
+    country = CountryField(_("country"))
     tax_number = models.CharField(_('VAT ID'), max_length=200, blank=True)
 
     @staticmethod
     def clean_tax_number(tax_number, country):
         tax_number = re.sub(r'[^A-Z0-9]', '',  tax_number.upper())
-        if tax_number:
+        if tax_number and country:
 
             if country in vatnumber.countries():
                 number = tax_number

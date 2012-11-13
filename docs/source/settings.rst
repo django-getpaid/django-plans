@@ -100,6 +100,25 @@ Example::
 
 
 
+``INVOICE_TEMPLATE``
+--------------------
+
+**Optional**
+
+Template name for displaying invoice.
+
+.. warning::
+
+    Invoices are generated on the fly from database records. Therefore  changing this value will affect all
+    previously created invoices.
+
+Default: ``'plans/invoices/PL_EN.html'``
+
+Example::
+
+    INVOICE_TEMPLATE = 'plans/invoices/PL_EN.html'
+
+
 
 
 ``ISSUER_DATA``
@@ -163,7 +182,7 @@ User will receive notification before 7 , 3 and 1 day to account expire.
 
 **Optional**
 
-How many days activate a default plan for a new account.
+New account default plan activation period counted in days.
 
 Default: 30
 
@@ -204,7 +223,7 @@ Example::
 
 **Required**
 
-Decimal value for default TAX.
+Decimal or integer value for default TAX.
 
 Example::
 
@@ -220,6 +239,7 @@ Default: ``None``
 
 
 ``TAXATION_POLICY``
+-------------------
 
 **Required**
 
@@ -237,17 +257,14 @@ Example::
 
 **Optional**
 
-Two letter ISO country code. This variable is used to determine all purchases made from outside countries.
-If VAT ID number is successfully checked against VIES system, system will automatically set ``TAX = None`` (not applicable), but only for this one purchase.
-
-VIES system is checked every time a customer makes new order (or once per sessions).
+Two letter ISO country code. This variable is used to determine origin issuers country. Taxation policy uses this value to determine tax amount for any order.
 
 Example::
 
     VAT_COUNTRY = 'PL'
 
 
-.. warning::
 
-    This option is suitable only to use for European countries.
+.. note::
 
+    ``settings.VAT_COUNTRY`` is a separate value from ``settings.ISSUER_DATA.issuer_country`` on purpose. ``ISSUER_DATA`` is just what you want to have printed on an invoice.
