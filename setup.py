@@ -30,11 +30,12 @@ setup(
                       ],
     extras_require = {
       'eu': ['vatnumber',
-             'git://github.com/bradleyayers/suds-htj.git'
+             'suds==fixed-unicode'
              ],
     },
     dependency_links=['git://github.com/sbrandtb/django-ordered-model.git',
                       'git://github.com/bearstech/django-transmeta.git',
+                      'git://github.com/bradleyayers/suds-htj.git#egg=fixed-unicode'
                       ],
     include_package_data=True,
     zip_safe=False,
