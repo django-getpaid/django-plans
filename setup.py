@@ -24,10 +24,21 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    install_requires=['django', 'vatnumber', 'django-countries'],
-    dependency_links=['git://github.com/sbrandtb/django-ordered-model.git',
-                      'git://github.com/bearstech/django-transmeta.git',
-                      'git://github.com/bradleyayers/suds-htj.git'],
+    install_requires=['django',
+                      'django-countries',
+                      # TODO 'django-transmeta==dev',
+                      # TODO 'django-ordered-model==dev'
+                      'pytz',
+                      ],
+    extras_require = {
+      'eu': ['vatnumber',
+             'suds==0.4.1-htj'
+             ],
+    },
+    dependency_links=['https://github.com/sbrandtb/django-ordered-model/downloads',
+                      'https://github.com/bearstech/django-transmeta/downloads',
+                      'https://github.com/htj/suds-htj/downloads'
+                      ],
     include_package_data=True,
     zip_safe=False,
 )
