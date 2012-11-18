@@ -16,6 +16,6 @@ class TaxationPolicy(object):
     def get_issuer_country_code(self):
         return getattr(settings, 'TAX_COUNTRY', None)
 
-    def get_tax_rate(self, vat_id, country_code):
+    def get_tax_rate(self, tax_id, country_code):
         raise NotImplementedError('Method get_tax_rate should be implemented.')
 

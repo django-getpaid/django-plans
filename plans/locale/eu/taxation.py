@@ -38,16 +38,16 @@ class EUTaxationPolicy(TaxationPolicy):
     def is_in_EU(self, country_code):
         return country_code.upper() in self.EU_COUNTRIES
 
-    def get_tax_rate(self, vat_id, country_code):
+    def get_tax_rate(self, tax_id, country_code):
         issuer_country = self.get_issuer_country_code()
         if not self.is_in_EU(issuer_country):
             raise ImproperlyConfigured("EUTaxationPolicy requires that issuer country is in EU")
 
-        if not vat_id and not country_code:
+        if not tax_id and not country_code:
             # No vat id, no country
             return self.get_default_tax()
 
-        elif vat_id and not country_code:
+        elif tax_id and not country_code:
             # Customer is not a company, we know his country
 
            if self.is_in_EU(country_code):
@@ -69,7 +69,7 @@ class EUTaxationPolicy(TaxationPolicy):
             if self.is_in_EU(country_code):
                 # Company is from other EU country
                 try:
-                    if vat_id and vatnumber.check_vies(vat_id):
+                    if tax_id and vatnumber.check_vies(tax_id):
                     # Company is registered in VIES
                     # Charge back
                         return None
