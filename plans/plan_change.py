@@ -1,3 +1,4 @@
+# coding=utf-8
 from decimal import Decimal
 
 class PlanChangePolicy(object):
@@ -45,14 +46,36 @@ class PlanChangePolicy(object):
 class StandardPlanChangePolicy(PlanChangePolicy):
     """
     This plan switch policy follows the rules:
-    * user can downgrade a plan for free if the plan is cheaper or have exact the same price
-    * user need to pay extra amount of price difference with additional upgrade rate percent fee
+        * user can downgrade a plan for free if the plan is cheaper or have exact the same price (additional constant charge can be applied)
+        * user need to pay extra amount depending of plans price difference (additional constant charge can be applied)
+
+    Change percent rate while upgrading is defined in ``StandardPlanChangePolicy.UPGRADE_PERCENT_RATE``
+
+    Additional constant charges are:
+        * ``StandardPlanChangePolicy.UPGRADE_CHARGE``
+        * ``StandardPlanChangePolicy.DOWNGRADE_CHARGE``
+
+    .. note:: Example
+
+        User has PlanA which costs monthly (30 days) 20 €. His account will expire in 23 days. He wants to change
+        to PlanB which costs monthly (30 days) 50€. Calculations::
+
+            PlanA costs per day 20 €/ 30 days = 0.67 €
+            PlanB costs per day 50 €/ 30 days = 1.67 €
+            Difference per day between PlanA and PlanB is 1.00 €
+            Upgrade percent rate is 10%
+            Constant upgrade charge is 0 €
+            Switch cost is:
+                       23 *            1.00 € *                  10% +                     0 € = 25.30 €
+                days_left * cost_diff_per_day * upgrade_percent_rate + constant_upgrade_charge
+
+
+
     """
 
     UPGRADE_PERCENT_RATE = Decimal('10.0')
     UPGRADE_CHARGE = Decimal('0.0')
     DOWNGRADE_CHARGE = None
-
 
     def _calculate_final_price(self, period, day_cost_diff):
         if day_cost_diff is None:

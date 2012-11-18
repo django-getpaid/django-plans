@@ -13,6 +13,6 @@ when called from django make an Exception.
 
 As stackoverflow answers, the solution is to use fixed version of ``Suds`` that unfortunately is not in PyPi.
 Working suds version can be clone from:
-https://github.com/bradleyayers/suds-htj.git
+https://github.com/cypreess/suds-htj.git
 
 Version: 0.4.1-htj  is reported to be working.

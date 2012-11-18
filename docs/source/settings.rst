@@ -26,15 +26,14 @@ This is the default mail ``FROM`` value for sending system notifications.
 
 **Optional**
 
+Default: ``monthly``
+
 This settings switches invoice counting per days, month or year basis. It requires to
 provide one of following string format:
 
  * ``daily``
  * ``monthly``
  * ``annually``
-
-
-Default: ``monthly``
 
 Example::
 
@@ -52,14 +51,15 @@ Example::
 
 **Optional**
 
+Default: ``"{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"``
+
 A django template syntax format for rendering invoice full number. Within this template you can use one variable
 ``invoice`` which is an instance of ``Invoice`` object.
 
-Default: ``"{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"``
 
 Example::
 
-    INVOICE_NUMBER_FROMAT = "{ invoice.number }}/{{ invoice.issued|date='m/FV/Y' }}"
+    INVOICE_NUMBER_FROMAT = "{{ invoice.number }}/{{ invoice.issued|date='m/FV/Y' }}"
 
 This example for invoice issued on ``March 5th, 2010``, with sequential number ``13``, will produce the full number
 ``13/03/FV/2010`` or ``13/03/PF/2010`` based on invoice type.
@@ -73,13 +73,15 @@ This example for invoice issued on ``March 5th, 2010``, with sequential number `
 
 **Optional**
 
+Default: ``None``
+
 URL of logo image that should be placed in an invoice. It will be available in invoice template as ``{{ logo_url }}`` context variable.
 
-Default: ``None``
 
 Example::
 
-    INVOICE_LOGO_URL = STATIC_URL + 'my_logo.png'
+    from urllib.parse import urljoin
+    INVOICE_LOGO_URL = urljoin(STATIC_URL, 'my_logo.png')
 
 
 
@@ -87,12 +89,11 @@ Example::
 ``INVOICE_PROJECT_NAME``
 ------------------------
 
-**Required**
-
-Name of service that will be used in the purchase item name of an invoice.
+**Optional**
 
 Default: ``u''``
 
+Name of service that will be used in the purchase item name of an invoice.
 
 Example::
 
@@ -105,6 +106,9 @@ Example::
 
 **Optional**
 
+Default: ``'plans/invoices/PL_EN.html'``
+
+
 Template name for displaying invoice.
 
 .. warning::
@@ -112,7 +116,6 @@ Template name for displaying invoice.
     Invoices are generated on the fly from database records. Therefore  changing this value will affect all
     previously created invoices.
 
-Default: ``'plans/invoices/PL_EN.html'``
 
 Example::
 
@@ -130,14 +133,13 @@ You need to define a dictionary that will store information needed to issue an i
 Example::
 
     ISSUER_DATA = {
-
         "issuer_name": "Joe Doe Company",
         "issuer_street": "Django street, 34",
         "issuer_zipcode": "123-3444",
         "issuer_city": "Djangoko",
         "issuer_country": "Djangoland",
         "issuer_tax_number": "1222233334444555",
-        }
+    }
 
 
 
@@ -148,10 +150,14 @@ Example::
 
 **Optional**
 
-A number of days that an Order is valid (e.g. to made a payment). This value is only used in ``is_ready_for_payment()`` method for django-getpaid integration. This value has no effect on processing paid orders. Even if payment will be processed after ``ORDER_EXPIRATION`` period, it will be processed normally.
-
 Default: ``14``
 
+
+A number of days that an Order is valid (e.g. to start a payment) counting from order creation date. This value is only used in ``is_ready_for_payment()`` method for django-getpaid integration. This value has no effect on processing already paid orders before ``ORDER_EXPIRATION`` period, even if confirmation for this payment will came after ``ORDER_EXPIRATION`` period.
+
+Example::
+
+    ORDER_EXPIRATION = 14
 
 
 ``PLAN_EXPIRATION_REMIND``
@@ -241,6 +247,7 @@ Default: ``None``
    The value ``None`` means "TAX not applicable, rather than value ``Decimal(0)`` which means 0% TAX.
 
 
+.. _settings-TAXATION_POLICY:
 
 ``TAXATION_POLICY``
 -------------------

@@ -18,6 +18,8 @@ Contents:
    settings
    middleware
    plans
+   plans_change
+   taxation
    invoicing
    templating
    caveats

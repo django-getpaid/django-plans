@@ -5,6 +5,23 @@ import vatnumber
 from plans.taxation import TaxationPolicy
 
 class EUTaxationPolicy(TaxationPolicy):
+    """
+    This taxation policy should be correct for all EU countries. It uses following rules:
+        * if issuer country is not in EU - assert error,
+        * return **default tax** in cases:
+            * if issuer country and customer country are the same,
+            * if issuer country and customer country are **not** not the same, but customer is private person from EU,
+            * if issuer country and customer country are **not** not the same, customer is company, but his tax ID is **not** valid according VIES system.
+        * return tax not applicable (``None``) in cases:
+            * if issuer country and customer country are **not** not the same, customer is company from EU and his tax id is valid according VIES system.
+            * if issuer country and customer country are **not** not the same and customer is private person **not** from EU,
+            * if issuer country and customer country are **not** not the same and customer is company **not** from EU.
+
+
+    Please note, that term "private person" refers in system to user that did not provide tax ID and
+    ``company`` refers to user that provides it.
+
+    """
     EU_COUNTRIES = {
         'AT', # Austria
         'BE', # Belgium
