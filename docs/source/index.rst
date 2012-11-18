@@ -1,13 +1,6 @@
-.. django-plans documentation master file, created by
-   sphinx-quickstart on Fri Mar  9 14:47:25 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to django-plans's documentation!
 ========================================
 Django-plans is a pluggable app for managing pricing plans with quotas and accounts expiration.
-
-
 
 Contents:
 ---------
@@ -25,8 +18,6 @@ Contents:
    caveats
 
 
-
-
 Indices and tables
 ==================
 
@@ -34,3 +25,43 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+Developing
+----------
+
+Project leader:
+
+* Krzysztof Dorosz <cypreess@gmail.com>
+
+Contributors:
+
+* Victor Safronovich <vsafronovich@gmail.com>
+* Dominik Kozaczko <http://dominik.kozaczko.info>
+
+Source code:
+https://github.com/cypreess/django-plans
+
+You are very welcome to join the development team of django-plans.
+Contribution via github fork and pull requests. Here are some ideas what is needed:
+
+* more tests,
+* more precise documentation,
+* documentation proofreading and copyediting,
+* taxation backends for you country/area,
+* translations,
+* other then default change plan policies.
+
+
+
+..
+    Commercial Support
+    ==================
+
+    If you're using django-plans in a commercial environment, paid support is available.
+    Services offered include:
+
+    * Advice/help with setup and integration.
+    * Advice/help with application architecture.
+    * Bugfixes in django-plans itself.
+    * Features in django-plans itself.
+
+    If you're interested, please contact Krzysztof Dorosz <cypreess@gmail.com>.
