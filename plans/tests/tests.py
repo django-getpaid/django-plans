@@ -388,35 +388,35 @@ class EUTaxationPolicyTestCase(TestCase):
         self.policy = EUTaxationPolicy()
 
     def test_none(self):
-        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate(None, None), Decimal('23.0'))
 
     def test_private_nonEU(self):
-        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate(None, 'RU'), None)
 
     def test_private_EU_same(self):
-        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate(None, 'PL'), Decimal('23.0'))
 
     def test_private_EU_notsame(self):
-        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate(None, 'AT'), Decimal('23.0'))
 
     def test_company_nonEU(self):
-        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'RU'), None)
 
     def test_company_EU_same(self):
-        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'PL'), Decimal('23.0'))
 
     @mock.patch("vatnumber.check_vies", lambda x: True)
     def test_company_EU_notsame_vies_ok(self):
-        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), None)
 
     @mock.patch("vatnumber.check_vies", lambda x: False)
     def test_company_EU_notsame_vies_not_ok(self):
-        with self.settings(TAX=Decimal('23.0'), VAT_COUNTRY='PL'):
+        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), Decimal('23.0'))

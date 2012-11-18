@@ -12,7 +12,7 @@ class RussianTaxationPolicy(TaxationPolicy):
         return getattr(settings, 'TAX', None)
 
     def get_issuer_country_code(self):
-        return getattr(settings, 'VAT_COUNTRY', None)
+        return getattr(settings, 'TAX_COUNTRY', None)
 
     def get_tax_rate(self, vat_id, country_code):
         # TODO

@@ -182,9 +182,11 @@ User will receive notification before 7 , 3 and 1 day to account expire.
 
 **Optional**
 
+Default: ``30``
+
+
 New account default plan activation period counted in days.
 
-Default: 30
 
 Example::
 
@@ -202,6 +204,8 @@ Example::
 ------------------------------
 
 **Optional**
+
+Default: ``{}``
 
 A dict that stores mapping ``"Quota codename" : "validator object"``. Validators are used to check if user account
 can be activated for the given plan. Account cannot exceed certain limits introduced by quota.
@@ -252,7 +256,7 @@ Example::
 
 
 
-``VAT_COUNTRY``
+``TAX_COUNTRY``
 ---------------
 
 **Optional**
@@ -261,10 +265,10 @@ Two letter ISO country code. This variable is used to determine origin issuers c
 
 Example::
 
-    VAT_COUNTRY = 'PL'
+    TAX_COUNTRY = 'PL'
 
 
 
 .. note::
 
-    ``settings.VAT_COUNTRY`` is a separate value from ``settings.ISSUER_DATA.issuer_country`` on purpose. ``ISSUER_DATA`` is just what you want to have printed on an invoice.
+    ``settings.TAX_COUNTRY`` is a separate value from ``settings.ISSUER_DATA.issuer_country`` on purpose. ``ISSUER_DATA`` is just what you want to have printed on an invoice.
