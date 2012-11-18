@@ -1,7 +1,6 @@
+from django.core.exceptions import ImproperlyConfigured
 import suds
 import vatnumber
-
-from django.conf import settings
 
 from plans.taxation import TaxationPolicy
 
