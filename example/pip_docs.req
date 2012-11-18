@@ -1,0 +1,8 @@
+Django==1.4.1
+django_countries
+pytz
+Sphinx
+vatnumber
+git+https://github.com/cypreess/suds-htj.git
+django-ordered-model
+git+https://github.com/cypreess/django-transmeta.git@bc0ea153c727fe923fc24e595d1074143175e7ac
