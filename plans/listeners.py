@@ -38,3 +38,13 @@ def set_default_user_plan(sender, instance, created, **kwargs):
                                     active=True,
                                     expire=datetime.utcnow().replace(tzinfo=utc) +
                                            timedelta(days=getattr(settings, 'PLAN_DEFAULT_GRACE_PERIOD', 30)))
+
+
+# Hook to django-getpaid if it is installed
+try:
+    from getpaid.signals import user_data_query
+    @receiver(user_data_query)
+    def set_user_email_for_getpaid(sender, order, user_data, **kwargs):
+        user_data['email'] = order.user.email
+except ImportError:
+    pass
