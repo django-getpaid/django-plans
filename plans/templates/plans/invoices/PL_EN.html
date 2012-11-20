@@ -86,7 +86,7 @@
     <h1>
          <label><span class="pl invoice_header">{% if invoice.type == invoice.INVOICE_TYPES.INVOICE %}Faktura VAT nr{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}Faktura PROFORMA nr{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.DUPLICATE %}Faktura VAT DUPLIKAT nr{% endif %}</span> <span class="en">{% if invoice.type == invoice.INVOICE_TYPES.INVOICE %}Invoice ID{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}Order confirmation ID{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.DUPLICATE %}Invoice (duplicate) ID{% endif %}</span></label> <span id="full_number">{{ invoice.full_number }}</span>
     </h1>
-
+    <h2>{% if not copy %}ORYGINAŁ{% else %}KOPIA{% endif %}</h2>
     <p> <label><span class="pl">Data wystawienia:</span> <span class="en">Issued</span></label> {{ invoice.issued|date:"Y-m-d" }}</p>
     {% if invoice.type != invoice.INVOICE_TYPES.PROFORMA %}{# Not a PROFORMA #}
     <p> <label><span class="pl">Data sprzedaży:</span> <span class="en">Date of order</span></label> {{ invoice.selling_date|date:"Y-m-d" }}</p>
