@@ -38,6 +38,8 @@ class Plan(OrderedModel):
     class Meta:
         translate = ('name', 'description', )
         ordering = ('order',)
+        verbose_name = _("Plan")
+        verbose_name_plural = _("Plans")
 
     @classmethod
     def get_default_plan(cls):
@@ -61,6 +63,10 @@ class BillingInfo(models.Model):
     city = models.CharField(_('city'), max_length=200)
     country = CountryField(_("country"))
     tax_number = models.CharField(_('VAT ID'), max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = _("Billing info")
+        verbose_name_plural = _("Billing infos")
 
     @staticmethod
     def clean_tax_number(tax_number, country):
@@ -95,6 +101,12 @@ class UserPlan(models.Model):
     plan = models.ForeignKey('Plan', verbose_name=_('plan'))
     expire = models.DateField(_('expire'), db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
+
+
+    class Meta:
+        verbose_name = _("User plan")
+        verbose_name_plural = _("Users plans")
+
 
     def __unicode__(self):
         return u"%s [%s]" % (self.user, self.plan)
@@ -216,6 +228,8 @@ class Pricing(models.Model):
     class Meta:
         translate = ('name', )
         ordering = ('period',)
+        verbose_name = _("Pricing")
+        verbose_name_plural = _("Pricings")
 
     def __unicode__(self):
         return u"%s (%d "  % (self.name, self.period) + unicode(_("days")) + u")"
@@ -235,6 +249,8 @@ class Quota(OrderedModel):
     class Meta:
         translate = ('name', 'description', 'unit')
         ordering = ('order',)
+        verbose_name = _("Quota")
+        verbose_name_plural = _("Quotas")
 
     def __unicode__(self):
         return u"%s" % (self.codename, )
@@ -252,6 +268,10 @@ class PlanPricing(models.Model):
 
     objects = PlanPricingManager()
 
+    class Meta:
+        verbose_name = _("Plan pricing")
+        verbose_name_plural = _("Plans pricings")
+
     def __unicode__(self):
         return u"%s %s" % (self.plan.name, self.pricing)
 
@@ -267,6 +287,9 @@ class PlanQuota(models.Model):
 
     objects = PlanQuotaManager()
 
+    class Meta:
+        verbose_name = _("Plan quota")
+        verbose_name_plural = _("Plans quotas")
 
 class Order(models.Model):
     STATUS=Enumeration([
@@ -331,6 +354,8 @@ class Order(models.Model):
 
     class Meta:
         ordering = ('-created', )
+        verbose_name = _("Order")
+        verbose_name_plural = _("Orders")
 
 
 class InvoiceManager(models.Manager):
@@ -423,6 +448,10 @@ class Invoice(models.Model):
     issuer_city = models.CharField(max_length=200, verbose_name=_("City"))
     issuer_country = CountryField(verbose_name=_("Country"), default='PL')
     issuer_tax_number = models.CharField(max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
+
+    class Meta:
+        verbose_name = _("Invoice")
+        verbose_name_plural = _("Invoices")
 
     def __unicode__(self):
         return unicode(self.full_number)
