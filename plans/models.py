@@ -269,8 +269,6 @@ class PlanQuota(models.Model):
 
 
 class Order(models.Model):
-
-
     STATUS=Enumeration([
         (1, 'NEW', pgettext_lazy(u'Order status', u'new')),
         (2, 'COMPLETED', pgettext_lazy(u'Order status', u'completed')),
@@ -290,6 +288,9 @@ class Order(models.Model):
         blank=True) # Tax=None is when tax is not applicable
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
     status = models.IntegerField(_('status'), choices=STATUS, default=STATUS.NEW)
+
+    def __unicode__(self):
+        return _("Order #%(id)d") % {'id' : self.id}
 
     def is_ready_for_payment(self):
         return self.status == self.STATUS.NEW and (datetime.utcnow().replace(tzinfo=utc) - self.created).days < getattr(settings, 'ORDER_EXPIRATION', 14)
