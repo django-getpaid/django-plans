@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-11 19:12+0100\n"
-"PO-Revision-Date: 2012-11-11 19:13\n"
+"POT-Creation-Date: 2012-11-23 14:16+0100\n"
+"PO-Revision-Date: 2012-11-23 14:23\n"
 "Last-Translator:   <cypreess@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -19,1133 +19,193 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "X-Translated-Using: django-rosetta 0.6.8\n"
 
-#: model_fields.py:12
-msgid "Andorra"
-msgstr ""
-
-#: model_fields.py:13
-msgid "United Arab Emirates"
-msgstr ""
-
-#: model_fields.py:14
-msgid "Afghanistan"
-msgstr ""
-
-#: model_fields.py:15
-msgid "Antigua & Barbuda"
-msgstr ""
-
-#: model_fields.py:16
-msgid "Anguilla"
-msgstr ""
-
-#: model_fields.py:17
-msgid "Albania"
-msgstr ""
-
-#: model_fields.py:18
-msgid "Armenia"
-msgstr ""
-
-#: model_fields.py:19
-msgid "Netherlands Antilles"
-msgstr ""
-
-#: model_fields.py:20
-msgid "Angola"
-msgstr ""
-
-#: model_fields.py:21
-msgid "Antarctica"
-msgstr ""
-
-#: model_fields.py:22
-msgid "Argentina"
-msgstr ""
-
-#: model_fields.py:23
-msgid "American Samoa"
-msgstr ""
-
-#: model_fields.py:24
-msgid "Austria"
-msgstr ""
-
-#: model_fields.py:25
-msgid "Australia"
-msgstr ""
-
-#: model_fields.py:26
-msgid "Aruba"
-msgstr ""
-
-#: model_fields.py:27
-msgid "Azerbaijan"
-msgstr ""
-
-#: model_fields.py:28
-msgid "Bosnia and Herzegovina"
-msgstr ""
-
-#: model_fields.py:29
-msgid "Barbados"
-msgstr ""
-
-#: model_fields.py:30
-msgid "Bangladesh"
-msgstr ""
-
-#: model_fields.py:31
-msgid "Belgium"
-msgstr ""
-
-#: model_fields.py:32
-msgid "Burkina Faso"
-msgstr ""
-
-#: model_fields.py:33
-msgid "Bulgaria"
-msgstr ""
-
-#: model_fields.py:34
-msgid "Bahrain"
-msgstr ""
-
-#: model_fields.py:35
-msgid "Burundi"
-msgstr ""
-
-#: model_fields.py:36
-msgid "Benin"
-msgstr ""
-
-#: model_fields.py:37
-msgid "Bermuda"
-msgstr ""
-
-#: model_fields.py:38
-msgid "Brunei Darussalam"
-msgstr ""
-
-#: model_fields.py:39
-msgid "Bolivia"
-msgstr ""
-
-#: model_fields.py:40
-msgid "Brazil"
-msgstr ""
-
-#: model_fields.py:41
-msgid "Bahama"
-msgstr ""
-
-#: model_fields.py:42
-msgid "Bhutan"
-msgstr ""
-
-#: model_fields.py:43
-msgid "Bouvet Island"
-msgstr ""
-
-#: model_fields.py:44
-msgid "Botswana"
-msgstr ""
-
-#: model_fields.py:45
-msgid "Belarus"
-msgstr ""
-
-#: model_fields.py:46
-msgid "Belize"
-msgstr ""
-
-#: model_fields.py:47
-msgid "Canada"
-msgstr ""
-
-#: model_fields.py:48
-msgid "Cocos (Keeling) Islands"
-msgstr ""
-
-#: model_fields.py:49
-msgid "Central African Republic"
-msgstr ""
-
-#: model_fields.py:50
-msgid "Congo"
-msgstr ""
-
-#: model_fields.py:51
-msgid "Switzerland"
-msgstr ""
-
-#: model_fields.py:52
-msgid "Ivory Coast"
-msgstr ""
-
-#: model_fields.py:53
-msgid "Cook Iislands"
-msgstr ""
-
-#: model_fields.py:54
-msgid "Chile"
-msgstr ""
-
-#: model_fields.py:55
-msgid "Cameroon"
-msgstr ""
-
-#: model_fields.py:56
-msgid "China"
-msgstr ""
-
-#: model_fields.py:57
-msgid "Colombia"
-msgstr ""
-
-#: model_fields.py:58
-msgid "Costa Rica"
-msgstr ""
-
-#: model_fields.py:59
-msgid "Cuba"
-msgstr ""
-
-#: model_fields.py:60
-msgid "Cape Verde"
-msgstr ""
-
-#: model_fields.py:61
-msgid "Christmas Island"
-msgstr ""
-
-#: model_fields.py:62
-msgid "Cyprus"
-msgstr ""
-
-#: model_fields.py:63
-msgid "Czech Republic"
-msgstr ""
-
-#: model_fields.py:64
-msgid "Germany"
-msgstr ""
-
-#: model_fields.py:65
-msgid "Djibouti"
-msgstr ""
-
-#: model_fields.py:66
-msgid "Denmark"
-msgstr ""
-
-#: model_fields.py:67
-msgid "Dominica"
-msgstr ""
-
-#: model_fields.py:68
-msgid "Dominican Republic"
-msgstr ""
-
-#: model_fields.py:69
-msgid "Algeria"
-msgstr ""
-
-#: model_fields.py:70
-msgid "Ecuador"
-msgstr ""
-
-#: model_fields.py:71
-msgid "Estonia"
-msgstr ""
-
-#: model_fields.py:72
-msgid "Egypt"
-msgstr ""
-
-#: model_fields.py:73
-msgid "Western Sahara"
-msgstr ""
-
-#: model_fields.py:74
-msgid "Eritrea"
-msgstr ""
-
-#: model_fields.py:75
-msgid "Spain"
-msgstr ""
-
-#: model_fields.py:76
-msgid "Ethiopia"
-msgstr ""
-
-#: model_fields.py:77
-msgid "Finland"
-msgstr ""
-
-#: model_fields.py:78
-msgid "Fiji"
-msgstr ""
-
-#: model_fields.py:79
-msgid "Falkland Islands (Malvinas)"
-msgstr ""
-
-#: model_fields.py:80
-msgid "Micronesia"
-msgstr ""
-
-#: model_fields.py:81
-msgid "Faroe Islands"
-msgstr ""
-
-#: model_fields.py:82
-msgid "France"
-msgstr ""
-
-#: model_fields.py:83
-msgid "France, Metropolitan"
-msgstr ""
-
-#: model_fields.py:84
-msgid "Gabon"
-msgstr ""
-
-#: model_fields.py:85
-msgid "United Kingdom (Great Britain)"
-msgstr ""
-
-#: model_fields.py:86
-msgid "Grenada"
-msgstr ""
-
-#: model_fields.py:87
-msgid "Georgia"
-msgstr ""
-
-#: model_fields.py:88
-msgid "French Guiana"
-msgstr ""
-
-#: model_fields.py:89
-msgid "Ghana"
-msgstr ""
-
-#: model_fields.py:90
-msgid "Gibraltar"
-msgstr ""
-
-#: model_fields.py:91
-msgid "Greenland"
-msgstr ""
-
-#: model_fields.py:92
-msgid "Gambia"
-msgstr ""
-
-#: model_fields.py:93
-msgid "Guinea"
-msgstr ""
-
-#: model_fields.py:94
-msgid "Guadeloupe"
-msgstr ""
-
-#: model_fields.py:95
-msgid "Equatorial Guinea"
-msgstr ""
-
-#: model_fields.py:96
-msgid "Greece"
-msgstr ""
-
-#: model_fields.py:97
-msgid "South Georgia and the South Sandwich Islands"
-msgstr ""
-
-#: model_fields.py:98
-msgid "Guatemala"
-msgstr ""
-
-#: model_fields.py:99
-msgid "Guam"
-msgstr ""
-
-#: model_fields.py:100
-msgid "Guinea-Bissau"
-msgstr ""
-
-#: model_fields.py:101
-msgid "Guyana"
-msgstr ""
-
-#: model_fields.py:102
-msgid "Hong Kong"
-msgstr ""
-
-#: model_fields.py:103
-msgid "Heard & McDonald Islands"
-msgstr ""
-
-#: model_fields.py:104
-msgid "Honduras"
-msgstr ""
-
-#: model_fields.py:105
-msgid "Croatia"
-msgstr ""
-
-#: model_fields.py:106
-msgid "Haiti"
-msgstr ""
-
-#: model_fields.py:107
-msgid "Hungary"
-msgstr ""
-
-#: model_fields.py:108
-msgid "Indonesia"
-msgstr ""
-
-#: model_fields.py:109
-msgid "Ireland"
-msgstr ""
-
-#: model_fields.py:110
-msgid "Israel"
-msgstr ""
-
-#: model_fields.py:111
-msgid "India"
-msgstr ""
-
-#: model_fields.py:112
-msgid "British Indian Ocean Territory"
-msgstr ""
-
-#: model_fields.py:113
-msgid "Iraq"
-msgstr ""
-
-#: model_fields.py:114
-msgid "Islamic Republic of Iran"
-msgstr ""
-
-#: model_fields.py:115
-msgid "Iceland"
-msgstr ""
-
-#: model_fields.py:116
-msgid "Italy"
-msgstr ""
-
-#: model_fields.py:117
-msgid "Jamaica"
-msgstr ""
-
-#: model_fields.py:118
-msgid "Jordan"
-msgstr ""
-
-#: model_fields.py:119
-msgid "Japan"
-msgstr ""
-
-#: model_fields.py:120
-msgid "Kenya"
-msgstr ""
-
-#: model_fields.py:121
-msgid "Kyrgyzstan"
-msgstr ""
-
-#: model_fields.py:122
-msgid "Cambodia"
-msgstr ""
-
-#: model_fields.py:123
-msgid "Kiribati"
-msgstr ""
-
-#: model_fields.py:124
-msgid "Comoros"
-msgstr ""
-
-#: model_fields.py:125
-msgid "St. Kitts and Nevis"
-msgstr ""
-
-#: model_fields.py:126
-msgid "Korea, Democratic People's Republic of"
-msgstr ""
-
-#: model_fields.py:127
-msgid "Korea, Republic of"
-msgstr ""
-
-#: model_fields.py:128
-msgid "Kuwait"
-msgstr ""
-
-#: model_fields.py:129
-msgid "Cayman Islands"
-msgstr ""
-
-#: model_fields.py:130
-msgid "Kazakhstan"
-msgstr ""
-
-#: model_fields.py:131
-msgid "Lao People's Democratic Republic"
-msgstr ""
-
-#: model_fields.py:132
-msgid "Lebanon"
-msgstr ""
-
-#: model_fields.py:133
-msgid "Saint Lucia"
-msgstr ""
-
-#: model_fields.py:134
-msgid "Liechtenstein"
-msgstr ""
-
-#: model_fields.py:135
-msgid "Sri Lanka"
-msgstr ""
-
-#: model_fields.py:136
-msgid "Liberia"
-msgstr ""
-
-#: model_fields.py:137
-msgid "Lesotho"
-msgstr ""
-
-#: model_fields.py:138
-msgid "Lithuania"
-msgstr ""
-
-#: model_fields.py:139
-msgid "Luxembourg"
-msgstr ""
-
-#: model_fields.py:140
-msgid "Latvia"
-msgstr ""
-
-#: model_fields.py:141
-msgid "Libyan Arab Jamahiriya"
-msgstr ""
-
-#: model_fields.py:142
-msgid "Morocco"
-msgstr ""
-
-#: model_fields.py:143
-msgid "Monaco"
-msgstr ""
-
-#: model_fields.py:144
-msgid "Moldova, Republic of"
-msgstr ""
-
-#: model_fields.py:145
-msgid "Madagascar"
-msgstr ""
-
-#: model_fields.py:146
-msgid "Marshall Islands"
-msgstr ""
-
-#: model_fields.py:147
-msgid "Mali"
-msgstr ""
-
-#: model_fields.py:148
-msgid "Mongolia"
-msgstr ""
-
-#: model_fields.py:149
-msgid "Myanmar"
-msgstr ""
-
-#: model_fields.py:150
-msgid "Macau"
-msgstr ""
-
-#: model_fields.py:151
-msgid "Northern Mariana Islands"
-msgstr ""
-
-#: model_fields.py:152
-msgid "Martinique"
-msgstr ""
-
-#: model_fields.py:153
-msgid "Mauritania"
-msgstr ""
-
-#: model_fields.py:154
-msgid "Monserrat"
-msgstr ""
-
-#: model_fields.py:155
-msgid "Malta"
-msgstr ""
-
-#: model_fields.py:156
-msgid "Mauritius"
-msgstr ""
-
-#: model_fields.py:157
-msgid "Maldives"
-msgstr ""
-
-#: model_fields.py:158
-msgid "Malawi"
-msgstr ""
-
-#: model_fields.py:159
-msgid "Mexico"
-msgstr ""
-
-#: model_fields.py:160
-msgid "Malaysia"
-msgstr ""
-
-#: model_fields.py:161
-msgid "Mozambique"
-msgstr ""
-
-#: model_fields.py:162
-msgid "Namibia"
-msgstr ""
-
-#: model_fields.py:163
-msgid "New Caledonia"
-msgstr ""
-
-#: model_fields.py:164
-msgid "Niger"
-msgstr ""
-
-#: model_fields.py:165
-msgid "Norfolk Island"
-msgstr ""
-
-#: model_fields.py:166
-msgid "Nigeria"
-msgstr ""
-
-#: model_fields.py:167
-msgid "Nicaragua"
-msgstr ""
-
-#: model_fields.py:168
-msgid "Netherlands"
-msgstr ""
-
-#: model_fields.py:169
-msgid "Norway"
-msgstr ""
-
-#: model_fields.py:170
-msgid "Nepal"
-msgstr ""
-
-#: model_fields.py:171
-msgid "Nauru"
-msgstr ""
-
-#: model_fields.py:172
-msgid "Niue"
-msgstr ""
-
-#: model_fields.py:173
-msgid "New Zealand"
-msgstr ""
-
-#: model_fields.py:174
-msgid "Oman"
-msgstr ""
-
-#: model_fields.py:175
-msgid "Panama"
-msgstr ""
-
-#: model_fields.py:176
-msgid "Peru"
-msgstr ""
-
-#: model_fields.py:177
-msgid "French Polynesia"
-msgstr ""
-
-#: model_fields.py:178
-msgid "Papua New Guinea"
-msgstr ""
-
-#: model_fields.py:179
-msgid "Philippines"
-msgstr ""
-
-#: model_fields.py:180
-msgid "Pakistan"
-msgstr ""
-
-#: model_fields.py:181
-msgid "Poland"
-msgstr "Polska"
-
-#: model_fields.py:182
-msgid "St. Pierre & Miquelon"
-msgstr ""
-
-#: model_fields.py:183
-msgid "Pitcairn"
-msgstr ""
-
-#: model_fields.py:184
-msgid "Puerto Rico"
-msgstr ""
-
-#: model_fields.py:185
-msgid "Portugal"
-msgstr ""
-
-#: model_fields.py:186
-msgid "Palau"
-msgstr ""
-
-#: model_fields.py:187
-msgid "Paraguay"
-msgstr ""
-
-#: model_fields.py:188
-msgid "Qatar"
-msgstr ""
-
-#: model_fields.py:189
-msgid "Reunion"
-msgstr ""
-
-#: model_fields.py:190
-msgid "Romania"
-msgstr ""
-
-#: model_fields.py:191
-msgid "Russian Federation"
-msgstr "Rosja"
-
-#: model_fields.py:192
-msgid "Rwanda"
-msgstr ""
-
-#: model_fields.py:193
-msgid "Saudi Arabia"
-msgstr ""
-
-#: model_fields.py:194
-msgid "Solomon Islands"
-msgstr ""
-
-#: model_fields.py:195
-msgid "Seychelles"
-msgstr ""
-
-#: model_fields.py:196
-msgid "Sudan"
-msgstr ""
-
-#: model_fields.py:197
-msgid "Sweden"
-msgstr "Szwecja"
-
-#: model_fields.py:198
-msgid "Singapore"
-msgstr ""
-
-#: model_fields.py:199
-msgid "St. Helena"
-msgstr ""
-
-#: model_fields.py:200
-msgid "Slovenia"
-msgstr "Słowenia"
-
-#: model_fields.py:201
-msgid "Svalbard & Jan Mayen Islands"
-msgstr ""
-
-#: model_fields.py:202
-msgid "Slovakia"
-msgstr "Słowacja"
-
-#: model_fields.py:203
-msgid "Sierra Leone"
-msgstr ""
-
-#: model_fields.py:204
-msgid "San Marino"
-msgstr ""
-
-#: model_fields.py:205
-msgid "Senegal"
-msgstr ""
-
-#: model_fields.py:206
-msgid "Somalia"
-msgstr ""
-
-#: model_fields.py:207
-msgid "Suriname"
-msgstr ""
-
-#: model_fields.py:208
-msgid "Sao Tome & Principe"
-msgstr ""
-
-#: model_fields.py:209
-msgid "El Salvador"
-msgstr ""
-
-#: model_fields.py:210
-msgid "Syrian Arab Republic"
-msgstr ""
-
-#: model_fields.py:211
-msgid "Swaziland"
-msgstr ""
-
-#: model_fields.py:212
-msgid "Turks & Caicos Islands"
-msgstr ""
-
-#: model_fields.py:213
-msgid "Chad"
-msgstr ""
-
-#: model_fields.py:214
-msgid "French Southern Territories"
-msgstr ""
-
-#: model_fields.py:215
-msgid "Togo"
-msgstr ""
-
-#: model_fields.py:216
-msgid "Thailand"
-msgstr ""
-
-#: model_fields.py:217
-msgid "Tajikistan"
-msgstr ""
-
-#: model_fields.py:218
-msgid "Tokelau"
-msgstr ""
-
-#: model_fields.py:219
-msgid "Turkmenistan"
-msgstr ""
-
-#: model_fields.py:220
-msgid "Tunisia"
-msgstr ""
-
-#: model_fields.py:221
-msgid "Tonga"
-msgstr ""
-
-#: model_fields.py:222
-msgid "East Timor"
-msgstr ""
-
-#: model_fields.py:223
-msgid "Turkey"
-msgstr ""
-
-#: model_fields.py:224
-msgid "Trinidad & Tobago"
-msgstr ""
-
-#: model_fields.py:225
-msgid "Tuvalu"
-msgstr ""
-
-#: model_fields.py:226
-msgid "Taiwan, Province of China"
-msgstr ""
-
-#: model_fields.py:227
-msgid "Tanzania, United Republic of"
-msgstr ""
-
-#: model_fields.py:228
-msgid "Ukraine"
-msgstr ""
-
-#: model_fields.py:229
-msgid "Uganda"
-msgstr ""
-
-#: model_fields.py:230
-msgid "United States Minor Outlying Islands"
-msgstr ""
-
-#: model_fields.py:231
-msgid "United States of America"
-msgstr ""
-
-#: model_fields.py:232
-msgid "Uruguay"
-msgstr ""
-
-#: model_fields.py:233
-msgid "Uzbekistan"
-msgstr ""
-
-#: model_fields.py:234
-msgid "Vatican City State (Holy See)"
-msgstr ""
-
-#: model_fields.py:235
-msgid "St. Vincent & the Grenadines"
-msgstr ""
-
-#: model_fields.py:236
-msgid "Venezuela"
-msgstr ""
-
-#: model_fields.py:237
-msgid "British Virgin Islands"
-msgstr ""
-
-#: model_fields.py:238
-msgid "United States Virgin Islands"
-msgstr ""
-
-#: model_fields.py:239
-msgid "Viet Nam"
-msgstr ""
-
-#: model_fields.py:240
-msgid "Vanuatu"
-msgstr ""
-
-#: model_fields.py:241
-msgid "Wallis & Futuna Islands"
-msgstr ""
-
-#: model_fields.py:242
-msgid "Samoa"
-msgstr ""
-
-#: model_fields.py:243
-msgid "Yemen"
-msgstr ""
-
-#: model_fields.py:244
-msgid "Mayotte"
-msgstr ""
-
-#: model_fields.py:245
-msgid "Yugoslavia"
-msgstr ""
-
-#: model_fields.py:246
-msgid "South Africa"
-msgstr ""
-
-#: model_fields.py:247
-msgid "Zambia"
-msgstr ""
-
-#: model_fields.py:248
-msgid "Zaire"
-msgstr ""
-
-#: model_fields.py:249
-msgid "Zimbabwe"
-msgstr ""
-
-#: models.py:28 models.py:54 models.py:207 models.py:224
+#: models.py:29 models.py:58 models.py:211 models.py:228
 msgid "name"
 msgstr "nazwa"
 
-#: models.py:29 models.py:226
+#: models.py:30 models.py:230
 msgid "description"
 msgstr "opis"
 
-#: models.py:31
+#: models.py:32
 msgid "available"
 msgstr "dostępny"
 
-#: models.py:32 models.py:282
+#: models.py:33 models.py:284
 msgid "created"
 msgstr "utworzono"
 
-#: models.py:33
+#: models.py:34
 msgid "customized"
 msgstr "specjalny"
 
-#: models.py:34
+#: models.py:35
 msgid "quotas"
 msgstr "ograniczenia"
 
-#: models.py:53 models.py:90 models.py:279
+#: models.py:57 models.py:94 models.py:281
 msgid "user"
 msgstr "użytkownik"
 
-#: models.py:55
+#: models.py:59
 msgid "street"
 msgstr "ulica"
 
-#: models.py:56
+#: models.py:60
 msgid "zip code"
 msgstr "kod pocztowy"
 
-#: models.py:57
+#: models.py:61
 msgid "city"
 msgstr "miasto"
 
-#: models.py:58
+#: models.py:62
 msgid "country"
 msgstr "kraj"
 
-#: models.py:59
+#: models.py:63
 msgid "VAT ID"
 msgstr "NIP"
 
-#: models.py:78
+#: models.py:82
 msgid "VAT ID is not correct"
 msgstr "NIP nie jest poprawny"
 
-#: models.py:91 models.py:280
+#: models.py:95 models.py:282
 msgid "plan"
 msgstr "abonament"
 
-#: models.py:92
+#: models.py:96
 msgid "expire"
 msgstr "wygasa"
 
-#: models.py:93 templates/plans/current.html:18
+#: models.py:97 templates/plans/current.html:12
 msgid "active"
 msgstr "aktywny"
 
-#: models.py:208
+#: models.py:212
 msgid "period"
 msgstr "okres"
 
-#: models.py:217 models.py:533 templates/plans/extend.html:51
-#: templates/plans/plan_table.html:74 templates/plans/upgrade.html:44
+#: models.py:221 models.py:538 templates/plans/extend.html:44
+#: templates/plans/plan_table.html:74 templates/plans/upgrade.html:37
 msgid "days"
 msgstr "dni"
 
-#: models.py:223
+#: models.py:227
 msgid "codename"
 msgstr "codename"
 
-#: models.py:225
+#: models.py:229
 msgid "unit"
 msgstr "jednostka"
 
-#: models.py:227
+#: models.py:231
 msgid "is boolean"
 msgstr "wartość tak lub nie"
 
-#: models.py:271
+#: models.py:273
 msgctxt "Order status"
 msgid "new"
 msgstr "nowe"
 
-#: models.py:272
+#: models.py:274
 msgctxt "Order status"
 msgid "completed"
 msgstr "zakończono"
 
-#: models.py:273
+#: models.py:275
 msgctxt "Order status"
 msgid "not valid"
 msgstr "niepoprawne"
 
-#: models.py:274
+#: models.py:276
 msgctxt "Order status"
 msgid "canceled"
 msgstr "anulowane"
 
-#: models.py:275
+#: models.py:277
 msgctxt "Order status"
 msgid "returned"
 msgstr "zwrócone"
 
-#: models.py:281
+#: models.py:283
 msgid "pricing"
 msgstr "okres cenowy"
 
-#: models.py:283
+#: models.py:285
 msgid "completed"
 msgstr "zakończono"
 
-#: models.py:284
+#: models.py:286
 msgid "amount"
 msgstr "kwota"
 
-#: models.py:285
+#: models.py:287
 msgid "tax"
 msgstr "podatek"
 
-#: models.py:287
+#: models.py:289
 msgid "currency"
 msgstr "waluta"
 
-#: models.py:288
+#: models.py:290
 msgid "status"
 msgstr "status"
 
-#: models.py:351
+#: models.py:293
+#, python-format
+msgid "Order #%(id)d"
+msgstr "Zamówienie #%(id)d"
+
+#: models.py:356
 msgid "Invoice"
 msgstr "Faktura"
 
-#: models.py:352
+#: models.py:357
 msgid "Invoice Duplicate"
 msgstr "Duplikat faktury"
 
-#: models.py:353
+#: models.py:358
 msgctxt "proforma"
 msgid "Order confirmation"
 msgstr "Proforma"
 
-#: models.py:400 models.py:407 models.py:415
+#: models.py:405 models.py:412 models.py:420
 msgid "Name"
 msgstr "Nazwa"
 
-#: models.py:401 models.py:408 models.py:416
+#: models.py:406 models.py:413 models.py:421
 msgid "Street"
 msgstr "Ulica"
 
-#: models.py:402 models.py:409 models.py:417
+#: models.py:407 models.py:414 models.py:422
 msgid "Zip code"
 msgstr "Kod pocztowy"
 
-#: models.py:403 models.py:410 models.py:418
+#: models.py:408 models.py:415 models.py:423
 msgid "City"
 msgstr "Miasto"
 
-#: models.py:404 models.py:411 models.py:419
+#: models.py:409 models.py:416 models.py:424
 msgid "Country"
 msgstr "Kraj"
 
-#: models.py:405 models.py:420
+#: models.py:410 models.py:425
 msgid "TAX/VAT number"
 msgstr "Numer NIP"
 
-#: models.py:530 models.py:539 templates/plans/current.html:20
-#: templates/plans/extend.html:31 templates/plans/upgrade.html:19
+#: models.py:535 models.py:544 templates/plans/current.html:14
+#: templates/plans/extend.html:24 templates/plans/upgrade.html:12
 msgid "Plan"
 msgstr "Abonament"
+
+#: validators.py:32
+#, python-format
+msgid "Limit of %(model_name_plural)s exceeded. The limit is %(quota)s items."
+msgstr ""
+"Konto przekracza limit obiektów \"%(model_name_plural)s\". Ograniczenie to "
+"%(quota)s obiektów na koncie."
 
 #: views.py:45
 msgid "Your account is now active"
@@ -1155,22 +215,22 @@ msgstr "Twoje konto zostało właśnie aktywowane"
 msgid "Your plan has been successfully changed"
 msgstr "Abonament na koncie został pomyślnie zmieniony"
 
-#: views.py:375
+#: views.py:376
 msgid ""
 "Thank you for placing a payment. It will be processed as soon as possible."
 msgstr ""
 "Dziękujemy za dokonanie płatności. Zamówienie zostanie zrealizowane tak "
 "szybko jak to możliwe."
 
-#: views.py:377
+#: views.py:378
 msgid "Payment was not completed correctly. Please repeat payment process."
 msgstr "Płatność została przerwana. Proszę ponowić proces płatności."
 
-#: views.py:414 views.py:433
+#: views.py:415 views.py:434
 msgid "Billing info has been updated successfuly."
 msgstr "Dane bilingowe zostały zapisane."
 
-#: views.py:449
+#: views.py:450
 msgid "Billing info has been deleted."
 msgstr "Dane bilingowe zostały usunięte."
 
@@ -1288,48 +348,81 @@ msgid_plural "Your account %(user)s will expire in %(days)s days"
 msgstr[0] "Twoje konto %(user)s wygaśnie za  %(days)s dni"
 msgstr[1] "Twoje konto %(user)s wygaśnie za  %(days)s dzień"
 
-#: templates/plans/billing_info_delete.html:16
+#: templates/plans/billing_info_delete.html:6
 msgid "Are you sure to delete billing info?"
 msgstr "Czy napewno usunąć dane bilingowe?"
 
-#: templates/plans/current.html:15
+#: templates/plans/current.html:9
 msgid "Account"
 msgstr "Konto"
 
-#: templates/plans/current.html:18
+#: templates/plans/current.html:12
 msgid "State"
 msgstr "Stan"
 
-#: templates/plans/current.html:18
+#: templates/plans/current.html:12
 msgid "expired"
 msgstr "wygasło"
 
-#: templates/plans/current.html:19
+#: templates/plans/current.html:13
 msgid "Expire"
 msgstr "Wygaśnie"
 
-#: templates/plans/current.html:21
+#: templates/plans/current.html:15
 msgid "upgrade"
 msgstr "uaktualnij"
 
-#: templates/plans/extend.html:32 templates/plans/upgrade.html:24
+#: templates/plans/expiration_messages.html:5
+#, python-format
+msgid ""
+"\n"
+"            Your account has expired. Please <a href=\"%(url)s\">extend your account</a>.\n"
+"        "
+msgstr ""
+"\n"
+"Twój abonament wygasł. Należy <a href=\"%(url)s\">przedłużyć ważność konta</a>, aby kontynuować korzystanie z systemu."
+
+#: templates/plans/expiration_messages.html:13
+#, python-format
+msgid ""
+"\n"
+"                Your account is not active. Possibly you are over some limits.\n"
+"                Try to <a href=\"%(url)s\">activate your account</a>.\n"
+"            "
+msgstr ""
+"\n"
+"Twoje konto nie jest aktywne. Najprawdopodobniej konto przekracza dostępne limity użycia. Proszę spróbować <a href=\"%(url)s\">aktywować konto</a>."
+
+#: templates/plans/expiration_messages.html:22
+#, python-format
+msgid ""
+"\n"
+"                Your account will expire soon (in %(days_to_expire)s days).\n"
+"                We recommend to <a href=\"%(extend_url)s\">extend your account now.</a>\n"
+"            "
+msgstr ""
+"\n"
+"Twoje konto wkrótce wygaśnie (za %(days_to_expire)s dni).\n"
+"Możesz <a href=\"%(extend_url)s\">przedłużyć ważność konta</a> już teraz."
+
+#: templates/plans/extend.html:25 templates/plans/upgrade.html:17
 msgid "Quotas"
 msgstr "Limity"
 
-#: templates/plans/extend.html:39 templates/plans/upgrade.html:31
+#: templates/plans/extend.html:32 templates/plans/upgrade.html:24
 msgid "yes"
 msgstr "tak"
 
-#: templates/plans/extend.html:39 templates/plans/upgrade.html:31
+#: templates/plans/extend.html:32 templates/plans/upgrade.html:24
 msgid "no"
 msgstr "nie"
 
-#: templates/plans/extend.html:47 templates/plans/plan_table.html:46
-#: templates/plans/upgrade.html:40
+#: templates/plans/extend.html:40 templates/plans/plan_table.html:46
+#: templates/plans/upgrade.html:33
 msgid "Pricings"
 msgstr "Okresy"
 
-#: templates/plans/extend.html:61
+#: templates/plans/extend.html:54
 #, python-format
 msgid ""
 "\n"
@@ -1370,9 +463,24 @@ msgstr ""
 msgid "Net prices"
 msgstr "Ceny netto"
 
-#: templates/plans/upgrade.html:22
+#: templates/plans/upgrade.html:15
 msgid "Description"
 msgstr "Opis"
+
+#~ msgid "Poland"
+#~ msgstr "Polska"
+
+#~ msgid "Russian Federation"
+#~ msgstr "Rosja"
+
+#~ msgid "Sweden"
+#~ msgstr "Szwecja"
+
+#~ msgid "Slovenia"
+#~ msgstr "Słowenia"
+
+#~ msgid "Slovakia"
+#~ msgstr "Słowacja"
 
 #~ msgid ""
 #~ "Hosting of your images is suspended, but we will keep all your files for next 30 days. If you want to continue to\n"
