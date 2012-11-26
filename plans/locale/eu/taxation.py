@@ -1,5 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
-import suds
+from suds import WebFault
+from suds.transport import TransportError
 import vatnumber
 
 from plans.taxation import TaxationPolicy
@@ -92,7 +93,7 @@ class EUTaxationPolicy(TaxationPolicy):
                         return None
                     else:
                         return self.get_default_tax()
-                except suds.WebFault:
+                except (WebFault, TransportError):
                     # If we could not connect to VIES
                     return self.get_default_tax()
             else:
