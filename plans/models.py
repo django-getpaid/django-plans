@@ -464,11 +464,11 @@ class Invoice(models.Model):
             invoice_counter_reset = getattr(settings, 'INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
 
             if invoice_counter_reset == Invoice.NUMBERING.DAILY:
-                count = Invoice.objects.filter(issued=self.issued).count()
+                count = Invoice.objects.filter(issued=self.issued, type=self.type).count()
             elif invoice_counter_reset == Invoice.NUMBERING.MONTHLY:
-                count = Invoice.objects.filter(issued__year=self.issued.year, issued__month=self.issued.month).count()
+                count = Invoice.objects.filter(issued__year=self.issued.year, issued__month=self.issued.month,  type=self.type).count()
             elif invoice_counter_reset == Invoice.NUMBERING.ANNUALLY:
-                count = Invoice.objects.filter(issued__year=self.issued.year).count()
+                count = Invoice.objects.filter(issued__year=self.issued.year, type=self.type).count()
             else:
                 raise ImproperlyConfigured("INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly.")
             self.number = 1 if count == 0 else count + 1
