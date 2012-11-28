@@ -30,7 +30,7 @@ class PlanChangePolicy(object):
         """
         Calculates total price of plan change. Returns None if no payment is required.
         """
-        if period < 1:
+        if period is None or period < 1:
             return None
 
         plan_old_day_cost = self._calculate_day_cost(plan_old, period)

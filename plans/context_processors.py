@@ -18,9 +18,9 @@ def account_status(request):
 
     if request.user.is_authenticated():
         return {
-            'ACCOUNT_EXPIRED' : request.user_plan.is_expired(),
-            'ACCOUNT_NOT_ACTIVE' : (not request.user_plan.is_active() and not request.user_plan.is_expired()),
-            'EXPIRE_IN_DAYS' : (request.user_plan.expire - date.today()).days,
+            'ACCOUNT_EXPIRED' : request.user.userplan.is_expired(),
+            'ACCOUNT_NOT_ACTIVE' : (not request.user.userplan.is_active() and not request.user.userplan.is_expired()),
+            'EXPIRE_IN_DAYS' : request.user.userplan.days_left(),
             'EXTEND_URL' :  reverse('current_plan'),
             'ACTIVATE_URL' : reverse('account_activation'),
         }

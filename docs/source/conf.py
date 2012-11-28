@@ -29,7 +29,7 @@ sys.path.append(os.path.join(
 )
 )
 
-
+print sys.path
 
 #import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example.settings_docs")

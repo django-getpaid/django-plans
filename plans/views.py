@@ -1,10 +1,8 @@
-import datetime
 from decimal import Decimal
-
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
-from django.views.generic import TemplateView, FormView, RedirectView, CreateView, UpdateView, View
+from django.views.generic import TemplateView, RedirectView, CreateView, UpdateView, View
 from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.conf import settings
@@ -13,24 +11,19 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import DeleteView, ModelFormMixin
 from django.views.generic.list import ListView
-
 from plans.importer import import_name
-
-from models import UserPlan, PlanQuota, PlanPricing, Plan, Order, BillingInfo
-from forms import OrderForm, BillingInfoForm
-
-# Create your views here.
+from models import UserPlan, PlanPricing, Plan, Order, BillingInfo
+from forms import BillingInfoForm
 from plans.forms import CreateOrderForm
 from plans.models import Quota, Invoice
-from plans.signals import order_started, account_activated
+from plans.signals import order_started
 from plans.validators import account_full_validation
 
 class AccountActivationView(TemplateView):
     template_name = 'plans/account_activation.html'
 
     def get_context_data(self, **kwargs):
-        user_plan = self.request.user.userplan
-        if user_plan.active == True or user_plan.expire < datetime.date.today():
+        if self.request.user.userplan.active == True or self.request.user.userplan.is_expired():
             raise Http404()
 
         context = super(AccountActivationView, self).get_context_data(**kwargs)
@@ -41,7 +34,7 @@ class AccountActivationView(TemplateView):
                     messages.error(self.request, e)
             context['SUCCESSFUL'] = False
         else:
-            user_plan.activate()
+            self.request.user.userplan.activate()
             messages.success(self.request, _("Your account is now active"))
             context['SUCCESSFUL'] = True
 
@@ -164,8 +157,8 @@ class ChangePlanView(View):
         if request.user.userplan.plan != plan:
             policy = import_name(getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy'))()
 
-            period = (request.user_plan.expire - datetime.date.today()).days
-            price = policy.get_change_price(request.user_plan.plan, plan, period)
+            period = request.user.userplan.days_left()
+            price = policy.get_change_price(request.user.userplan.plan, plan, period)
 
             if price is None:
                 request.user.userplan.extend_account(plan, None)
@@ -220,8 +213,7 @@ class CreateOrderView(CreateView):
         self.plan_pricing = get_object_or_404(PlanPricing.objects.all().select_related('plan', 'pricing'),
             Q(pk=self.kwargs['pk']) & Q(plan__available=True)  & ( Q(plan__customized = self.request.user) | Q(plan__customized__isnull=True)))
 
-        user_plan = self.request.user_plan
-        if not user_plan.is_expired() and user_plan.plan != self.plan_pricing.plan:
+        if not self.request.user.userplan.is_expired() and self.request.user.userplan.plan != self.plan_pricing.plan:
             raise Http404
 
         self.plan = self.plan_pricing.plan
@@ -301,11 +293,11 @@ class CreateOrderPlanChangeView(CreateOrderView):
         self.get_tax()
 
         self.policy = self.get_policy()
-        self.period = (self.request.user_plan.expire - datetime.date.today()).days
-        self.price = self.policy.get_change_price(self.request.user_plan.plan, self.plan, self.period)
+        self.period = self.request.user.userplan.days_left()
+        self.price = self.policy.get_change_price(self.request.user.userplan.plan, self.plan, self.period)
         context['plan'] = self.plan
         if self.price is None:
-            context['current_plan'] = self.request.user_plan.plan
+            context['current_plan'] = self.request.user.userplan.plan
             context['FREE_ORDER'] = True
         else:
 
@@ -466,7 +458,3 @@ class InvoiceDetailView(DetailView):
     def get_queryset(self):
         return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user)
 
-
-#class PDFDetailView(DetailView):
-#    def render_to_response(self, context, **response_kwargs):
-#        return render_to_pdf_response(template_name=self.get_template_names()[0], context=context, pdfname=unicode(self.object).replace('/', '_'))

@@ -12,8 +12,7 @@ def expire_account():
 
     logger.info('Started')
 
-    for user in User.objects.select_related('userplan').filter(userplan__active=True,
-        userplan__expire__lt=datetime.date.today()):
+    for user in User.objects.select_related('userplan').filter(userplan__active=True,         userplan__expire__lt=datetime.date.today()).exclude(userplan__expire=None):
         user.userplan.expire_account()
 
     notifications_days_before = getattr(settings, 'PLAN_EXPIRATION_REMIND', [])

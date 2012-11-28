@@ -1,7 +1,7 @@
 Installation
 ============
 
-Setup for django project
+Installing module code
 ------------------------
 
 You can install app using package manager directly from github:
@@ -10,14 +10,8 @@ You can install app using package manager directly from github:
 
     $ pip install -e git://github.com/cypreess/django-plans.git#egg=django-plans
 
-Now you need to configure your project. Add this app to your ``INSTALED_APPS`` setting::
 
-    INSTALLED_APPS += ('plans', )
-
-Define all **required** settings options described in :doc:`settings`, consider also adding :doc:`middleware` and Context Processor described in :doc:`templating`.
-
-Don't forget to run ``manage.py syncdb`` in your project. South migrations are not supported at this moment as it is difficult to handle dynamically generated models in South.
-
+For integration instruction please see section  :doc:`integration`.
 
 
 

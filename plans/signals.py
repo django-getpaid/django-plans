@@ -34,3 +34,8 @@ account_change_plan = Signal(providing_args=['user'])
 account_change_plan.__doc__ = """
 Sent on account when plan was changed after order completion
 """
+
+activate_user_plan = Signal(providing_args=['user'])
+activate_user_plan.__doc__ = """
+This signal should be called when user has succesfully registered (e.g. he activated account via e-mail activation). If you are using django-registration there is no need to call this signal.
+"""

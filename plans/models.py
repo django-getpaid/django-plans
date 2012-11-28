@@ -9,7 +9,6 @@ from django.utils.translation import ugettext_lazy as _, pgettext_lazy
 from django.db import models
 from ordered_model.models import OrderedModel
 import vatnumber
-#from model_fields import CountryField
 from django.template import Context
 from django.conf import settings
 from datetime import date, timedelta, datetime
@@ -99,9 +98,8 @@ class BillingInfo(models.Model):
 class UserPlan(models.Model):
     user = models.OneToOneField('auth.User', verbose_name=_('user'))
     plan = models.ForeignKey('Plan', verbose_name=_('plan'))
-    expire = models.DateField(_('expire'), db_index=True)
+    expire = models.DateField(_('expire'), default=None, blank=True, null=True, db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
-
 
     class Meta:
         verbose_name = _("User plan")
@@ -116,10 +114,16 @@ class UserPlan(models.Model):
         return self.active
 
     def is_expired(self):
-        return self.expire < date.today()
+        if self.expire is None:
+            return False
+        else:
+            return self.expire < date.today()
 
     def days_left(self):
-        return (self.expire - date.today()).days
+        if self.expire is None:
+            return None
+        else:
+            return (self.expire - date.today()).days
 
     def quotas(self):
         quotas = {}
@@ -138,6 +142,15 @@ class UserPlan(models.Model):
             self.save()
             account_deactivated.send(sender=self,user=self.user)
 
+    def initialize(self):
+        """
+        Set up user plan for first use
+        """
+        if not self.is_active():
+            if self.expire is None:
+                self.expire = datetime.utcnow().replace(tzinfo=utc) + timedelta(days=getattr(settings, 'PLAN_DEFAULT_GRACE_PERIOD', 30))
+            self.activate() #this will call self.save()
+
     def extend_account(self, plan, pricing):
         """
         Manages extending account after plan or pricing order
@@ -146,7 +159,7 @@ class UserPlan(models.Model):
         :return:
         """
 
-        status = False      #if extending account was successful?
+        status = False      # flag; if extending account was successful?
         if pricing is None:
             # Process a plan change request (downgrade or upgrade)
             # No account activation or extending at this point
@@ -155,24 +168,28 @@ class UserPlan(models.Model):
             account_change_plan.send(sender=self, user=self.user)
             mail_context = Context({ 'user': self.user, 'userplan': self, 'plan': plan})
             send_template_email([self.user.email],'mail/change_plan_title.txt', 'mail/change_plan_body.txt', mail_context, get_user_language(self.user))
-            accounts_logger.info(u"Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (
-            self.user, self.user.pk, plan, plan.pk))
+            accounts_logger.info(u"Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.user, self.user.pk, plan, plan.pk))
             status = True
         else:
             # Processing standard account extending procedure
             if self.plan == plan:
                 status = True
-                if self.expire > date.today():
+                if self.expire is None:
+                    pass
+                elif self.expire > date.today():
                     self.expire += timedelta(days=pricing.period)
                 else:
                     self.expire = date.today() + timedelta(days=pricing.period)
 
             else:
-                if self.expire > date.today():
+                # This should not ever happen (as this case should be managed by plan change request)
+                # but just in case we consider a case when user has a different plan
+                if self.expire is None:
+                    status = True
+                elif self.expire > date.today():
                     status = False
                     accounts_logger.warning(u"Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
                         self.user, self.user.pk, plan, plan.pk))
-
                 else:
                     status = True
                     account_change_plan.send(sender=self, user=self.user)
@@ -214,7 +231,7 @@ class UserPlan(models.Model):
     def remind_expire_soon(self):
         """reminds about soon account expiration"""
 
-        mail_context = Context({'user': self.user, 'userplan': self, 'days': (self.expire - date.today()).days})
+        mail_context = Context({'user': self.user, 'userplan': self, 'days': self.days_left()})
         send_template_email([self.user.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
             mail_context, get_user_language(self.user))
 

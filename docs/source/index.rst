@@ -8,13 +8,14 @@ Contents:
    :maxdepth: 2
 
    installation
+   integration
    settings
-   middleware
    plans
    plans_change
    taxation
    invoicing
    templating
+   south
    caveats
 
 

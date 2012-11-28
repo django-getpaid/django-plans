@@ -12,8 +12,6 @@ to get information in any template about:
  * an URL of account extend action - ``{{ EXTEND_URL }}``,
  * an URL of account activate action - ``{{ ACTIVATE_URL }}``.
 
-It requires middleware ``plans.middleware.UserPlanMiddleware`` to be active.
-
 First you need to add a context processor to your settings, e.g.::
 
 
