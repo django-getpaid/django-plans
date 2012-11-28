@@ -125,11 +125,6 @@ class UserPlan(models.Model):
         else:
             return (self.expire - date.today()).days
 
-    def quotas(self):
-        quotas = {}
-        for quota in self.plan.planquota_set.all():
-            quotas[quota]
-
     def activate(self):
         if self.active == False:
             self.active = True
