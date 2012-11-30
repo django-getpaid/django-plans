@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.core import urlresolvers
 from models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
 from ordered_model.admin import OrderedModelAdmin
 from plans.models import Invoice
@@ -47,7 +48,14 @@ class UserPlanAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email')
     list_display = ('user', 'plan', 'expire', 'active')
     list_select_related = True
+    readonly_fields = ['user_link']
+    fields = ('user_link', 'plan', 'expire', 'active' )
 
+    def user_link(self, obj):
+        change_url = urlresolvers.reverse('admin:auth_user_change', args=(obj.user.id,))
+        return '<a href="%s">%s</a>' % (change_url, obj.user.username)
+    user_link.short_description = 'User'
+    user_link.allow_tags = True
 
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)
