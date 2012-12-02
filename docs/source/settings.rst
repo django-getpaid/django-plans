@@ -86,20 +86,6 @@ Example::
 
 
 
-``INVOICE_PROJECT_NAME``
-------------------------
-
-**Optional**
-
-Default: ``u''``
-
-Name of service that will be used in the purchase item name of an invoice.
-
-Example::
-
-    INVOICE_PROJECT_NAME = u'MyService.com'
-
-
 
 ``INVOICE_TEMPLATE``
 --------------------

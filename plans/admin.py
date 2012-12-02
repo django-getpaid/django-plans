@@ -4,6 +4,14 @@ from models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order
 from ordered_model.admin import OrderedModelAdmin
 from plans.models import Invoice
 
+class UserLinkMixin(object):
+    def user_link(self, obj):
+        change_url = urlresolvers.reverse('admin:auth_user_change', args=(obj.user.id,))
+        return '<a href="%s">%s</a>' % (change_url, obj.user.username)
+
+    user_link.short_description = 'User'
+    user_link.allow_tags = True
+
 class PlanQuotaInline(admin.TabularInline):
     model = PlanQuota
 
@@ -24,15 +32,17 @@ class PlanAdmin(OrderedModelAdmin):
         return super(PlanAdmin, self).queryset(request).select_related('customized')
 
 
-class BillingInfoAdmin(admin.ModelAdmin):
+class BillingInfoAdmin(UserLinkMixin, admin.ModelAdmin):
     search_fields = ('user__username', 'user__email')
-    list_display = ('user', 'name',  'street', 'zipcode', 'city', 'country')
+    list_display = ('user', 'tax_number', 'name', 'street', 'zipcode', 'city', 'country')
     list_select_related = True
+    readonly_fields = ('user_link',)
+    exclude = ('user',)
 
 class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status', "plan")
     search_fields = ('id', 'user__username', 'user__email')
-    list_display = ("id", "created", "user", "status", "completed", "amount", "currency", "plan", "pricing")
+    list_display = ("id", "name", "created", "user", "status", "completed", "tax", "amount", "currency", "plan", "pricing")
     def queryset(self, request):
         return super(OrderAdmin, self).queryset(request).select_related('plan', 'pricing', 'user')
 
@@ -43,7 +53,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_display = ('full_number', "issued", "total_net", "currency", 'user', "tax", "buyer_name", "buyer_city", "buyer_tax_number")
     list_select_related = True
 
-class UserPlanAdmin(admin.ModelAdmin):
+class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     list_filter = ('active', 'expire')
     search_fields = ('user__username', 'user__email')
     list_display = ('user', 'plan', 'expire', 'active')
@@ -51,11 +61,7 @@ class UserPlanAdmin(admin.ModelAdmin):
     readonly_fields = ['user_link']
     fields = ('user_link', 'plan', 'expire', 'active' )
 
-    def user_link(self, obj):
-        change_url = urlresolvers.reverse('admin:auth_user_change', args=(obj.user.id,))
-        return '<a href="%s">%s</a>' % (change_url, obj.user.username)
-    user_link.short_description = 'User'
-    user_link.allow_tags = True
+
 
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)

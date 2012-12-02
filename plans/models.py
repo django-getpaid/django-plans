@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.contrib.sites.models import Site
 from django.utils import translation
 from django_countries import CountryField
 from pytz import utc
@@ -29,7 +30,7 @@ class Plan(OrderedModel):
     description = models.TextField(_('description'), blank=True)
     default = models.BooleanField(default=False, db_index=True)
     available = models.BooleanField(_('available'), default=False, db_index=True)
-    created = models.DateTimeField(_('created'), auto_now_add=True, db_index=True)
+    created = models.DateTimeField(_('created'), db_index=True)
     customized = models.ForeignKey('auth.User', null=True, blank=True, verbose_name=_('customized'))
     quotas = models.ManyToManyField('Quota', through='PlanQuota', verbose_name=_('quotas'))
 
@@ -39,6 +40,13 @@ class Plan(OrderedModel):
         ordering = ('order',)
         verbose_name = _("Plan")
         verbose_name_plural = _("Plans")
+
+    def save(self, *args, **kwargs):
+        if not self.created:
+            self.created = datetime.utcnow().replace(tzinfo=utc)
+
+        super(Plan, self).save(*args, **kwargs)
+
 
     @classmethod
     def get_default_plan(cls):
@@ -56,12 +64,17 @@ class BillingInfo(models.Model):
     Stores customer billing data needed to issue an invoice
     """
     user = models.OneToOneField('auth.User', verbose_name=_('user'))
-    name = models.CharField(_('name'), max_length=200, )
+    tax_number = models.CharField(_('VAT ID'), max_length=200, blank=True)
+    name = models.CharField(_('name'), max_length=200)
     street = models.CharField(_('street'), max_length=200)
     zipcode = models.CharField(_('zip code'), max_length=200)
     city = models.CharField(_('city'), max_length=200)
     country = CountryField(_("country"))
-    tax_number = models.CharField(_('VAT ID'), max_length=200, blank=True)
+
+    shipping_name = models.CharField(_('name (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+    shipping_street = models.CharField(_('street (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+    shipping_zipcode = models.CharField(_('zip code (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+    shipping_city = models.CharField(_('city (shipping)'), max_length=200, blank=True, help_text=_('optional'))
 
     class Meta:
         verbose_name = _("Billing info")
@@ -314,9 +327,10 @@ class Order(models.Model):
     ])
 
     user = models.ForeignKey('auth.User', verbose_name=_('user'))
+    flat_name = models.CharField(max_length=200, blank=True, null=True)
     plan = models.ForeignKey('plan', verbose_name=_('plan'), related_name="plan_order")
     pricing = models.ForeignKey('pricing', blank=True, null=True, verbose_name=_('pricing')) #if pricing is None the order is upgrade plan, not buy new pricing
-    created = models.DateTimeField(_('created'), auto_now_add=True, db_index=True)
+    created = models.DateTimeField(_('created'), db_index=True)
     completed = models.DateTimeField(_('completed'), null=True, blank=True, db_index=True)
     amount = models.DecimalField(_('amount'), max_digits=7, decimal_places=2, db_index=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
@@ -324,8 +338,30 @@ class Order(models.Model):
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
     status = models.IntegerField(_('status'), choices=STATUS, default=STATUS.NEW)
 
+    def save(self, force_insert=False, force_update=False, using=None):
+        if self.created is None:
+            self.created = datetime.utcnow().replace(tzinfo=utc)
+        return super(Order, self).save(force_insert, force_update, using)
+
+
     def __unicode__(self):
         return _("Order #%(id)d") % {'id' : self.id}
+
+    @property
+    def name(self):
+        """
+        Support for two kind of Order names:
+        * (preferred) dynamically generated from Plan and Pricing (if flatname is not provided) (translatable)
+        * (legacy) just return flat name, which is any text (not translatable)
+
+        Flat names are only introduced for legacy system support, when you need to migrate old orders into
+        django-plans and you cannot match Plan&Pricings convention.
+        """
+        if self.flat_name:
+            return self.flat_name
+        else:
+            return _('Plan') + u' ' + unicode(self.plan.name) + (u" (upgrade)"  if self.pricing is None else u' - ' + unicode(self.pricing))
+
 
     def is_ready_for_payment(self):
         return self.status == self.STATUS.NEW and (datetime.utcnow().replace(tzinfo=utc) - self.created).days < getattr(settings, 'ORDER_EXPIRATION', 14)
@@ -353,6 +389,13 @@ class Order(models.Model):
 
     def get_all_invoices(self):
         return self.invoice_set.order_by('issued', 'issued_duplicate', 'pk')
+
+    def tax_total(self):
+        if self.tax is None:
+            return None
+        else:
+            return self.total() - self.amount
+
 
     def total(self):
         if self.tax is not None:
@@ -548,11 +591,11 @@ class Invoice(models.Model):
         self.buyer_country = billing_info.country
         self.buyer_tax_number = billing_info.tax_number
 
-        #TODO: different shipping data?
-        self.shipping_name = billing_info.name
-        self.shipping_street = billing_info.street
-        self.shipping_zipcode = billing_info.zipcode
-        self.shipping_city = billing_info.city
+        self.shipping_name = billing_info.shipping_name or billing_info.name
+        self.shipping_street = billing_info.shipping_street or billing_info.street
+        self.shipping_zipcode = billing_info.shipping_zipcode or billing_info.zipcode
+        self.shipping_city = billing_info.shipping_city or billing_info.city
+        #TODO: Should allow shipping to other country? Not think so
         self.shipping_country = billing_info.country
 
     def copy_from_order(self, order):
@@ -570,25 +613,16 @@ class Invoice(models.Model):
         self.tax_total = order.total() - order.amount
         self.tax = order.tax
         self.currency = order.currency
-        if order.pricing:
-            self.item_description = u"%s - %s %s (%d %s)" % (
-                getattr(settings, 'INVOICE_PROJECT_NAME', ''),
-                unicode(_("Plan")),
-                order.plan.name,
-                order.pricing.period,
-                unicode(_("days")),
+        self.item_description = u"%s - %s" % (Site.objects.get_current().name, order.name)
 
-            )
-        else:
-            self.item_description = u"%s - %s %s (%s)" % (
-                getattr(settings, 'INVOICE_PROJECT_NAME', ''),
-                unicode(_("Plan")),
-                order.plan.name,
-                u'upgrade',
-                )
 
     @classmethod
     def create(cls, order, invoice_type):
+        language_code = get_user_language(order.user)
+
+        if language_code is not None:
+            translation.activate(language_code)
+
         try:
             billing_info = BillingInfo.objects.get(user=order.user)
         except BillingInfo.DoesNotExist:
@@ -602,7 +636,8 @@ class Invoice(models.Model):
         invoice.set_buyer_invoice_data(billing_info)
         invoice.clean()
         invoice.save()
-
+        if language_code is not None:
+            translation.deactivate()
 
     def send_invoice_by_email(self):
         language_code = get_user_language(self.user)

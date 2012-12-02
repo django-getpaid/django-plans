@@ -30,4 +30,7 @@ class BillingInfoForm(forms.ModelForm):
         return self.cleaned_data['tax_number']
 
 
-
+class BillingInfoWithoutShippingForm(BillingInfoForm):
+    class Meta:
+        model = BillingInfo
+        exclude = ('user', 'shipping_name', 'shipping_street', 'shipping_zipcode', 'shipping_city')

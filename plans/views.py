@@ -12,9 +12,8 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import DeleteView, ModelFormMixin
 from django.views.generic.list import ListView
 from plans.importer import import_name
-from models import UserPlan, PlanPricing, Plan, Order, BillingInfo
-from forms import BillingInfoForm
-from plans.forms import CreateOrderForm
+from plans.models import UserPlan, PlanPricing, Plan, Order, BillingInfo
+from plans.forms import CreateOrderForm, BillingInfoForm, BillingInfoWithoutShippingForm
 from plans.models import Quota, Invoice
 from plans.signals import order_started
 from plans.validators import account_full_validation
@@ -76,17 +75,6 @@ class PlanTableMixin(object):
 
             ), quota_list)
 
-
-
-        
-#class ExtendPlanView(CurrentPlanView):
-#    template_name = "plans/extend.html"
-#    def get_context_data(self, **kwargs):
-#        context = super(ExtendPlanView, self).get_context_data(**kwargs)
-#        context['pricings'] = PlanPricing.objects.select_related('pricing').filter(plan=context['userplan'])
-#        context['form'] = OrderPlanForm()
-#
-#        return context
 
 class UpgradePlanView(PlanTableMixin, ListView):
     template_name = "plans/upgrade.html"
@@ -165,8 +153,6 @@ class ChangePlanView(View):
                 messages.success(request, _("Your plan has been successfully changed"))
             else:
                 return HttpResponseForbidden()
-
-
         return HttpResponseRedirect(reverse('upgrade_plan'))
 
 
@@ -176,43 +162,45 @@ class CreateOrderView(CreateView):
 
     def recalculate(self, amount, billing_info):
         """
-        Method calculates order details
+        Calculates and return pre-filled Order
         """
-        self.amount = amount
-
+        order = Order(pk=-1)
+        order.amount = amount
+        order.currency = self.get_currency()
         country = getattr(billing_info, 'country', None)
         if not country is None:
             country = country.code
         tax_number = getattr(billing_info, 'tax_number', None)
 
+        # Calculating session can be complex task (e.g. VIES webservice call)
+        # To ensure that once we get what tax we display to confirmation it will
+        # not change, tax rate is cached for a given billing data (as it mainly depends on it)
         tax_session_key = "tax_%s_%s" % (tax_number, country)
 
         tax = self.request.session.get(tax_session_key)
 
         if tax:
-            self.tax = tax[0] #retreiving tax as a tuple to avoid None problems
+            order.tax = tax[0] #retreiving tax as a tuple to avoid None problems
         else:
             taxation_policy = getattr(settings, 'TAXATION_POLICY' , None)
             if not taxation_policy:
                 raise ImproperlyConfigured('TAXATION_POLICY is not set')
             taxation_policy = import_name(taxation_policy)()
-            self.tax = taxation_policy.get_tax_rate(tax_number, country)
-            self.request.session[tax_session_key] = (self.tax, )
+            order.tax = taxation_policy.get_tax_rate(tax_number, country)
+            self.request.session[tax_session_key] = (order.tax, )
 
-        if self.tax is not None:
-            self.tax_total = (self.amount * (self.tax) / 100).quantize(Decimal('1.00'))
-        else:
-            self.tax_total = None
-
-        if self.tax_total is None:
-            self.total = self.amount
-        else:
-            self.total = self.amount + self.tax_total
+        return order
 
     def get_all_context(self):
+        """
+        Retrieves Plan and Pricing for current order creation
+        """
         self.plan_pricing = get_object_or_404(PlanPricing.objects.all().select_related('plan', 'pricing'),
             Q(pk=self.kwargs['pk']) & Q(plan__available=True)  & ( Q(plan__customized = self.request.user) | Q(plan__customized__isnull=True)))
 
+
+        # User is not allowed to create new order for Plan when he has different Plan
+        # He should use Plan Change View for this kind of action
         if not self.request.user.userplan.is_expired() and self.request.user.userplan.plan != self.plan_pricing.plan:
             raise Http404
 
@@ -221,52 +209,43 @@ class CreateOrderView(CreateView):
 
     def get_billing_info(self):
         try:
-            self.billing_info = self.request.user.billinginfo
+            return self.request.user.billinginfo
         except BillingInfo.DoesNotExist:
-            self.billing_info = None
+            return None
 
     def get_currency(self):
-        self.CURRENCY = getattr(settings, 'CURRENCY', None)
-        if len(self.CURRENCY) != 3:
+        CURRENCY = getattr(settings, 'CURRENCY', '')
+        if len(CURRENCY) != 3:
             raise ImproperlyConfigured('CURRENCY should be configured as 3-letter currency code.')
+        return CURRENCY
 
-    def get_tax(self):
-        try:
-            tax = Decimal(getattr(settings, 'TAX'))
-        except (AttributeError, TypeError):
-            raise ImproperlyConfigured('settings.TAX should be configured as Decimal instance.')
-        else:
-            self.tax = tax
+    def get_price(self):
+        return self.plan_pricing.price
+
 
     def get_context_data(self, **kwargs):
         context = super(CreateOrderView, self).get_context_data(**kwargs)
         self.get_all_context()
-        self.get_billing_info()
-        self.get_currency()
-        self.get_tax()
+        context['billing_info'] = self.get_billing_info()
 
-        self.recalculate(self.plan_pricing.price, self.billing_info)
-        context['plan_pricing'] = self.plan_pricing
-        context['plan'] = self.plan_pricing.plan
-        context['pricing'] = self.plan_pricing.pricing
-
-        context['billing_info'] = self.billing_info
-        context['CURRENCY'] = self.CURRENCY
-        context['tax'] = self.tax
-        context['amount'] = self.amount
-        context['tax_total'] = self.tax_total
-        context['total'] = self.total
+        order = self.recalculate(self.plan_pricing.price, context['billing_info'])
+        order.plan = self.plan_pricing.plan
+        order.pricing = self.plan_pricing.pricing
+        order.currency = self.get_currency()
+        context['object'] = order
         return context
 
     def form_valid(self, form):
-        self.get_context_data()
+        self.get_all_context()
+        order = self.recalculate(self.get_price(), self.get_billing_info())
+
         self.object = form.save(commit=False)
         self.object.user = self.request.user
         self.object.plan = self.plan
         self.object.pricing = self.pricing
-        self.object.amount = self.amount
-        self.object.tax = self.tax
-        self.object.currency = self.CURRENCY
+        self.object.amount = order.amount
+        self.object.tax = order.tax
+        self.object.currency = order.currency
         self.object.save()
         order_started.send(sender=self.object)
         return super(ModelFormMixin, self).form_valid(form)
@@ -284,58 +263,54 @@ class CreateOrderPlanChangeView(CreateOrderView):
         policy_class = getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy')
         return import_name(policy_class)()
 
+    def get_price(self):
+        policy = self.get_policy()
+        period = self.request.user.userplan.days_left()
+        return policy.get_change_price(self.request.user.userplan.plan, self.plan, period)
+
     def get_context_data(self, **kwargs):
         context = super(CreateOrderView, self).get_context_data(**kwargs)
-
         self.get_all_context()
-        self.get_billing_info()
-        self.get_currency()
-        self.get_tax()
 
-        self.policy = self.get_policy()
-        self.period = self.request.user.userplan.days_left()
-        self.price = self.policy.get_change_price(self.request.user.userplan.plan, self.plan, self.period)
+        price = self.get_price()
         context['plan'] = self.plan
-        if self.price is None:
+        context['billing_info'] = self.get_billing_info()
+        if price is None:
             context['current_plan'] = self.request.user.userplan.plan
             context['FREE_ORDER'] = True
         else:
-
-            self.recalculate(self.price, self.billing_info)
-            context['plan_pricing'] = None
-            context['pricing'] = None
-            context['billing_info'] = self.billing_info
-            context['CURRENCY'] = self.CURRENCY
-            context['tax'] = self.tax
-            context['amount'] = self.amount
-            context['tax_total'] = self.tax_total
-            context['total'] = self.total
+            order = self.recalculate(price, context['billing_info'])
+            order.pricing = None
+            order.plan = self.plan
+            context['billing_info'] = context['billing_info']
+            context['object'] = order
         return context
 
 
 class OrderView(DetailView):
     model = Order
 
-    def get_context_data(self, **kwargs):
-        context = super(OrderView, self).get_context_data(**kwargs)
-
-        self.CURRENCY = getattr(settings, 'CURRENCY', None)
-        if len( self.CURRENCY) != 3:
-            raise ImproperlyConfigured('CURRENCY should be configured as 3-letter currency code.')
-        context['CURRENCY'] = self.CURRENCY
-        context['plan'] = self.object.plan
-        context['pricing'] = self.object.pricing
-        context['tax'] = self.object.tax
-        context['amount'] = self.object.amount
-        context['tax_total'] = self.object.total() - self.object.amount
-        context['total'] = self.object.total()
-
-        context['invoices_proforma'] = self.object.get_invoices_proforma()
-        context['invoices'] = self.object.get_invoices()
-
-        context['printable_documents'] = self.object.get_all_invoices()
-        context['INVOICE_TYPES'] = Invoice.INVOICE_TYPES
-        return context
+#    def get_context_data(self, **kwargs):
+#        context = super(OrderView, self).get_context_data(**kwargs)
+#
+#        self.CURRENCY = getattr(settings, 'CURRENCY', None)
+#        if len( self.CURRENCY) != 3:
+#            raise ImproperlyConfigured('CURRENCY should be configured as 3-letter currency code.')
+#        context['CURRENCY'] = self.CURRENCY
+#
+#        context['plan'] = self.object.plan
+#        context['pricing'] = self.object.pricing
+#        context['tax'] = self.object.tax
+#        context['amount'] = self.object.amount
+#        context['tax_total'] = self.object.total() - self.object.amount
+#        context['total'] = self.object.total()
+#
+#        context['invoices_proforma'] = self.object.get_invoices_proforma()
+#        context['invoices'] = self.object.get_invoices()
+#
+#        context['printable_documents'] = self.object.get_all_invoices()
+#        context['INVOICE_TYPES'] = Invoice.INVOICE_TYPES
+#        return context
 
     def get_queryset(self):
         return super(OrderView, self).get_queryset().filter(user=self.request.user).select_related('plan', 'pricing', )
