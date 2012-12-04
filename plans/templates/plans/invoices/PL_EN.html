@@ -229,7 +229,7 @@
     {{ invoice.payment_date|date:"Y-m-d" }}
     <br><br>
     <hr>
-    {% if invoice.type == invoice.INVOICE_TYPES.INVOICE or invoice.type == invoice.INVOICE_TYPES.DUPLICATE %}
+    {% if not invoice.is_tax_applicable %}
         <p>
             <span class="pl">Odwrotne obciążenie.</span><span class="en">-Reverse charge.</span>
         </p>
