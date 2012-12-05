@@ -20,6 +20,7 @@ from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
 from plans.signals import order_completed, account_activated, account_expired, account_change_plan, account_deactivated
 from validators import account_full_validation
+from plans.locale.eu.taxation import EUTaxationPolicy
 
 accounts_logger = logging.getLogger('accounts')
 
@@ -392,7 +393,7 @@ class Order(models.Model):
 
     def tax_total(self):
         if self.tax is None:
-            return None
+            return Decimal('0.00')
         else:
             return self.total() - self.amount
 
@@ -654,9 +655,8 @@ class Invoice(models.Model):
             translation.deactivate()
         send_template_email([self.user.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt', mail_context, language_code)
 
-
-    def is_tax_applicable(self):
-        return not self.tax is None
+    def is_UE_customer(self):
+        return EUTaxationPolicy.is_in_EU(self.buyer_country.code)
 
 #noinspection PyUnresolvedReferences
 import plans.listeners

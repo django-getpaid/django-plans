@@ -185,7 +185,7 @@ class CreateOrderView(CreateView):
             taxation_policy = getattr(settings, 'TAXATION_POLICY' , None)
             if not taxation_policy:
                 raise ImproperlyConfigured('TAXATION_POLICY is not set')
-            taxation_policy = import_name(taxation_policy)()
+            taxation_policy = import_name(taxation_policy)
             order.tax = taxation_policy.get_tax_rate(tax_number, country)
             self.request.session[tax_session_key] = (order.tax, )
 

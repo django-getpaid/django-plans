@@ -53,25 +53,28 @@ class EUTaxationPolicy(TaxationPolicy):
         'GB', # United Kingdom (Great Britain)
     }
 
-    def is_in_EU(self, country_code):
-        return country_code.upper() in self.EU_COUNTRIES
+    @classmethod
+    def is_in_EU(cls, country_code):
+        return country_code.upper() in cls.EU_COUNTRIES
 
-    def get_tax_rate(self, tax_id, country_code):
-        issuer_country = self.get_issuer_country_code()
-        if not self.is_in_EU(issuer_country):
+
+    @classmethod
+    def get_tax_rate(cls, tax_id, country_code):
+        issuer_country = cls.get_issuer_country_code()
+        if not cls.is_in_EU(issuer_country):
             raise ImproperlyConfigured("EUTaxationPolicy requires that issuer country is in EU")
 
         if not tax_id and not country_code:
             # No vat id, no country
-            return self.get_default_tax()
+            return cls.get_default_tax()
 
         elif tax_id and not country_code:
             # Customer is not a company, we know his country
 
-           if self.is_in_EU(country_code):
+           if cls.is_in_EU(country_code):
                # Customer (private person) is from a EU
                # He must pay full VAT of our country
-               return self.get_default_tax()
+               return cls.get_default_tax()
            else:
                # Customer (private person) not from EU
                # charge back
@@ -83,8 +86,8 @@ class EUTaxationPolicy(TaxationPolicy):
             if country_code.upper() == issuer_country.upper():
                # Company is from the same country as issuer
                # Normal tax
-               return self.get_default_tax()
-            if self.is_in_EU(country_code):
+               return cls.get_default_tax()
+            if cls.is_in_EU(country_code):
                 # Company is from other EU country
                 try:
                     if tax_id and vatnumber.check_vies(tax_id):
@@ -92,10 +95,10 @@ class EUTaxationPolicy(TaxationPolicy):
                     # Charge back
                         return None
                     else:
-                        return self.get_default_tax()
+                        return cls.get_default_tax()
                 except (WebFault, TransportError):
                     # If we could not connect to VIES
-                    return self.get_default_tax()
+                    return cls.get_default_tax()
             else:
                 # Company is not from EU
                 # Charge back

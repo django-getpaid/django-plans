@@ -11,7 +11,8 @@ class TaxationPolicy(object):
     or None if tax is not applicable.
     """
 
-    def get_default_tax(self):
+    @classmethod
+    def get_default_tax(cls):
         """
         Gets default tax rate. Simple returns ``settings.TAX``
 
@@ -19,7 +20,8 @@ class TaxationPolicy(object):
         """
         return getattr(settings, 'TAX', None)
 
-    def get_issuer_country_code(self):
+    @classmethod
+    def get_issuer_country_code(cls):
         """
         Gets issuers country. Simply returns ``settings.TAX_COUNTRY``
 
@@ -27,7 +29,8 @@ class TaxationPolicy(object):
         """
         return getattr(settings, 'TAX_COUNTRY', None)
 
-    def get_tax_rate(self, tax_id, country_code):
+    @classmethod
+    def get_tax_rate(cls, tax_id, country_code):
         """
         Methods
 
