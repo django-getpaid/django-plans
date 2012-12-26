@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.contrib.sites.models import Site
+from django.db.models import Max
 from django.utils import translation
 from django_countries import CountryField
 from pytz import utc
@@ -520,14 +521,14 @@ class Invoice(models.Model):
             invoice_counter_reset = getattr(settings, 'INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
 
             if invoice_counter_reset == Invoice.NUMBERING.DAILY:
-                count = Invoice.objects.filter(issued=self.issued, type=self.type).count()
+                last_number = Invoice.objects.filter(issued=self.issued, type=self.type).aggregate(Max('number'))['number__max'] or 0
             elif invoice_counter_reset == Invoice.NUMBERING.MONTHLY:
-                count = Invoice.objects.filter(issued__year=self.issued.year, issued__month=self.issued.month,  type=self.type).count()
+                last_number = Invoice.objects.filter(issued__year=self.issued.year, issued__month=self.issued.month,  type=self.type).aggregate(Max('number'))['number__max'] or 0
             elif invoice_counter_reset == Invoice.NUMBERING.ANNUALLY:
-                count = Invoice.objects.filter(issued__year=self.issued.year, type=self.type).count()
+                last_number = Invoice.objects.filter(issued__year=self.issued.year, type=self.type).aggregate(Max('number'))['number__max'] or 0
             else:
                 raise ImproperlyConfigured("INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly.")
-            self.number = 1 if count == 0 else count + 1
+            self.number = last_number + 1
 
 
         if self.full_number is "":
