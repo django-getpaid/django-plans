@@ -460,9 +460,9 @@ class Invoice(models.Model):
     order = models.ForeignKey('Order')
 
     number = models.IntegerField(db_index=True)
-    full_number = models.CharField(max_length=200, editable=False)
+    full_number = models.CharField(max_length=200)
 
-    type = models.IntegerField(choices=INVOICE_TYPES, default=INVOICE_TYPES.INVOICE, editable=False, db_index=True)
+    type = models.IntegerField(choices=INVOICE_TYPES, default=INVOICE_TYPES.INVOICE,  db_index=True)
 
     issued = models.DateField(db_index=True)
     issued_duplicate = models.DateField(db_index=True, null=True, blank=True)
@@ -631,7 +631,11 @@ class Invoice(models.Model):
             return
 
         day = date.today()
-        invoice = cls(issued=day, selling_date=day, payment_date=day + timedelta(days=14)) #FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
+        pday = day
+        if invoice_type == Invoice.INVOICE_TYPES['PROFORMA']:
+            pday = day + timedelta(days=14)
+
+        invoice = cls(issued=day, selling_date=day, payment_date=pday) #FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
         invoice.type = invoice_type
         invoice.copy_from_order(order)
         invoice.set_issuer_invoice_data()
