@@ -52,6 +52,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_filter = ('type', )
     list_display = ('full_number', "issued", "total_net", "currency", 'user', "tax", "buyer_name", "buyer_city", "buyer_tax_number")
     list_select_related = True
+    raw_id_fields = ('user', 'order')
 
 class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     list_filter = ('active', 'expire')
