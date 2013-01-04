@@ -431,5 +431,8 @@ class InvoiceDetailView(DetailView):
         return context
 
     def get_queryset(self):
-        return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user)
+        if self.request.user.is_superuser:
+            return super(InvoiceDetailView, self).get_queryset()
+        else:
+            return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user)
 
