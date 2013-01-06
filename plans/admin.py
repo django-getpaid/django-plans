@@ -3,6 +3,7 @@ from django.core import urlresolvers
 from models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
 from ordered_model.admin import OrderedModelAdmin
 from plans.models import Invoice
+from django.utils.translation import ugettext_lazy as _, pgettext_lazy
 
 class UserLinkMixin(object):
     def user_link(self, obj):
@@ -39,10 +40,23 @@ class BillingInfoAdmin(UserLinkMixin, admin.ModelAdmin):
     readonly_fields = ('user_link',)
     exclude = ('user',)
 
+
+def make_order_completed(modeladmin, request, queryset):
+    for order in queryset:
+        order.complete_order()
+make_order_completed.short_description = _("Make selected orders completed")
+
+def make_order_invoice(modeladmin, request, queryset):
+    for order in queryset:
+        if Invoice.objects.filter(type=Invoice.INVOICE_TYPES['INVOICE'], order=order).count() == 0:
+            Invoice.create(order, Invoice.INVOICE_TYPES['INVOICE'])
+make_order_invoice.short_description = _("Make invoices for orders")
+
 class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status', "plan")
     search_fields = ('id', 'user__username', 'user__email')
     list_display = ("id", "name", "created", "user", "status", "completed", "tax", "amount", "currency", "plan", "pricing")
+    actions = [make_order_completed, make_order_invoice]
     def queryset(self, request):
         return super(OrderAdmin, self).queryset(request).select_related('plan', 'pricing', 'user')
 
