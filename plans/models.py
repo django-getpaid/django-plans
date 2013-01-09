@@ -635,7 +635,7 @@ class Invoice(models.Model):
         if invoice_type == Invoice.INVOICE_TYPES['PROFORMA']:
             pday = day + timedelta(days=14)
 
-        invoice = cls(issued=day, selling_date=day, payment_date=pday) #FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
+        invoice = cls(issued=day, selling_date=order.completed, payment_date=order.completed) #FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
         invoice.type = invoice_type
         invoice.copy_from_order(order)
         invoice.set_issuer_invoice_data()
