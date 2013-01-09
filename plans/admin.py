@@ -52,11 +52,17 @@ def make_order_invoice(modeladmin, request, queryset):
             Invoice.create(order, Invoice.INVOICE_TYPES['INVOICE'])
 make_order_invoice.short_description = _("Make invoices for orders")
 
+
+class InvoiceInline(admin.TabularInline):
+    model = Invoice
+    extra = 0
+
 class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status', "plan")
     search_fields = ('id', 'user__username', 'user__email')
     list_display = ("id", "name", "created", "user", "status", "completed", "tax", "amount", "currency", "plan", "pricing")
     actions = [make_order_completed, make_order_invoice]
+    inlines = (InvoiceInline, )
     def queryset(self, request):
         return super(OrderAdmin, self).queryset(request).select_related('plan', 'pricing', 'user')
 
