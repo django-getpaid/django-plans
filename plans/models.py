@@ -467,8 +467,8 @@ class Invoice(models.Model):
     issued = models.DateField(db_index=True)
     issued_duplicate = models.DateField(db_index=True, null=True, blank=True)
 
-    selling_date = models.DateField()
-    payment_date = models.DateField()
+    selling_date = models.DateField(db_index=True, null=True, blank=True)
+    payment_date = models.DateField(db_index=True)
 
     unit_price_net = models.DecimalField(max_digits=7, decimal_places=2)
 
@@ -631,11 +631,11 @@ class Invoice(models.Model):
             return
 
         day = date.today()
-        pday = day
+        pday = order.completed
         if invoice_type == Invoice.INVOICE_TYPES['PROFORMA']:
             pday = day + timedelta(days=14)
 
-        invoice = cls(issued=day, selling_date=order.completed, payment_date=order.completed) #FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
+        invoice = cls(issued=day, selling_date=order.completed, payment_date=pday) #FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
         invoice.type = invoice_type
         invoice.copy_from_order(order)
         invoice.set_issuer_invoice_data()
