@@ -26,7 +26,7 @@ setup(
     ],
     install_requires=['django',
                       'django-countries',
-                      # TODO 'django-transmeta==dev',
+
                       # TODO 'django-ordered-model==dev'
                       'pytz',
                       ],
@@ -36,7 +36,6 @@ setup(
              ],
     },
     dependency_links=['https://github.com/sbrandtb/django-ordered-model/downloads',
-                      'https://github.com/bearstech/django-transmeta/downloads',
                       'https://github.com/htj/suds-htj/downloads'
                       ],
     include_package_data=True,

@@ -15,7 +15,6 @@ from django.template import Context
 from django.conf import settings
 from datetime import date, timedelta, datetime
 from django.core.exceptions import ImproperlyConfigured, ValidationError
-from transmeta import TransMeta
 import logging
 from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
@@ -36,9 +35,7 @@ class Plan(OrderedModel):
     customized = models.ForeignKey('auth.User', null=True, blank=True, verbose_name=_('customized'))
     quotas = models.ManyToManyField('Quota', through='PlanQuota', verbose_name=_('quotas'))
 
-    __metaclass__ = TransMeta
     class Meta:
-        translate = ('name', 'description', )
         ordering = ('order',)
         verbose_name = _("Plan")
         verbose_name_plural = _("Plans")
@@ -250,10 +247,7 @@ class Pricing(models.Model):
     name = models.CharField(_('name'), max_length=100)
     period = models.PositiveIntegerField(_('period'), default=30, null=True, blank=True, db_index=True)
 
-    __metaclass__ = TransMeta
-
     class Meta:
-        translate = ('name', )
         ordering = ('period',)
         verbose_name = _("Pricing")
         verbose_name_plural = _("Pricings")
@@ -271,10 +265,7 @@ class Quota(OrderedModel):
     description = models.TextField(_('description'), blank=True)
     is_boolean = models.BooleanField(_('is boolean'), default=False)
 
-    __metaclass__ = TransMeta
-
     class Meta:
-        translate = ('name', 'description', 'unit')
         ordering = ('order',)
         verbose_name = _("Quota")
         verbose_name_plural = _("Quotas")
