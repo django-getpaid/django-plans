@@ -1,3 +1,4 @@
+from copy import deepcopy
 from django.contrib import admin
 from django.core import urlresolvers
 from models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
@@ -22,12 +23,39 @@ class PlanPricingInline(admin.TabularInline):
 class QuotaAdmin(OrderedModelAdmin):
     list_display = ('codename', 'name', 'description', 'unit', 'is_boolean',  'move_up_down_links', )
 
+
+
+def copy_plan(modeladmin, request, queryset):
+    """
+    Admin command for duplicating plans preserving quotas and pricings.
+    """
+    for plan in queryset:
+        plan_copy =  deepcopy(plan)
+        plan_copy.id = None
+        plan_copy.available = False
+        plan_copy.default = False
+        plan_copy.created = None
+        plan_copy.save(force_insert=True)
+
+        for pricing in plan.planpricing_set.all():
+            pricing.id = None
+            pricing.plan = plan_copy
+            pricing.save(force_insert=True)
+
+        for quota in plan.planquota_set.all():
+            quota.id = None
+            quota.plan = plan_copy
+            quota.save(force_insert=True)
+copy_plan.short_description = _("Make plan copy")
+
 class PlanAdmin(OrderedModelAdmin):
     search_fields = ('customized__username', 'customized__email', )
     list_filter = ( 'available',  )
     list_display = ('name',   'description', 'customized', 'default', 'available', 'created', 'move_up_down_links')
     inlines = (PlanPricingInline, PlanQuotaInline)
     list_select_related = True
+    raw_id_fields = ('customized',)
+    actions = [copy_plan, ]
 
     def queryset(self, request):
         return super(PlanAdmin, self).queryset(request).select_related('customized')
