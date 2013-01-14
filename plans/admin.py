@@ -62,7 +62,7 @@ class PlanAdmin(OrderedModelAdmin):
 
 
 class BillingInfoAdmin(UserLinkMixin, admin.ModelAdmin):
-    search_fields = ('user__username', 'user__email')
+    search_fields = ('user__username', 'user__email', 'tax_number', 'name')
     list_display = ('user', 'tax_number', 'name', 'street', 'zipcode', 'city', 'country')
     list_select_related = True
     readonly_fields = ('user_link',)

@@ -63,8 +63,8 @@ class BillingInfo(models.Model):
     Stores customer billing data needed to issue an invoice
     """
     user = models.OneToOneField('auth.User', verbose_name=_('user'))
-    tax_number = models.CharField(_('VAT ID'), max_length=200, blank=True)
-    name = models.CharField(_('name'), max_length=200)
+    tax_number = models.CharField(_('VAT ID'), max_length=200, blank=True, db_index=True)
+    name = models.CharField(_('name'), max_length=200, db_index=True)
     street = models.CharField(_('street'), max_length=200)
     zipcode = models.CharField(_('zip code'), max_length=200)
     city = models.CharField(_('city'), max_length=200)
