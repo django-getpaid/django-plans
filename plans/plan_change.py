@@ -53,6 +53,7 @@ class StandardPlanChangePolicy(PlanChangePolicy):
 
     Additional constant charges are:
         * ``StandardPlanChangePolicy.UPGRADE_CHARGE``
+        * ``StandardPlanChangePolicy.FREE_UPGRADE``
         * ``StandardPlanChangePolicy.DOWNGRADE_CHARGE``
 
     .. note:: Example
@@ -68,17 +69,18 @@ class StandardPlanChangePolicy(PlanChangePolicy):
             Switch cost is:
                        23 *            1.00 € *                  10% +                     0 € = 25.30 €
                 days_left * cost_diff_per_day * upgrade_percent_rate + constant_upgrade_charge
-
-
-
     """
 
     UPGRADE_PERCENT_RATE = Decimal('10.0')
     UPGRADE_CHARGE = Decimal('0.0')
     DOWNGRADE_CHARGE = None
+    FREE_UPGRADE = Decimal('0.0')
 
     def _calculate_final_price(self, period, day_cost_diff):
         if day_cost_diff is None:
             return self.DOWNGRADE_CHARGE
+        cost = (period * day_cost_diff * (self.UPGRADE_PERCENT_RATE/100 + 1) + self.UPGRADE_CHARGE).quantize(Decimal('1.00'))
+        if cost is None or cost < self.FREE_UPGRADE:
+            return None
         else:
-            return (period * day_cost_diff * (self.UPGRADE_PERCENT_RATE/100 + 1) + self.UPGRADE_CHARGE).quantize(Decimal('1.00'))
+            return cost

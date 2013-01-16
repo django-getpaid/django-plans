@@ -165,9 +165,14 @@ Example::
 User will receive notification before 7 , 3 and 1 day to account expire.
 
 
+``PLAN_CHANGE_POLICY``
+----------------------
 
+**Optional**
 
+Default: ``'plans.plan_change.StandardPlanChangePolicy'``
 
+A full python to path that should be used as plan change policy.
 
 ``PLAN_DEFAULT_GRACE_PERIOD``
 -----------------------------
