@@ -108,8 +108,9 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     search_fields = ('user__username', 'user__email')
     list_display = ('user', 'plan', 'expire', 'active')
     list_select_related = True
-    readonly_fields = ['user_link']
+    readonly_fields = ['user_link', ]
     fields = ('user_link', 'plan', 'expire', 'active' )
+    raw_id_fields = ['plan', ]
 
 
 
