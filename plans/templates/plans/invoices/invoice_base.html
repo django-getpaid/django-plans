@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+        html, body{
+            font-size: 12px;
+            font-family: Helvetica;
+        }
+        span.en {
+            font-size: 10px;
+            color:gray;
+        }
+        span.pl {
+            font-size: 14px;
+            color: black;
+        }
+        table {
+            border-collapse: collapse;
+        }
+
+        table td, table th {
+            border: 1px solid black;
+            padding: 1em;
+        }
+        table thead{
+            text-align: center;
+        }
+        #shipping{
+            text-align: right;
+        }
+        table#items thead {
+            background-color: #EEE;
+        }
+        table#items tfoot td{
+            text-align: right;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        table td.number{
+            text-align: right;
+
+        }
+        table td.center{
+            text-align: center;
+        }
+
+        strong{
+            font-size: 14px;
+        }
+        #full_number , span.invoice_header{
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+
+        label{
+            display: inline-block;
+            position: relative;
+            margin-bottom: .5em;
+
+        }
+
+        label span.pl {
+            display: block;
+        }
+
+        label span.en{
+            position: absolute;
+            right: .5em;
+
+        }
+
+    </style>
+
+    {% block head %}{% endblock %}
+
+</head>
+<body style="width: 960px; margin: 0 auto;" {% if auto_print %}onload="window.print();"{% endif %}>
+{% block body %}{% endblock %}
+</body>
+</html>
