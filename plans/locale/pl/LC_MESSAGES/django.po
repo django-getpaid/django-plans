@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-05 09:05+0100\n"
-"PO-Revision-Date: 2012-12-05 09:06\n"
+"POT-Creation-Date: 2013-02-23 17:26+0100\n"
+"PO-Revision-Date: 2013-02-23 17:30+0124\n"
 "Last-Translator:   <cypreess@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -17,272 +17,284 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
-"X-Translated-Using: django-rosetta 0.6.8\n"
+"X-Translated-Using: django-rosetta 0.7.0\n"
 
-#: models.py:29 models.py:68 models.py:248 models.py:267
+#: admin.py:49
+msgid "Make plan copy"
+msgstr "Utwórz kopię abonamentu"
+
+#: admin.py:75
+msgid "Make selected orders completed"
+msgstr "Zrealizuj zamówienia"
+
+#: admin.py:81
+msgid "Make invoices for orders"
+msgstr "Wygeneruj faktury VAT dla zamówień"
+
+#: models.py:30 models.py:67 models.py:247 models.py:263
 msgid "name"
 msgstr "nazwa"
 
-#: models.py:30 models.py:269
+#: models.py:31 models.py:265
 msgid "description"
 msgstr "opis"
 
-#: models.py:32
+#: models.py:33
 msgid "available"
 msgstr "dostępny"
 
-#: models.py:33 models.py:333
+#: models.py:34 models.py:326
 msgid "created"
 msgstr "utworzono"
 
-#: models.py:34
+#: models.py:35
 msgid "customized"
 msgstr "specjalny"
 
-#: models.py:35
+#: models.py:36
 msgid "quotas"
 msgstr "ograniczenia"
 
-#: models.py:41 models.py:363 templates/plans/current.html:14
+#: models.py:40 models.py:356 templates/plans/current.html:14
 #: templates/plans/extend.html:24 templates/plans/upgrade.html:12
 msgid "Plan"
 msgstr "Abonament"
 
-#: models.py:42
+#: models.py:41
 msgid "Plans"
 msgstr "Abonamenty"
 
-#: models.py:66 models.py:112 models.py:329
+#: models.py:65 models.py:111 models.py:322
 msgid "user"
 msgstr "użytkownik"
 
-#: models.py:67
+#: models.py:66
 msgid "VAT ID"
 msgstr "NIP"
 
-#: models.py:69
+#: models.py:68
 msgid "street"
 msgstr "ulica"
 
-#: models.py:70
+#: models.py:69
 msgid "zip code"
 msgstr "kod pocztowy"
 
-#: models.py:71
+#: models.py:70
 msgid "city"
 msgstr "miasto"
 
-#: models.py:72
+#: models.py:71
 msgid "country"
 msgstr "kraj"
 
-#: models.py:74
+#: models.py:73
 msgid "name (shipping)"
 msgstr "nazwa (korespondencja)"
 
-#: models.py:74 models.py:75 models.py:76 models.py:77
+#: models.py:73 models.py:74 models.py:75 models.py:76
 msgid "optional"
 msgstr "opcjonalnie"
 
-#: models.py:75
+#: models.py:74
 msgid "street (shipping)"
 msgstr "ulica (korespondencja)"
 
-#: models.py:76
+#: models.py:75
 msgid "zip code (shipping)"
 msgstr "kod pocztowy (korespondencja)"
 
-#: models.py:77
+#: models.py:76
 msgid "city (shipping)"
 msgstr "miasto (korespondencja)"
 
-#: models.py:80
+#: models.py:79
 msgid "Billing info"
 msgstr "Dane do faktury"
 
-#: models.py:81
+#: models.py:80
 msgid "Billing infos"
 msgstr "Dane do faktur"
 
-#: models.py:100
+#: models.py:99
 msgid "VAT ID is not correct"
 msgstr "NIP nie jest poprawny"
 
-#: models.py:113 models.py:331
+#: models.py:112 models.py:324
 msgid "plan"
 msgstr "abonament"
 
-#: models.py:114
+#: models.py:113
 msgid "expire"
 msgstr "wygasa"
 
-#: models.py:115 templates/plans/current.html:12
+#: models.py:114 templates/plans/current.html:12
 msgid "active"
 msgstr "aktywny"
 
-#: models.py:118
+#: models.py:117
 msgid "User plan"
 msgstr "Abonament użytkownika"
 
-#: models.py:119
+#: models.py:118
 msgid "Users plans"
 msgstr "Abonamenty użytkowników"
 
-#: models.py:249
+#: models.py:248
 msgid "period"
 msgstr "okres"
 
-#: models.py:256
+#: models.py:252
 msgid "Pricing"
 msgstr "Okres"
 
-#: models.py:257 templates/plans/extend.html:40
+#: models.py:253 templates/plans/extend.html:40
 #: templates/plans/plan_table.html:46 templates/plans/upgrade.html:33
 msgid "Pricings"
 msgstr "Okresy"
 
-#: models.py:260 templates/plans/extend.html:44
+#: models.py:256 templates/plans/extend.html:44
 #: templates/plans/plan_table.html:74 templates/plans/upgrade.html:37
 msgid "days"
 msgstr "dni"
 
-#: models.py:266
+#: models.py:262
 msgid "codename"
 msgstr "codename"
 
-#: models.py:268
+#: models.py:264
 msgid "unit"
 msgstr "jednostka"
 
-#: models.py:270
+#: models.py:266
 msgid "is boolean"
 msgstr "wartość tak lub nie"
 
-#: models.py:277
+#: models.py:270
 msgid "Quota"
 msgstr "Limit"
 
-#: models.py:278 templates/plans/extend.html:25
+#: models.py:271 templates/plans/extend.html:25
 #: templates/plans/upgrade.html:17
 msgid "Quotas"
 msgstr "Limity"
 
-#: models.py:297
+#: models.py:290
 msgid "Plan pricing"
 msgstr "Okres abonamentu"
 
-#: models.py:298
+#: models.py:291
 msgid "Plans pricings"
 msgstr "Okresy abonamentów"
 
-#: models.py:316
+#: models.py:309
 msgid "Plan quota"
 msgstr "Limit abonamentu"
 
-#: models.py:317
+#: models.py:310
 msgid "Plans quotas"
 msgstr "Limity abonamentów"
 
-#: models.py:321
+#: models.py:314
 msgctxt "Order status"
 msgid "new"
 msgstr "nowe"
 
-#: models.py:322
+#: models.py:315
 msgctxt "Order status"
 msgid "completed"
 msgstr "zakończono"
 
-#: models.py:323
+#: models.py:316
 msgctxt "Order status"
 msgid "not valid"
 msgstr "niepoprawne"
 
-#: models.py:324
+#: models.py:317
 msgctxt "Order status"
 msgid "canceled"
 msgstr "anulowane"
 
-#: models.py:325
+#: models.py:318
 msgctxt "Order status"
 msgid "returned"
 msgstr "zwrócone"
 
-#: models.py:332
+#: models.py:325
 msgid "pricing"
 msgstr "okres cenowy"
 
-#: models.py:334
+#: models.py:327
 msgid "completed"
 msgstr "zakończono"
 
-#: models.py:335
+#: models.py:328
 msgid "amount"
 msgstr "kwota"
 
-#: models.py:336
+#: models.py:329
 msgid "tax"
 msgstr "podatek"
 
-#: models.py:338
+#: models.py:331
 msgid "currency"
 msgstr "waluta"
 
-#: models.py:339
+#: models.py:332
 msgid "status"
 msgstr "status"
 
-#: models.py:348
+#: models.py:341
 #, python-format
 msgid "Order #%(id)d"
 msgstr "Zamówienie #%(id)d"
 
-#: models.py:412 templates/mail/invoice_created_title.txt:1
+#: models.py:405 templates/mail/invoice_created_title.txt:1
 msgid "Order"
 msgstr "Zamówienie"
 
-#: models.py:413
+#: models.py:406
 msgid "Orders"
 msgstr "Zamówienia"
 
-#: models.py:436 models.py:508
+#: models.py:429 models.py:501
 msgid "Invoice"
 msgstr "Faktura"
 
-#: models.py:437
+#: models.py:430
 msgid "Invoice Duplicate"
 msgstr "Duplikat faktury"
 
-#: models.py:438
+#: models.py:431
 msgctxt "proforma"
 msgid "Order confirmation"
 msgstr "Proforma"
 
-#: models.py:485 models.py:492 models.py:500
+#: models.py:478 models.py:485 models.py:493
 msgid "Name"
 msgstr "Nazwa"
 
-#: models.py:486 models.py:493 models.py:501
+#: models.py:479 models.py:486 models.py:494
 msgid "Street"
 msgstr "Ulica"
 
-#: models.py:487 models.py:494 models.py:502
+#: models.py:480 models.py:487 models.py:495
 msgid "Zip code"
 msgstr "Kod pocztowy"
 
-#: models.py:488 models.py:495 models.py:503
+#: models.py:481 models.py:488 models.py:496
 msgid "City"
 msgstr "Miasto"
 
-#: models.py:489 models.py:496 models.py:504
+#: models.py:482 models.py:489 models.py:497
 msgid "Country"
 msgstr "Kraj"
 
-#: models.py:490 models.py:505
+#: models.py:483 models.py:498
 msgid "TAX/VAT number"
 msgstr "Numer NIP"
 
-#: models.py:509
+#: models.py:502
 msgid "Invoices"
 msgstr "Faktury"
 
@@ -539,27 +551,3 @@ msgstr "Ceny netto"
 #: templates/plans/upgrade.html:15
 msgid "Description"
 msgstr "Opis"
-
-#~ msgid "Poland"
-#~ msgstr "Polska"
-
-#~ msgid "Russian Federation"
-#~ msgstr "Rosja"
-
-#~ msgid "Sweden"
-#~ msgstr "Szwecja"
-
-#~ msgid "Slovenia"
-#~ msgstr "Słowenia"
-
-#~ msgid "Slovakia"
-#~ msgstr "Słowacja"
-
-#~ msgid ""
-#~ "Hosting of your images is suspended, but we will keep all your files for next 30 days. If you want to continue to\n"
-#~ "use our service please extend your account soon for full service recover."
-#~ msgstr ""
-#~ "Wyświetlanie Twoich zdjęć zostało zawieszone, ale pliki nie zostaną usunięte"
-#~ " jeszcze przez okres 30 dni. Jeśli chcesz kontynuować korzystanie z usługi "
-#~ "przedłuż już teraz abonament, aby przywrócić pełne działanie usługi na Twoim"
-#~ " koncie."
