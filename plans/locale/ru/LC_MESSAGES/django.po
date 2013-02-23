@@ -2,34 +2,34 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the django-plans package.
 # Victor Safronovich <vsafronovich@gmail.com>, 2012.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-02-23 17:26+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Victor Safronovich <vsafronovich@gmail.com>\n"
+"PO-Revision-Date: 2013-02-23 18:01+0124\n"
+"Last-Translator:   <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"Language: \n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"X-Translated-Using: django-rosetta 0.7.0\n"
 
 #: admin.py:49
 msgid "Make plan copy"
-msgstr ""
+msgstr "Создать копию пакета"
 
 #: admin.py:75
 msgid "Make selected orders completed"
-msgstr ""
+msgstr "Выполнить заказы"
 
 #: admin.py:81
 msgid "Make invoices for orders"
-msgstr ""
+msgstr "Генерировать счета для заказов"
 
 #: models.py:30 models.py:67 models.py:247 models.py:263
 msgid "name"
@@ -61,9 +61,8 @@ msgid "Plan"
 msgstr "План"
 
 #: models.py:41
-#, fuzzy
 msgid "Plans"
-msgstr "План"
+msgstr "Пакеты"
 
 #: models.py:65 models.py:111 models.py:322
 msgid "user"
@@ -91,32 +90,31 @@ msgstr "страна"
 
 #: models.py:73
 msgid "name (shipping)"
-msgstr ""
+msgstr "название "
 
 #: models.py:73 models.py:74 models.py:75 models.py:76
 msgid "optional"
-msgstr ""
+msgstr "необязательно"
 
 #: models.py:74
 msgid "street (shipping)"
-msgstr ""
+msgstr "улица"
 
 #: models.py:75
 msgid "zip code (shipping)"
-msgstr ""
+msgstr "индекс"
 
 #: models.py:76
 msgid "city (shipping)"
-msgstr ""
+msgstr "город"
 
 #: models.py:79
 msgid "Billing info"
-msgstr ""
+msgstr "платежная информация"
 
 #: models.py:80
-#, fuzzy
 msgid "Billing infos"
-msgstr "Информация об оплате удалена"
+msgstr "Платежная информация"
 
 #: models.py:99
 msgid "VAT ID is not correct"
@@ -135,22 +133,20 @@ msgid "active"
 msgstr "активный"
 
 #: models.py:117
-#, fuzzy
 msgid "User plan"
-msgstr "план"
+msgstr "Пакет"
 
 #: models.py:118
 msgid "Users plans"
-msgstr ""
+msgstr "Пакеты пользователей"
 
 #: models.py:248
 msgid "period"
 msgstr "период"
 
 #: models.py:252
-#, fuzzy
 msgid "Pricing"
-msgstr "Ценообразование"
+msgstr "Цены"
 
 #: models.py:253 templates/plans/extend.html:40
 #: templates/plans/plan_table.html:46 templates/plans/upgrade.html:33
@@ -175,9 +171,8 @@ msgid "is boolean"
 msgstr "логический тип"
 
 #: models.py:270
-#, fuzzy
 msgid "Quota"
-msgstr "Ограничения"
+msgstr "Лимит"
 
 #: models.py:271 templates/plans/extend.html:25
 #: templates/plans/upgrade.html:17
@@ -185,24 +180,20 @@ msgid "Quotas"
 msgstr "Ограничения"
 
 #: models.py:290
-#, fuzzy
 msgid "Plan pricing"
-msgstr "ценообразование"
+msgstr "Цена пакета"
 
 #: models.py:291
-#, fuzzy
 msgid "Plans pricings"
-msgstr "Ценообразование"
+msgstr "Цены пакетов"
 
 #: models.py:309
-#, fuzzy
 msgid "Plan quota"
-msgstr "ограничения"
+msgstr "Лимиты пакета"
 
 #: models.py:310
-#, fuzzy
 msgid "Plans quotas"
-msgstr "ограничения"
+msgstr "Лимиты пакетов"
 
 #: models.py:314
 msgctxt "Order status"
@@ -256,16 +247,15 @@ msgstr "статус"
 #: models.py:341
 #, python-format
 msgid "Order #%(id)d"
-msgstr ""
+msgstr "Заказ #%(id)d"
 
 #: models.py:405 templates/mail/invoice_created_title.txt:1
 msgid "Order"
 msgstr "Заказ"
 
 #: models.py:406
-#, fuzzy
 msgid "Orders"
-msgstr "Заказ"
+msgstr "Заказы"
 
 #: models.py:429 models.py:501
 msgid "Invoice"
@@ -305,14 +295,14 @@ msgid "TAX/VAT number"
 msgstr "ИНН"
 
 #: models.py:502
-#, fuzzy
 msgid "Invoices"
-msgstr "Счет"
+msgstr "Счета"
 
 #: validators.py:32
 #, python-format
 msgid "Limit of %(model_name_plural)s exceeded. The limit is %(quota)s items."
 msgstr ""
+"Лимит %(model_name_plural)s превышен. Лимит составляет %(quota)s лотов."
 
 #: views.py:37
 msgid "Your account is now active"
@@ -399,11 +389,13 @@ msgid ""
 "Your account has just been extended by %(days)s days. Your current plan is "
 "%(plan_name)s and it will expire on %(expire)s. "
 msgstr ""
+"Ваш аккаунт был продлен на %(days)s дней. Ваш текущий пакет это "
+"%(plan_name)s и он истекает %(expire)s. "
 
 #: templates/mail/extend_account_body.txt:6
 msgid ""
 "An invoice will be sent with another e-mail, if billing data was provided."
-msgstr ""
+msgstr "Счет будет выслан на другой email, если указана платежная информация"
 
 #: templates/mail/extend_account_title.txt:1
 #, python-format
@@ -413,10 +405,11 @@ msgstr "Ваш аккаунт %(user)s продлен на %(days)s дней"
 #: templates/mail/invoice_created_body.txt:4
 #, python-format
 msgid ""
-"We are writing to inform you, that %(invoice_type)s %(invoice_number)s has "
-"been issued. You can view it and print it at:\n"
+"We are writing to inform you, that %(invoice_type)s %(invoice_number)s has been issued. You can view it and print it at:\n"
 "http://%(site_domain)s%(url)s\n"
 msgstr ""
+"Сообщаем Вам, что создан документ %(invoice_type)s %(invoice_number)s. Его можно распечатать на:\n"
+"http://%(site_domain)s%(url)s\n"
 
 #: templates/mail/invoice_created_body.txt:8
 msgid "Details of the order can be see on:"
@@ -425,7 +418,7 @@ msgstr "Детали заказа смотрите"
 #: templates/mail/invoice_created_title.txt:1
 #, python-format
 msgid "%(invoice_type)s %(invoice_number)s has been issued for %(user)s"
-msgstr ""
+msgstr "%(invoice_type)s %(invoice_number)s был сгенерирован для %(user)s"
 
 #: templates/mail/remind_expire_body.txt:4
 #, python-format
@@ -441,8 +434,8 @@ msgstr "Вы можете изменить ваш тарифный план %(pl
 #, python-format
 msgid "Your account %(user)s will expire in %(days)s day"
 msgid_plural "Your account %(user)s will expire in %(days)s days"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Ваш аккаунт %(user)s истекает через %(days)s дней"
+msgstr[1] "Ваш аккаунт %(user)s истекает через %(days)s дней"
 
 #: templates/plans/billing_info_delete.html:6
 msgid "Are you sure to delete billing info?"
@@ -472,30 +465,35 @@ msgstr "расширить"
 #, python-format
 msgid ""
 "\n"
-"            Your account has expired. Please <a href=\"%(url)s\">extend your "
-"account</a>.\n"
+"            Your account has expired. Please <a href=\"%(url)s\">extend your account</a>.\n"
 "        "
 msgstr ""
+"\n"
+"Ваш аккаунт истек. Пожалуйста <a href=\"%(url)s\">продлите Ваш аккаунт</a>."
 
 #: templates/plans/expiration_messages.html:13
 #, python-format
 msgid ""
 "\n"
-"                Your account is not active. Possibly you are over some "
-"limits.\n"
+"                Your account is not active. Possibly you are over some limits.\n"
 "                Try to <a href=\"%(url)s\">activate your account</a>.\n"
 "            "
 msgstr ""
+"\n"
+"Ваш аккаунт неактивен, возможно вы превысили некоторые лимиты.\n"
+"Попробуйте <a href=\"%(url)s\">активировать Ваш аккаунт</a>."
 
 #: templates/plans/expiration_messages.html:22
 #, python-format
 msgid ""
 "\n"
 "                Your account will expire soon (in %(days_to_expire)s days).\n"
-"                We recommend to <a href=\"%(extend_url)s\">extend your "
-"account now.</a>\n"
+"                We recommend to <a href=\"%(extend_url)s\">extend your account now.</a>\n"
 "            "
 msgstr ""
+"\n"
+"Ваш аккаунт скоро истечет (через %(days_to_expire)s дней).\n"
+"Рекомендуем <a href=\"%(extend_url)s\">продлить его сегодня.</a>"
 
 #: templates/plans/extend.html:32 templates/plans/upgrade.html:24
 msgid "yes"
@@ -509,10 +507,11 @@ msgstr "нет"
 #, python-format
 msgid ""
 "\n"
-"                Unfortunately your current plan is not available any more. "
-"You need to <a href=\"%(upgrade_url)s\">upgrade your plan</a>.\n"
+"                Unfortunately your current plan is not available any more. You need to <a href=\"%(upgrade_url)s\">upgrade your plan</a>.\n"
 "        "
 msgstr ""
+"\n"
+"К сожалению ваш текущий пакет больше не действует. Вам нужно <a href=\"%(upgrade_url)s\">расширить Ваш пакет</a>."
 
 #: templates/plans/plan_table.html:12
 msgid "your current plan"
@@ -534,12 +533,13 @@ msgstr "Купить"
 #, python-format
 msgid ""
 "\n"
-"                        This plan is not available anymore and cannot be "
-"extended.<p>\n"
-"                        You need to upgrade your account to any of <a href="
-"\"%(upgrade_url)s\">currently available plans</a>.\n"
+"                        This plan is not available anymore and cannot be extended.<p>\n"
+"                        You need to upgrade your account to any of <a href=\"%(upgrade_url)s\">currently available plans</a>.\n"
 "                    "
 msgstr ""
+"\n"
+"Этот пакет больше не действует и не может быть расширен.<p>\n"
+"Вам нужно расширить ваш аккаунт до любого пакета <a href=\"%(upgrade_url)s\">имеющегося в наличии</a>."
 
 #: templates/plans/plan_table.html:100
 msgid "Net prices"
@@ -548,4 +548,3 @@ msgstr "Цена"
 #: templates/plans/upgrade.html:15
 msgid "Description"
 msgstr "Описание"
-
