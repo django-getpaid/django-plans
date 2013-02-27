@@ -287,6 +287,7 @@ class PlanPricing(models.Model):
     objects = PlanPricingManager()
 
     class Meta:
+        ordering = ('pricing__period', )
         verbose_name = _("Plan pricing")
         verbose_name_plural = _("Plans pricings")
 
