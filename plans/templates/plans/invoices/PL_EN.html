@@ -1,5 +1,5 @@
 {% extends 'plans/invoices/invoice_base.html' %}
-{% block title %}{% if invoice.type == 1 %}Faktura VAT nr{% endif %}{% if invoice.type == 3 %}Faktura PROFORMA nr{% endif %}{% if invoice.type == 2 %}Faktura VAT DUPLIKAT nr{% endif %} {{ invoice.full_number }} | {% if invoice.type == 1 %}Invoice ID{% endif %}{% if invoice.type == 3 %}Order confirmation ID{% endif %}{% if invoice.type == 2 %}Invoice (duplicate) ID{% endif %} {{ invoice.full_number }}{% endblock %}
+{% block title %}{{ invoice.full_number }}{% endblock %}
 
 
 {% block body %}
