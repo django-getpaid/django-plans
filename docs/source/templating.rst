@@ -16,7 +16,7 @@ First you need to add a context processor to your settings, e.g.::
 
 
     TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
-        'plans.context_processors.expiration'
+        'plans.context_processors.account_status',
         )
 
 The context processor is defined as follows:
