@@ -11,6 +11,7 @@ Contents:
    integration
    settings
    plans
+   quota_validators
    plans_change
    taxation
    invoicing
