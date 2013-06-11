@@ -1,8 +1,12 @@
 # Create your views here.
+from django.contrib import messages
 from django.core.urlresolvers import reverse
+from django.shortcuts import redirect
 from django.views.generic import ListView, CreateView, DeleteView
 from example.foo.forms import FooForm
 from example.foo.models import Foo
+from plans.quota import get_user_quota
+
 
 class FooListView(ListView):
     model = Foo
@@ -35,3 +39,11 @@ class FooDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse('foo_list')
+
+    def delete(self, request, *args, **kwargs):
+        if not get_user_quota(request.user).get('CAN_DELETE_FOO', True):
+            messages.error(request, 'Sorry, your plan does not allow to deletes Foo. Please upgrade!')
+            return redirect('foo_del', pk=self.get_object().pk)
+        else:
+            return super(FooDeleteView, self).delete(request, *args, **kwargs)
+

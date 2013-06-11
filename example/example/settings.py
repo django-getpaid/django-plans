@@ -175,6 +175,14 @@ ISSUER_DATA = {
     }
 
 
+TAX = Decimal(23.0)
+TAXATION_POLICY = 'plans.locale.eu.taxation.EUTaxationPolicy'
+TAX_COUNTRY = 'PL'
+
+PLAN_ACTIVATION_VALIDATORS = {
+    'MAX_FOO_COUNT' : 'example.foo.validators.max_foos_validator',
+}
+
 CURRENCY = 'PLN'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
