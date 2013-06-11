@@ -39,15 +39,15 @@ Initialize example project database:
 
     $ cd ..
     $ python manage.py syncdb
-
-Load an initial data (used also for testing):
-
-.. code-block:: bash
-
-    $ python manage.py loaddata test_django-plans_auth test_django-plans_plans
+    [...]
+    Would you like to create one now? (yes/no): no
+    [...]
 
 
-Start dev webserver:
+Initial example data will be loaded automatically.
+
+
+Start development web server:
 
 .. code-block:: bash
 
