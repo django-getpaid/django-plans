@@ -25,7 +25,7 @@ Clone git repository to your current directory:
     $ git clone git://github.com/cypreess/django-plans.git
 
 
-Optionally create virtual env and get required packages to run example project:
+Optionally create virtual environment and get required packages to run example project:
 
 .. code-block:: bash
 
