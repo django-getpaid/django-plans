@@ -182,7 +182,7 @@ A full python to path that should be used as plan change policy.
 Default: ``30``
 
 
-New account default plan activation period counted in days.
+New account default plan expiration period counted in days.
 
 
 Example::
@@ -218,6 +218,7 @@ Example::
     }
 
 
+Further reading: :doc:`quota_validators`
 
 ``TAX``
 -------
@@ -252,7 +253,7 @@ Example::
     TAXATION_POLICY='plans.taxation.EUTaxationPolicy'
 
 
-
+Further reading: :doc:`taxation`
 
 ``TAX_COUNTRY``
 ---------------
