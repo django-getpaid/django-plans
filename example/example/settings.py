@@ -1,7 +1,6 @@
 # Django settings for example project.
 import os
 from decimal import Decimal
-import sys
 
 TAX = Decimal(23)
 EMAIL_FROM = "Test <test@server.com>"
@@ -80,6 +79,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(SITE_ROOT, 'static'),
 )
 
 # List of finder classes that know how to find static files in
@@ -130,7 +130,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'ordered_model',
-    'django_extensions',
+    # 'django_extensions',
     'plans',
     'example.foo',
 
@@ -166,12 +166,12 @@ LANGUAGES = (
     )
 
 ISSUER_DATA = {
-    "issuer_name": "Issuer Name",
-    "issuer_street": "Issuer Street",
-    "issuer_zipcode": "Issuer ZipCode",
-    "issuer_city": "Issuer City",
+    "issuer_name": "My Company Ltd",
+    "issuer_street": "48th Suny street",
+    "issuer_zipcode": "111-456",
+    "issuer_city": "Django City",
     "issuer_country": "PL",
-    "issuer_tax_number": "Issuer TAX number",
+    "issuer_tax_number": "PL123456789",
     }
 
 
