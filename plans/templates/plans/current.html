@@ -2,8 +2,6 @@
 
 {% load i18n %}
 
-{% block seo_title %}user_plan{% endblock %}
-
 {% block body %}
 <ul>
   <li>{% trans "Account" %}: {{ user }}
@@ -15,6 +13,20 @@
     <a href="{% url upgrade_plan %}">{% trans "upgrade" %}</a>
 </ul>
 
-{% include "plans/plan_table.html" %}
+
+
+
+    <h2>{% trans "Plan details" %}</h2>
+
+    {% include "plans/plan_table.html" %}
+
+
+    <h2>{% trans "Need more?" %}</h2>
+
+    {% url upgrade_plan as upgrade_url %}
+    {% blocktrans %}
+        Please see other <a href="{{ upgrade_url }}">currently available plans</a>.
+    {% endblocktrans %}
+
 
 {% endblock %}

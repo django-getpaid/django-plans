@@ -1,0 +1,172 @@
+
+/* @group Plan Table */
+
+table.plan_table  .current_plan {
+	font-size: 12px;
+	color: orange;
+	font-weight: bold;
+}
+
+
+
+
+table.plan_table {
+	border-collapse:collapse;
+	min-width: 80%;
+    margin: auto;
+}
+table.plan_table th{
+	font: 16px  sans-serif;
+	vertical-align: top;
+
+}
+
+table.plan_table th.planpricing_footer {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+
+table.plan_table thead th.plan_header{
+	font: 16px  sans-serif;
+	border-bottom: 2px solid #ddd8d2;
+	padding-bottom: 5px;
+	vertical-align: top;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+table.plan_table tbody tr.quota_row td:nth-child(odd),
+table.plan_table tfoot th.planpricing_footer:nth-child(odd)
+
+{
+	background-color: #f0f0f0;
+}
+
+
+
+
+table.plan_table .current,
+table.plan_table tbody tr.quota_row td.current,
+table.plan_table tfoot th.planpricing_footer.current
+{
+	background-color: #fefed3;
+}
+
+table.plan_table td{
+	text-align: center;
+	font: 23px  sans-serif;
+	border-bottom: 1px solid #ddd8d2;
+
+}
+
+table.plan_table span.plan_description {
+	display: block;
+	font-size: 11px;
+}
+
+table.plan_table span.plan_name {
+	display: block;
+	font: 25px Signika, sans-serif;
+	color: orange;
+
+}
+table.plan_table span.quota_name {
+	display: block;
+	text-align: right;
+	font: 16px sans-serif;
+    font-weight: bold;
+}
+
+table.plan_table span.quota_description {
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: none;
+	text-align: right;
+	display: block;
+	font-size: 11px;
+	color: #797979;
+}
+
+table.plan_table tfoot ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+table.plan_table tfoot ul li{
+	margin-bottom: 20px;
+	margin-top: 20px;
+	text-align: center;
+	height: 80px;
+}
+
+table.plan_table span.plan_pricing_name {
+	font-size: 14px;
+	display: block;
+}
+
+table.plan_table span.plan_pricing_period {
+	font-size: 11px;
+	font-weight: normal;
+	font-style: normal;
+	display: block;
+}
+
+table.plan_table th.quota_header {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #ddd8d2;
+	padding-right: 10px;
+	width: 195px;
+}
+
+table.plan_table span.plan_pricing_price {
+	font-size: 13px;
+	display: block;
+	font-weight: bold;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+table.plan_table tfoot a.buy,
+table.plan_table tfoot a.change_plan {
+	display: block;
+	color: #fff;
+	background-color: gray;
+	text-transform: uppercase;
+	text-transform: uppercase;
+	text-decoration: none;
+	font: 500 13px  sans-serif;
+	border-bottom-width: 0;
+	border-bottom-style: none;
+	cursor: pointer;
+	border: 0;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+table.plan_table tfoot span.plan_not_available {
+	font-size: 13px;
+}
+
+table.plan_table tfoot a:hover{
+	color: orange;
+
+}
+
+
+
+table.plan_table th.periods_footer {
+	border-bottom: 2px solid #ddd8d2;
+	color: orange;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	font-size: 19px;
+}
+
+
+
+
+
+/* @end */

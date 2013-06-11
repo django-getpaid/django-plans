@@ -1,10 +1,20 @@
+{% load staticfiles %}
+
 <html>
+<head>
+    <link rel="stylesheet" href="{% static "example.css" %}">
+</head>
 <body>
 <h1>django-plans example</h1>
 
+{%  include "plans/expiration_messages.html" %}
+
 {% block navigation %}
-    <a href="{% url foo_list %}">Foo list</a>
-    <a href="{% url foo_add %}">Foo add</a>
+    Menu:
+    <a href="{% url foo_list %}">Foo list</a> |
+    <a href="{% url foo_add %}">Foo add</a> |
+    <a href="{% url current_plan %}">Account</a> |
+    <a href="{% url upgrade_plan %}">Upgrade plan</a>
 
 {% endblock %}
 

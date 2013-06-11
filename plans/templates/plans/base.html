@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>{% block seo_title %}billing_info{% endblock %}</title>
-    <meta name="generator" content="TextMate http://macromates.com/">
-    <meta name="author" content="cypreess">
-    <!-- Date: 2012-03-02 -->
     {% block extra_js %}
     {% endblock %}
 </head>
 <body>
-{% block body %}
-{% endblock %}
+    <h1>django-plans</h1>
+    {% include "plans/expiration_messages.html" %}
+
+    {% block body %}
+    {% endblock %}
 </body>
 </html>

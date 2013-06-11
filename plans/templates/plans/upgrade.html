@@ -1,47 +1,20 @@
 {% extends 'plans/base.html' %}
-
 {% load i18n %}
-{% block seo_title %}user_plan{% endblock %}
 
 {% block body %}
 
-<ul>
+    <h2>{% trans "Choose plan" %}</h2>
 
-        {% for plan in plans %}
-
-        <li>{% trans "Plan" %}: {{ plan.plan.name }} 
-                
-        <ul>
-                <li>{% trans "Description" %}: {{ plan.plan.description }} 
-
-                <li>{% trans "Quotas" %}: 
-                        <ul> 
-                                {% for quota in plan.quotas %}
-                                <li> {{ quota.quota.name }} ({{ quota.quota.description }}) - 
-                        
-                                {% if quota.quota.is_boolean %}
-
-                                        {% if quota.value %} {% trans "yes" %} {% else %} {% trans "no" %} {% endif %}
-                        
-                                {% else %}
-                                        {{ quota.value }} {{ quota.quota.unit }}
-                                {% endif %}
-                                {% endfor %}
-                        </ul>
+    {% include "plans/plan_table.html" %}
 
 
-                <li>{% trans "Pricings" %}:
-                        <ul>
-                                {% for pricing in plan.pricings %}
-                                        <li>    
-                                                <a href=""> {{ pricing.pricing.name }} ({{ pricing.pricing.period }} {% trans "days" %} ): 
-                                                        {{ pricing.price}}
-                                                </a>
-                                {% endfor %}
-                        </ul>        
-                
-        </ul>
-        {% endfor %}
-</ul>
+    <h2>{% trans "Need even more?" %}</h2>
+
+    <p>
+    {% blocktrans %}
+        Please <a href="mailto:">contact our sales</a> for an exclusive
+        customised offer tailored to your needs.
+    {% endblocktrans %}
+    </p>
 
 {% endblock %}
