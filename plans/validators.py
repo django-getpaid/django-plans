@@ -8,11 +8,25 @@ class QuotaValidator(object):
     """
     Base class for all Quota validators needed for account activation
     """
-    code = ''
+    code = None
+
+    def get_code(self):
+        if not self.code:
+            raise ImproperlyConfigured('Quota code name is not provided for validator')
+        return self.code
 
     def get_quota(self, user):
+        """
+        Returns quota value for a given user
+        """
         quotas = get_user_quota(user)
-        return quotas.get(self.code, None)
+        return quotas.get(self.get_code(), None)
+
+    def __call__(self, user, **kwargs):
+        """
+        Quota call should action perform validation of quota for a user
+        """
+        raise NotImplementedError('Please implement specific QuotaValidator')
 
 class ModelCountValidator(QuotaValidator):
     """
@@ -34,9 +48,9 @@ class ModelCountValidator(QuotaValidator):
             'model_name_plural' : self.get_model()._meta.verbose_name_plural.title()
         }
 
-    def __call__(self, user, add=0):
+    def __call__(self, user, **kwargs):
         quota = self.get_quota(user)
-        total_count = self.get_queryset(user).count() + add
+        total_count = self.get_queryset(user).count() + kwargs.get('add', 0)
         if not quota is None and total_count > quota:
             raise ValidationError(self.get_error_message(quota))
 

@@ -1,6 +1,15 @@
 django-plans changelog
 ======================
 
+current dev
+-----------
+* Changing `QuotaValidator` API. `ModelCountValidator` requires now to give `add` argument only as a kwarg.
+
+
+v.0.5 - v0.6
+------------
+
+[...] (FIXME: history changelog from git commits
 
 v.0.4
 -----
