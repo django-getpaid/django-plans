@@ -6,11 +6,13 @@
         <th></th>
         {% for plan in plan_list %}
             <th class="plan_header {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+                {% if plan.url %}<a href="{{ plan.url }}" class="info_link plan">{% endif %}
                 <span class="plan_name">{{  plan.name }}</span>
                 <span class="plan_description">{{ plan.description }}</span>
                 {% if plan == userplan.plan %}
                     <span class="current current_plan">{% trans "your current plan" %}</span>
                 {% endif %}
+                {% if plan.url %}</a>{% endif %}
             </th>
         {% endfor %}
     </tr>
@@ -20,8 +22,11 @@
     {% for quota_row in plan_table %}
         <tr class="quota_row">
 
-            <th class="quota_header"><span class="quota_name">{{ quota_row.0.name }}</span>
+            <th class="quota_header">
+                {% if quota_row.0.url %}<a href="{{ quota_row.0.url }}" class="info_link quota">{% endif %}
+                <span class="quota_name">{{ quota_row.0.name }}</span>
                 <span class="quota_description">{{ quota_row.0.description }}</span>
+                {% if quota_row.0.url %}</a>{% endif %}
             </th>
 
             {% for plan_quota in quota_row.1 %}
@@ -70,8 +75,10 @@
                 <ul>
                     {% for plan_pricing in plan.planpricing_set.all %}
                         <li>
+                        {% if plan_pricing.pricing.url %}<a href="{{ plan_pricing.pricing.url }}" class="info_link pricing">{% endif %}
                         <span class="plan_pricing_name">{{ plan_pricing.pricing.name }}</span>
-                        <span class="plan_pricing_period">({% ifequal plan userplan.plan %}+{% endifequal %}{{ plan_pricing.pricing.period }} {% trans "days" %})</span>
+                        <span class="plan_pricing_period">({{ plan_pricing.pricing.period }} {% trans "days" %})</span>
+                        {% if plan_pricing.pricing.url %}</a>{% endif %}
                         <span class="plan_pricing_price">{{ plan_pricing.price }}&nbsp;{{ CURRENCY }}</span>
                         {% if plan_pricing.plan == userplan.plan or userplan.is_expired %}
                         <a href="{% url create_order_plan pk=plan_pricing.pk %}" class="buy">{% trans "Buy" %}</a>

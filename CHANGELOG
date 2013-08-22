@@ -4,7 +4,8 @@ django-plans changelog
 current dev
 -----------
 * Changing `QuotaValidator` API. `ModelCountValidator` requires now to give `add` argument only as a kwarg.
-
+* Adding support for defining URL for plan, quota and pricing period that will act as a clickable pricing
+  table header (requires schema migration)
 
 v.0.5 - v0.6
 ------------
