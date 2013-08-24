@@ -49,7 +49,7 @@ def copy_plan(modeladmin, request, queryset):
 copy_plan.short_description = _("Make plan copy")
 
 class PlanAdmin(OrderedModelAdmin):
-    search_fields = ('customized__username', 'customized__email', )
+    search_fields = ('name', 'customized__username', 'customized__email', )
     list_filter = ( 'available',  )
     list_display = ('name',   'description', 'customized', 'default', 'available', 'created', 'move_up_down_links')
     inlines = (PlanPricingInline, PlanQuotaInline)
@@ -104,8 +104,8 @@ class InvoiceAdmin(admin.ModelAdmin):
     raw_id_fields = ('user', 'order')
 
 class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
-    list_filter = ('active', 'expire')
-    search_fields = ('user__username', 'user__email')
+    list_filter = ('active', 'expire', 'plan__name')
+    search_fields = ('user__username', 'user__email', 'plan__name')
     list_display = ('user', 'plan', 'expire', 'active')
     list_select_related = True
     readonly_fields = ['user_link', ]
