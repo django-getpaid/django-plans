@@ -1,5 +1,10 @@
+import sys
+import os
 from decimal import Decimal
 from django.conf import settings
+
+
+sys.path[:0] = [os.path.join(os.getcwd(), 'demo')]
 
 
 def pytest_configure(config):
@@ -21,17 +26,16 @@ def pytest_configure(config):
             'django.contrib.sessions',
             'django.contrib.sites',
             'ordered_model',
-            'example.example.foo',
+            'example.foo',
             'plans',
         ],
-        ROOT_URLCONF='example.example.urls',
+        ROOT_URLCONF='example.urls',
         DEBUG=False,
         SITE_ID=1,
         TEMPLATE_DEBUG=True,
-        # TEMPLATE_DIRS=[os.path.join(where_am_i, 'tests', 'contrib', 'django', 'templates')],
         USE_TZ=True,
         ALLOWED_HOSTS=['*'],
-        ISSUER_DATA = {
+        ISSUER_DATA={
             "issuer_name": "My Company Ltd",
             "issuer_street": "48th Suny street",
             "issuer_zipcode": "111-456",
