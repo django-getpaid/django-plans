@@ -525,8 +525,7 @@ class Invoice(models.Model):
                 raise ImproperlyConfigured("INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly.")
             self.number = last_number + 1
 
-
-        if self.full_number is "":
+        if self.full_number == "":
             self.full_number = self.get_full_number()
         super(Invoice, self).clean()
 
