@@ -5,12 +5,23 @@
         "fields": {
             "default" : true,
             "available": false,
-            "name_pl": "Default Plan",
             "created": "2012-07-12T17:33:30.112Z",
             "customized": null,
-            "description_en": "Default Plan",
-            "description_pl": "Default Plan",
-            "name_en": "Default Plan",
+            "description": "Default Plan",
+            "name": "Default Plan",
+            "order": 0
+        }
+    },
+    {
+        "pk": 2,
+        "model": "plans.plan",
+        "fields": {
+            "default" : true,
+            "available": false,
+            "name": "Default Plan",
+            "created": "2012-07-12T17:33:30.112Z",
+            "customized": null,
+            "description": "Default Plan",
             "order": 0
         }
     }
