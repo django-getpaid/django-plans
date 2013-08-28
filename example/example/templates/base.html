@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load url from future %}
 
 <html>
 <head>
@@ -12,10 +13,10 @@
 
 {% block navigation %}
     Menu:
-    <a href="{% url foo_list %}">Foo list</a> |
-    <a href="{% url foo_add %}">Foo add</a> |
-    <a href="{% url current_plan %}">Account</a> |
-    <a href="{% url upgrade_plan %}">Upgrade plan</a>
+    <a href="{% url 'foo_list' %}">Foo list</a> |
+    <a href="{% url 'foo_add' %}">Foo add</a> |
+    <a href="{% url 'current_plan' %}">Account</a> |
+    <a href="{% url 'upgrade_plan' %}">Upgrade plan</a>
 
 {% endblock %}
 
