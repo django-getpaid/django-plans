@@ -1,3 +1,4 @@
+{% load url from future %}
 {% load i18n %}
 
 <table class="plan_table">
@@ -58,7 +59,7 @@
         {% for plan in plan_list %}
         <th class="planpricing_footer {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
             {% if plan != userplan.plan and not userplan.is_expired %}
-                <a href="{% url create_order_plan_change pk=plan.id %}" class="change_plan">{% trans "Change" %}</a>{% endif %}
+                <a href="{% url 'create_order_plan_change' pk=plan.id %}" class="change_plan">{% trans "Change" %}</a>{% endif %}
         </th>
         {% endfor %}
     </tr>
@@ -81,14 +82,14 @@
                         {% if plan_pricing.pricing.url %}</a>{% endif %}
                         <span class="plan_pricing_price">{{ plan_pricing.price }}&nbsp;{{ CURRENCY }}</span>
                         {% if plan_pricing.plan == userplan.plan or userplan.is_expired %}
-                        <a href="{% url create_order_plan pk=plan_pricing.pk %}" class="buy">{% trans "Buy" %}</a>
+                        <a href="{% url 'create_order_plan' pk=plan_pricing.pk %}" class="buy">{% trans "Buy" %}</a>
                         {% endif %}
                     {% endfor %}
                 </ul>
 
                    {% else %}
                      <span class="plan_not_available">
-                    {% url upgrade_plan as upgrade_url %}
+                    {% url 'upgrade_plan' as upgrade_url %}
                     {% blocktrans %}
                         This plan is not available anymore and cannot be extended.<p>
                         You need to upgrade your account to any of <a href="{{ upgrade_url }}">currently available plans</a>.
