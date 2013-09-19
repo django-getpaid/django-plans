@@ -18,6 +18,7 @@ from plans.models import Quota, Invoice
 from plans.signals import order_started
 from plans.validators import account_full_validation
 
+
 class AccountActivationView(TemplateView):
     template_name = 'plans/account_activation.html'
 
@@ -38,6 +39,7 @@ class AccountActivationView(TemplateView):
             context['SUCCESSFUL'] = True
 
         return context
+
 
 class PlanTableMixin(object):
     def get_plan_table(self, plan_list):
@@ -222,7 +224,6 @@ class CreateOrderView(CreateView):
     def get_price(self):
         return self.plan_pricing.price
 
-
     def get_context_data(self, **kwargs):
         context = super(CreateOrderView, self).get_context_data(**kwargs)
         self.get_all_context()
@@ -237,7 +238,7 @@ class CreateOrderView(CreateView):
 
     def form_valid(self, form):
         self.get_all_context()
-        order = self.recalculate(self.get_price(), self.get_billing_info())
+        order = self.recalculate(self.get_price() or Decimal('0.0'), self.get_billing_info())
 
         self.object = form.save(commit=False)
         self.object.user = self.request.user

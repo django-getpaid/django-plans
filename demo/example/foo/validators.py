@@ -1,4 +1,4 @@
-from example.foo.models import Foo
+from .models import Foo
 from plans.validators import ModelCountValidator
 
 

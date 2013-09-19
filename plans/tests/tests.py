@@ -10,10 +10,10 @@ from plans.models import PlanPricing, Invoice, Order, Pricing, Plan
 from django.core import mail
 from django.db.models import Q
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
-from plans.taxation import EUTaxationPolicy
+from plans.locale.eu.taxation import EUTaxationPolicy
+
 
 class PlansTestCase(TestCase):
-#    fixtures = ['test_user', 'test_plan.json']
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
     def test_extend_account_same_plan_future(self):
@@ -50,7 +50,7 @@ class PlansTestCase(TestCase):
         """
         u = User.objects.get(username='test1')
         print u.userplan
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = date.today() - timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
@@ -110,9 +110,9 @@ class TestInvoice(TestCase):
         i.issued = date(2010, 5, 30)
         self.assertEqual(i.get_full_number(), "123/PF/05/2010")
 
-
     def test_get_full_number_with_settings(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.issued|date:'Y' }}.{{ invoice.number }}.{{ invoice.issued|date:'m' }}"
+        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.issued|date:'Y' }}."\
+            "{{ invoice.number }}.{{ invoice.issued|date:'m' }}"
         i = Invoice()
         i.number = 123
         i.issued = date(2010, 5, 30)
@@ -152,7 +152,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i.buyer_country, u.billinginfo.shipping_country)
 
     def test_invoice_number(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal "\
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV"\
+            "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         o = Order.objects.all()[0]
         day = date(2010, 05, 03)
         i = Invoice(issued=day, selling_date=day, payment_date=day)
@@ -165,22 +167,29 @@ class TestInvoice(TestCase):
         self.assertEqual(i.number, 1)
         self.assertEqual(i.full_number, '1/FV/05/2010')
 
-
     def test_invoice_number_daily(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
+        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal "\
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV"\
+            "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
         settings.INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "TAX")
         currency = getattr(settings, "CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o1 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o2 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o3 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o3.save()
 
         day = date(2001, 05, 03)
@@ -210,22 +219,29 @@ class TestInvoice(TestCase):
         self.assertEqual(i2.full_number, "2/FV/03/05/2001")
         self.assertEqual(i3.full_number, "1/FV/04/05/2001")
 
-
     def test_invoice_number_monthly(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal "\
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV"\
+            "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         settings.INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "TAX")
         currency = getattr(settings, "CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o1 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o2 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o3 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o3.save()
 
         day = date(2002, 05, 03)
@@ -257,20 +273,28 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/06/2002")
 
     def test_invoice_number_annually(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'Y' }}"
+        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal "\
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV"\
+            "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
         settings.INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "TAX")
         currency = getattr(settings, "CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o1 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o2 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan, pricing=plan_pricing.pricing, amount=plan_pricing.price, tax=tax, currency=currency)
+        o3 = Order(user=user, plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing, amount=plan_pricing.price,
+            tax=tax, currency=currency)
         o3.save()
 
         day = date(1991, 05, 03)
@@ -301,7 +325,6 @@ class TestInvoice(TestCase):
         self.assertEqual(i2.full_number, "2/FV/1991")
         self.assertEqual(i3.full_number, "1/FV/1992")
 
-
     def test_set_order(self):
         o = Order.objects.all()[0]
 
@@ -316,7 +339,6 @@ class TestInvoice(TestCase):
         self.assertEqual(i.tax, o.tax)
         self.assertEqual(i.tax_total, o.total() - o.amount)
         self.assertEqual(i.currency, o.currency)
-
 
 
 class OrderTestCase(TestCase):
@@ -353,13 +375,13 @@ class PlanChangePolicyTestCase(TestCase):
     def test_get_change_price(self):
         p1 = Plan.objects.get(pk=3)
         p2 = Plan.objects.get(pk=4)
-        self.assertEqual(self.policy.get_change_price(p1, p2, 23), Decimal('8.97'))
+        self.assertEqual(self.policy.get_change_price(p1, p2, 23), Decimal('7.82'))
         self.assertEqual(self.policy.get_change_price(p2, p1, 23), None)
 
     def test_get_change_price1(self):
         p1 = Plan.objects.get(pk=3)
         p2 = Plan.objects.get(pk=4)
-        self.assertEqual(self.policy.get_change_price(p1, p2, 53), Decimal('20.67'))
+        self.assertEqual(self.policy.get_change_price(p1, p2, 53), Decimal('18.02'))
         self.assertEqual(self.policy.get_change_price(p2, p1, 53), None)
 
     def test_get_change_price2(self):
@@ -375,11 +397,10 @@ class StandardPlanChangePolicyTestCase(TestCase):
     def setUp(self):
         self.policy = StandardPlanChangePolicy()
 
-
     def test_get_change_price(self):
         p1 = Plan.objects.get(pk=3)
         p2 = Plan.objects.get(pk=4)
-        self.assertEqual(self.policy.get_change_price(p1, p2, 23), Decimal('9.87'))
+        self.assertEqual(self.policy.get_change_price(p1, p2, 23), Decimal('8.60'))
         self.assertEqual(self.policy.get_change_price(p2, p1, 23), None)
 
 

@@ -1,5 +1,5 @@
 {% extends 'plans/base.html' %}
-
+{% load url from future %}
 {% load i18n %}
 
 {% block body %}
@@ -10,7 +10,7 @@
   <li>{% trans "State" %}: {% if userplan.active %} {% trans "active" %} {% else %} {% trans "expired" %} {% endif %}
   <li>{% trans "Expire" %}: {{ userplan.expire }}
   <li>{% trans "Plan" %}: {{ userplan.plan.name }}
-    <a href="{% url upgrade_plan %}">{% trans "upgrade" %}</a>
+    <a href="{% url 'upgrade_plan' %}">{% trans "upgrade" %}</a>
 </ul>
 
 
@@ -23,7 +23,7 @@
 
     <h2>{% trans "Need more?" %}</h2>
 
-    {% url upgrade_plan as upgrade_url %}
+    {% url 'upgrade_plan' as upgrade_url %}
     {% blocktrans %}
         Please see other <a href="{{ upgrade_url }}">currently available plans</a>.
     {% endblocktrans %}
