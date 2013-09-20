@@ -3,8 +3,8 @@ from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect
 from django.views.generic import ListView, CreateView, DeleteView
-from example.foo.forms import FooForm
-from example.foo.models import Foo
+from .forms import FooForm
+from .models import Foo
 from plans.quota import get_user_quota
 
 

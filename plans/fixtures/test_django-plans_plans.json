@@ -5,12 +5,10 @@
         "fields": {
             "default" : true,
             "available": true,
-            "name_pl": "Standard",
             "created": "2012-05-05T15:24:44.966Z",
             "customized": null,
-            "description_en": "Plan for small company",
-            "description_pl": "Abonament dla ma\u0142ej firmy",
-            "name_en": "Standard",
+            "description": "Plan for small company",
+            "name": "Standard",
             "order": 0
         }
     },
@@ -19,12 +17,10 @@
         "model": "plans.plan",
         "fields": {
             "available": true,
-            "name_pl": "Premium",
             "created": "2012-05-05T15:36:31.671Z",
             "customized": null,
-            "description_en": "For better use",
-            "description_pl": "Dla wymagaj\u0105cych",
-            "name_en": "Premium",
+            "description": "For better use",
+            "name": "Premium",
             "order": 1
         }
     },
@@ -33,30 +29,25 @@
         "model": "plans.plan",
         "fields": {
             "available": true,
-            "name_pl": "PRO",
             "created": "2012-07-12T13:07:23.038Z",
             "customized": null,
-            "description_en": "Professional plan",
-            "description_pl": "Plan dla profesjonalistow",
-            "name_en": "PRO",
+            "description": "Professional plan",
+            "name": "PRO",
             "order": 2
         }
     },
-
 
     {
         "pk": 6, 
         "model": "plans.plan", 
         "fields": {
             "available": true, 
-            "name_pl": "Custom", 
             "created": "2012-07-12T17:33:30.112Z", 
             "customized": [
                 "test1"
             ], 
-            "description_en": "Custom for test1", 
-            "description_pl": "Custom for test1", 
-            "name_en": "Custom", 
+            "description": "Custom for test1", 
+            "name": "Custom", 
             "order": 4
         }
     }, 
@@ -65,20 +56,15 @@
         "model": "plans.plan", 
         "fields": {
             "available": true, 
-            "name_pl": "Custom 2", 
             "created": "2012-07-24T12:51:57.438Z", 
             "customized": [
                 "test2"
             ], 
-            "description_en": "Custom test 2", 
-            "description_pl": "Custom test2", 
-            "name_en": "Custom 2", 
+            "description": "Custom test 2", 
+            "name": "Custom 2", 
             "order": 5
         }
     },
-
-
-
     {
         "pk": 6,
         "model": "plans.billinginfo",
@@ -94,51 +80,38 @@
             "tax_number": "PL5521465632"
         }
     },
-
     {
         "pk": 1,
         "model": "plans.pricing",
         "fields": {
-            "name_en": "monthly",
             "period": 30,
-            "name_pl": "miesi\u0119czny"
+            "name": "monthly"
         }
     },
-
-
-
-
-
-
     {
         "pk": 2,
         "model": "plans.pricing",
         "fields": {
-            "name_en": "half-year",
             "period": 180,
-            "name_pl": "p\u00f3\u0142roczny"
+            "name": "half a year"
         }
     },
     {
         "pk": 3,
         "model": "plans.pricing",
         "fields": {
-            "name_en": "year",
             "period": 365,
-            "name_pl": "roczny"
+            "name": "year"
         }
     },
     {
         "pk": 3,
         "model": "plans.quota",
         "fields": {
-            "unit_pl": "",
-            "name_pl": "W\u0142asny znak wodny",
-            "unit_en": "",
-            "description_en": "Allows to customize watermark text",
+            "unit": "",
+            "description": "Allows to customize watermark text",
             "order": 0,
-            "name_en": "Custom watermark",
-            "description_pl": "Pozwala ustawi\u0107 w\u0142asny tekst dla znaku wodnego",
+            "name": "Custom watermark",
             "codename": "CUSTOM_WATERMARK",
             "is_boolean": true
         }
@@ -147,13 +120,10 @@
         "pk": 4,
         "model": "plans.quota",
         "fields": {
-            "unit_pl": "MB",
-            "name_pl": "Pojemno\u015b\u0107",
-            "unit_en": "MB",
-            "description_en": "Total storage space for photos",
+            "unit": "MB",
+            "description": "Total storage space for photos",
             "order": 1,
-            "name_en": "Storage space",
-            "description_pl": "Ilo\u015b\u0107 MB miejsca na zdj\u0119cia",
+            "name": "Storage space",
             "codename": "MAX_STORAGE",
             "is_boolean": false
         }
@@ -162,13 +132,10 @@
         "pk": 1,
         "model": "plans.quota",
         "fields": {
-            "unit_pl": "",
-            "name_pl": "Liczba galerii",
-            "unit_en": "",
-            "description_en": "Number of separate galleries you can have on your account.",
+            "unit": "",
+            "description": "Number of separate galleries you can have on your account.",
             "order": 2,
-            "name_en": "Galleries count",
-            "description_pl": "Liczba osobnych galerii, kt\u00f3rych mo\u017cesz utworzy\u0107 jednocze\u015bnie na koncie.",
+            "name": "Galleries count",
             "codename": "MAX_GALLERIES_COUNT",
             "is_boolean": false
         }
@@ -177,13 +144,10 @@
         "pk": 5,
         "model": "plans.quota",
         "fields": {
-            "unit_pl": "",
-            "name_pl": "Should not be visible",
-            "unit_en": "",
-            "description_en": "Should not be visible",
+            "unit": "",
+            "description": "Should not be visible",
             "order": 3,
-            "name_en": "Should not be visible",
-            "description_pl": "Should not be visible",
+            "name": "Should not be visible",
             "codename": "NOT_USED_QUOTA",
             "is_boolean": false
         }
@@ -192,23 +156,14 @@
         "pk": 2,
         "model": "plans.quota",
         "fields": {
-            "unit_pl": "",
-            "name_pl": "Liczba zdj\u0119\u0107 w galerii",
-            "unit_en": "",
-            "description_en": "Total count of photos in each gallery.",
+            "unit": "",
+            "description": "Total count of photos in each gallery.",
             "order": 4,
-            "name_en": "Photos number in gallery",
-            "description_pl": "Maksymalna liczba zdj\u0119\u0107 w pojedynczej galerii",
+            "name": "Photos number in gallery",
             "codename": "MAX_PHOTOS_PER_GALLERY",
             "is_boolean": false
         }
     },
-
-
-
-
-
-
     {
         "pk": 1,
         "model": "plans.planpricing",
@@ -219,7 +174,7 @@
         }
     },
     {
-        "pk": 1,
+        "pk": 13,
         "model": "plans.planpricing",
         "fields": {
             "price": "10.00",
@@ -563,9 +518,4 @@
             ]
         }
     }
-
-
-
-
-
 ]

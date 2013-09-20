@@ -1,4 +1,5 @@
 {% extends 'plans/base.html' %}
+{% load url from future %}
 
 {% block body %}
 
@@ -7,11 +8,11 @@
         {{ message }}
     </div>
 {% endfor %}
-    <form method="post" action="{% url billing_info_update %}">
+    <form method="post" action="{% url 'billing_info_update' %}">
         {% csrf_token %}
         {{ form.as_p }}
         <input type="submit">
     </form>
 
-<a href="{% url billing_info_delete %}">Delete billing info</a>
+<a href="{% url 'billing_info_delete' %}">Delete billing info</a>
 {% endblock %}

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.conf.urls import url, patterns
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from example.foo.views import FooListView, FooCreateView, FooDeleteView
+from .views import FooListView, FooCreateView, FooDeleteView
 
 
 urlpatterns = patterns('',

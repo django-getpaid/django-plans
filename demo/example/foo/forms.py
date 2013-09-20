@@ -1,6 +1,6 @@
 from django.forms import ModelForm, HiddenInput
-from example.foo.models import Foo
-from example.foo.validators import max_foos_validator
+from .models import Foo
+from .validators import max_foos_validator
 
 
 class FooForm(ModelForm):
