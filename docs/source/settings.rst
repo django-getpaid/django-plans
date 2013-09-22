@@ -197,7 +197,7 @@ Example::
 
 
 
-``PLAN_ACTIVATION_VALIDATORS``
+``PLAN_VALIDATORS``
 ------------------------------
 
 **Optional**
@@ -212,7 +212,7 @@ Given account will be activated only if calling all validators that are defined 
 Example::
 
 
-    PLAN_ACTIVATION_VALIDATORS = {
+    PLAN_VALIDATORS = {
         'CAN_DO_SOMETHING' :  'myproject.validators.can_do_something_validator',
         'MAX_STORAGE' :  'myproject.validators.max_storage_validator',
     }

@@ -27,11 +27,11 @@ Account complete validation
 
 Complete account validation is needed when user is switching a plan (or in a general - activating a plan). The reason is that user account can be in the state that exhausting limits of new plan (e.g. on downgrade). Plan should not be activated on the user account until user will not remove over limit resources until the account could validate in limits of the new plan.
 
-In django-plans there is a common validation mechanism which requires defining ``PLAN_ACTIVATION_VALIDATORS`` variable in ``settings.py``.
+In django-plans there is a common validation mechanism which requires defining ``PLAN_VALIDATORS`` variable in ``settings.py``.
 
-The format of ``PLAN_ACTIVATION_VALIDATORS`` variable is given as a dict::
+The format of ``PLAN_VALIDATORS`` variable is given as a dict::
 
-    PLAN_ACTIVATION_VALIDATORS = {
+    PLAN_VALIDATORS = {
         '<QUOTA_CODE_NAME>' :  '<full.python.path.to.validator.class>',
         [...]
     }
@@ -40,7 +40,7 @@ First of all this variable defines all quota that should be validated on any pla
 
 .. note::
 
-    Please note that the only quota that can be added to ``PLAN_ACTIVATION_VALIDATORS`` are "limiting resources quota" and "limiting states" quota. Those are the kind of quota that conceptually can be validated within the database state. The third kind of quota ("limiting actions quota") are to be checked on to go when user is just using it's account and performing certain actions.
+    Please note that the only quota that can be added to ``PLAN_VALIDATORS`` are "limiting resources quota" and "limiting states" quota. Those are the kind of quota that conceptually can be validated within the database state. The third kind of quota ("limiting actions quota") are to be checked on to go when user is just using it's account and performing certain actions.
 
 Secondly each quota has a specific validator defined that is custom to your need of validations.
 
@@ -100,3 +100,31 @@ You can easily re-use it also in create model form for this object to check if u
             return cleaned_data
 
 
+Model attribute validator
+`````````````````````````
+
+This validator can validate that every object returned from a queryset have correct value of attribute.
+
+
+.. autoclass:: plans.validators.ModelAttributeValidator
+    :members:
+    :undoc-members:
+
+E.g.::
+
+
+    from example.foo.models import Foo
+    from plans.validators import ModelCountValidator
+
+
+    class MaxFooSizeValidator(ModelAttributeValidator):
+        code = 'MAX_FOO_SIZE'
+        model = Foo
+        attribute = 'size'
+
+        def get_queryset(self, user):
+            return super(MaxFoosValidator, self).get_queryset(user).filter(user=user)
+
+    max_foo_size_validator = MaxFooSizeValidator()
+
+This validator will ensure that user does not have any object with attribute 'size' which is greater then the quota. If you need to provide any custom comparison other than "greater than" just override method ``check_attribute_value(attribute_value, quota_value)``.

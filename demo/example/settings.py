@@ -179,7 +179,7 @@ TAX = Decimal(23.0)
 TAXATION_POLICY = 'plans.locale.eu.taxation.EUTaxationPolicy'
 TAX_COUNTRY = 'PL'
 
-PLAN_ACTIVATION_VALIDATORS = {
+PLAN_VALIDATORS = {
     'MAX_FOO_COUNT' : 'example.foo.validators.max_foos_validator',
 }
 

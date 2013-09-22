@@ -47,7 +47,7 @@ def pytest_configure(config):
         TAXATION_POLICY='plans.locale.eu.taxation.EUTaxationPolicy',
         TAX_COUNTRY='PL',
         CURRENCY='PLN',
-        PLAN_ACTIVATION_VALIDATORS={
+        PLAN_VALIDATORS={
             'MAX_FOO_COUNT': 'example.foo.validators.max_foos_validator',
         },
         EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend',

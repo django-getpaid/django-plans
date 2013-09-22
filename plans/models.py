@@ -19,7 +19,7 @@ import logging
 from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
 from plans.signals import order_completed, account_activated, account_expired, account_change_plan, account_deactivated
-from validators import account_full_validation
+from validators import plan_validation
 from plans.locale.eu.taxation import EUTaxationPolicy
 
 accounts_logger = logging.getLogger('accounts')
@@ -57,6 +57,12 @@ class Plan(OrderedModel):
 
     def __unicode__(self):
         return u"%s" % (self.name)
+
+    def get_quota_dict(self):
+        quota_dic = {}
+        for plan_quota in PlanQuota.objects.filter(plan=self).select_related('quota'):
+            quota_dic[plan_quota.quota.codename] = plan_quota.value
+        return quota_dic
 
 
 class BillingInfo(models.Model):
@@ -138,6 +144,16 @@ class UserPlan(models.Model):
         else:
             return (self.expire - date.today()).days
 
+    def clean_activation(self):
+        errors = plan_validation(self.user)
+        if not errors['required_to_activate']:
+            plan_validation(self.user, on_activation=True)
+            self.activate()
+        else:
+            self.deactivate()
+        return errors
+
+
     def activate(self):
         if self.active == False:
             self.active = True
@@ -213,11 +229,7 @@ class UserPlan(models.Model):
 
 
         if status:
-            errors = account_full_validation(self.user)
-            if errors:
-                self.deactivate()
-            else:
-                self.activate()
+            self.clean_activation()
 
         return status
 

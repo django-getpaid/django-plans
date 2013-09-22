@@ -1,6 +1,6 @@
 def get_user_quota(user):
-    from plans.models import PlanQuota
-    quota_dic = {}
-    for plan_quota in PlanQuota.objects.filter(plan__userplan__user=user).select_related('quota'):
-        quota_dic[plan_quota.quota.codename] = plan_quota.value
-    return quota_dic
+    """
+    Tiny helper for getting quota dict for user (left mostly for backward compatibility)
+    """
+    return user.userplan.plan.get_quota_dict()
+

@@ -6,6 +6,8 @@ current dev
 * Changing `QuotaValidator` API. `ModelCountValidator` requires now to give `add` argument only as a kwarg.
 * Adding support for defining URL for plan, quota and pricing period that will act as a clickable pricing
   table header (requires schema migration)
+* Rename settings variable PLAN_ACTIVATION_VALIDATORS to PLAN_VALIDATORS
+* Major refactoring of Validators API providing new feature - required_to_activate False/True for validators
 
 v.0.5 - v0.6
 ------------
@@ -15,14 +17,14 @@ v.0.5 - v0.6
 v.0.4
 -----
 
-* Migrating to django-countries. Requires schemamigration.
+* Migrating to django-countries. Requires schema migration.
 
 v.0.3
 -----
 
-* Change plan policy - custom action how to billing change plan (downgrage/upgrade) can be implemented
+* Change plan policy - custom action how to billing change plan (downgrade/upgrade) can be implemented
 * Taxation policy - custom action how to calculate tax can be implemented
-* Dropping south migrations, it should be managed now as a project dependend migrations via SOUTH_MIGRATION_MODULES
+* Dropping south migrations, it should be managed now as a project dependent migrations via SOUTH_MIGRATION_MODULES
 
 v. 0.1.1
 --------
