@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-02-23 17:26+0100\n"
-"PO-Revision-Date: 2013-02-23 18:01+0124\n"
-"Last-Translator:   <>\n"
+"POT-Creation-Date: 2013-09-27 16:47+0200\n"
+"PO-Revision-Date: 2013-09-27 16:58+0124\n"
+"Last-Translator:   <cypreess@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,23 +19,23 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "X-Translated-Using: django-rosetta 0.7.0\n"
 
-#: admin.py:49
+#: admin.py:56
 msgid "Make plan copy"
 msgstr "Создать копию пакета"
 
-#: admin.py:75
+#: admin.py:85
 msgid "Make selected orders completed"
 msgstr "Выполнить заказы"
 
-#: admin.py:81
+#: admin.py:94
 msgid "Make invoices for orders"
 msgstr "Генерировать счета для заказов"
 
-#: models.py:30 models.py:67 models.py:247 models.py:263
+#: models.py:30 models.py:74 models.py:260 models.py:277
 msgid "name"
 msgstr "Название"
 
-#: models.py:31 models.py:265
+#: models.py:31 models.py:279
 msgid "description"
 msgstr "Описание"
 
@@ -43,7 +43,7 @@ msgstr "Описание"
 msgid "available"
 msgstr "доступен"
 
-#: models.py:34 models.py:326
+#: models.py:34 models.py:342
 msgid "created"
 msgstr "создан"
 
@@ -55,252 +55,263 @@ msgstr "индивидуальный"
 msgid "quotas"
 msgstr "ограничения"
 
-#: models.py:40 models.py:356 templates/plans/current.html:14
-#: templates/plans/extend.html:24 templates/plans/upgrade.html:12
+#: models.py:37 models.py:262 models.py:281
+msgid ""
+"Optional link to page with more information (for clickable pricing table "
+"headers)"
+msgstr ""
+
+#: models.py:41 models.py:372 templates/plans/current.html:12
+#: templates/plans/extend.html:25
 msgid "Plan"
 msgstr "План"
 
-#: models.py:41
+#: models.py:42
 msgid "Plans"
 msgstr "Пакеты"
 
-#: models.py:65 models.py:111 models.py:322
+#: models.py:72 models.py:118 models.py:338
 msgid "user"
 msgstr "пользователь"
 
-#: models.py:66
+#: models.py:73
 msgid "VAT ID"
 msgstr "ИНН"
 
-#: models.py:68
+#: models.py:75
 msgid "street"
 msgstr "улица"
 
-#: models.py:69
+#: models.py:76
 msgid "zip code"
 msgstr "почтовый код"
 
-#: models.py:70
+#: models.py:77
 msgid "city"
 msgstr "город"
 
-#: models.py:71
+#: models.py:78
 msgid "country"
 msgstr "страна"
 
-#: models.py:73
+#: models.py:80
 msgid "name (shipping)"
 msgstr "название "
 
-#: models.py:73 models.py:74 models.py:75 models.py:76
+#: models.py:80 models.py:81 models.py:82 models.py:83
 msgid "optional"
 msgstr "необязательно"
 
-#: models.py:74
+#: models.py:81
 msgid "street (shipping)"
 msgstr "улица"
 
-#: models.py:75
+#: models.py:82
 msgid "zip code (shipping)"
 msgstr "индекс"
 
-#: models.py:76
+#: models.py:83
 msgid "city (shipping)"
 msgstr "город"
 
-#: models.py:79
+#: models.py:86
 msgid "Billing info"
 msgstr "платежная информация"
 
-#: models.py:80
+#: models.py:87
 msgid "Billing infos"
 msgstr "Платежная информация"
 
-#: models.py:99
+#: models.py:106
 msgid "VAT ID is not correct"
 msgstr "ИНН некоректен"
 
-#: models.py:112 models.py:324
+#: models.py:119 models.py:340
 msgid "plan"
 msgstr "план"
 
-#: models.py:113
+#: models.py:120
 msgid "expire"
 msgstr "закончится"
 
-#: models.py:114 templates/plans/current.html:12
+#: models.py:121 templates/plans/current.html:10
 msgid "active"
 msgstr "активный"
 
-#: models.py:117
+#: models.py:124
 msgid "User plan"
 msgstr "Пакет"
 
-#: models.py:118
+#: models.py:125
 msgid "Users plans"
 msgstr "Пакеты пользователей"
 
-#: models.py:248
+#: models.py:261
 msgid "period"
 msgstr "период"
 
-#: models.py:252
+#: models.py:266
 msgid "Pricing"
 msgstr "Цены"
 
-#: models.py:253 templates/plans/extend.html:40
-#: templates/plans/plan_table.html:46 templates/plans/upgrade.html:33
+#: models.py:267 templates/plans/extend.html:41
+#: templates/plans/plan_table.html:52
 msgid "Pricings"
 msgstr "Ценообразование"
 
-#: models.py:256 templates/plans/extend.html:44
-#: templates/plans/plan_table.html:74 templates/plans/upgrade.html:37
+#: models.py:270 templates/plans/extend.html:45
+#: templates/plans/plan_table.html:81
 msgid "days"
 msgstr "дней"
 
-#: models.py:262
+#: models.py:276
 msgid "codename"
 msgstr "код"
 
-#: models.py:264
+#: models.py:278
 msgid "unit"
 msgstr "ед. измерения"
 
-#: models.py:266
+#: models.py:280
 msgid "is boolean"
 msgstr "логический тип"
 
-#: models.py:270
+#: models.py:285
 msgid "Quota"
 msgstr "Лимит"
 
-#: models.py:271 templates/plans/extend.html:25
-#: templates/plans/upgrade.html:17
+#: models.py:286 templates/plans/extend.html:26
 msgid "Quotas"
 msgstr "Ограничения"
 
-#: models.py:290
+#: models.py:306
 msgid "Plan pricing"
 msgstr "Цена пакета"
 
-#: models.py:291
+#: models.py:307
 msgid "Plans pricings"
 msgstr "Цены пакетов"
 
-#: models.py:309
+#: models.py:325
 msgid "Plan quota"
 msgstr "Лимиты пакета"
 
-#: models.py:310
+#: models.py:326
 msgid "Plans quotas"
 msgstr "Лимиты пакетов"
 
-#: models.py:314
+#: models.py:330
 msgctxt "Order status"
 msgid "new"
 msgstr "новый"
 
-#: models.py:315
+#: models.py:331
 msgctxt "Order status"
 msgid "completed"
 msgstr "завершен"
 
-#: models.py:316
+#: models.py:332
 msgctxt "Order status"
 msgid "not valid"
 msgstr "некоректный"
 
-#: models.py:317
+#: models.py:333
 msgctxt "Order status"
 msgid "canceled"
 msgstr "отменен"
 
-#: models.py:318
+#: models.py:334
 msgctxt "Order status"
 msgid "returned"
 msgstr "возвращен"
 
-#: models.py:325
+#: models.py:341
 msgid "pricing"
 msgstr "ценообразование"
 
-#: models.py:327
+#: models.py:343
 msgid "completed"
 msgstr "завершен"
 
-#: models.py:328
+#: models.py:344
 msgid "amount"
 msgstr "количество"
 
-#: models.py:329
+#: models.py:345
 msgid "tax"
 msgstr "налог"
 
-#: models.py:331
+#: models.py:347
 msgid "currency"
 msgstr "валюта"
 
-#: models.py:332
+#: models.py:348
 msgid "status"
 msgstr "статус"
 
-#: models.py:341
+#: models.py:357
 #, python-format
 msgid "Order #%(id)d"
 msgstr "Заказ #%(id)d"
 
-#: models.py:405 templates/mail/invoice_created_title.txt:1
+#: models.py:421 templates/mail/invoice_created_title.txt:1
 msgid "Order"
 msgstr "Заказ"
 
-#: models.py:406
+#: models.py:422
 msgid "Orders"
 msgstr "Заказы"
 
-#: models.py:429 models.py:501
+#: models.py:445 models.py:517
 msgid "Invoice"
 msgstr "Счет"
 
-#: models.py:430
+#: models.py:446
 msgid "Invoice Duplicate"
 msgstr "Дубликат счета"
 
-#: models.py:431
+#: models.py:447
 msgctxt "proforma"
 msgid "Order confirmation"
 msgstr "Подтверждение заказа"
 
-#: models.py:478 models.py:485 models.py:493
+#: models.py:494 models.py:501 models.py:509
 msgid "Name"
 msgstr "Наименование"
 
-#: models.py:479 models.py:486 models.py:494
+#: models.py:495 models.py:502 models.py:510
 msgid "Street"
 msgstr "Улица"
 
-#: models.py:480 models.py:487 models.py:495
+#: models.py:496 models.py:503 models.py:511
 msgid "Zip code"
 msgstr "Почтовый код"
 
-#: models.py:481 models.py:488 models.py:496
+#: models.py:497 models.py:504 models.py:512
 msgid "City"
 msgstr "Город"
 
-#: models.py:482 models.py:489 models.py:497
+#: models.py:498 models.py:505 models.py:513
 msgid "Country"
 msgstr "Страна"
 
-#: models.py:483 models.py:498
+#: models.py:499 models.py:514
 msgid "TAX/VAT number"
 msgstr "ИНН"
 
-#: models.py:502
+#: models.py:518
 msgid "Invoices"
 msgstr "Счета"
 
-#: validators.py:32
+#: validators.py:61
 #, python-format
 msgid "Limit of %(model_name_plural)s exceeded. The limit is %(quota)s items."
+msgstr ""
+"Лимит %(model_name_plural)s превышен. Лимит составляет %(quota)s лотов."
+
+#: validators.py:87
+#, fuzzy, python-format
+msgid "Following %(model_name_plural)s are not in limits: %(objects)s"
 msgstr ""
 "Лимит %(model_name_plural)s превышен. Лимит составляет %(quota)s лотов."
 
@@ -308,24 +319,32 @@ msgstr ""
 msgid "Your account is now active"
 msgstr "Ваш аккаунт активирован"
 
-#: views.py:153
+#: views.py:165
 msgid "Your plan has been successfully changed"
 msgstr "Ваш тарифный план изменен"
 
-#: views.py:343
+#: views.py:210
+#, python-format
+msgid ""
+"The selected plan is insufficient for your account. Your account will not be"
+" activated or will not work fully after completing this "
+"order.<br><br>Following limits will be exceeded: <ul><li>%(reasons)s</ul>"
+msgstr ""
+
+#: views.py:377
 msgid ""
 "Thank you for placing a payment. It will be processed as soon as possible."
 msgstr "Спасибо за платеж. Он будет обработан как будет возможно."
 
-#: views.py:345
+#: views.py:379
 msgid "Payment was not completed correctly. Please repeat payment process."
 msgstr "Платеж не прошел. Пожалуйста, повторите процесс оплаты"
 
-#: views.py:382 views.py:401
+#: views.py:416 views.py:435
 msgid "Billing info has been updated successfuly."
 msgstr "Информация об оплате обновлена"
 
-#: views.py:417
+#: views.py:452
 msgid "Billing info has been deleted."
 msgstr "Информация об оплате удалена"
 
@@ -437,29 +456,47 @@ msgid_plural "Your account %(user)s will expire in %(days)s days"
 msgstr[0] "Ваш аккаунт %(user)s истекает через %(days)s дней"
 msgstr[1] "Ваш аккаунт %(user)s истекает через %(days)s дней"
 
-#: templates/plans/billing_info_delete.html:6
+#: templates/plans/billing_info_delete.html:7
 msgid "Are you sure to delete billing info?"
 msgstr "Вы уверены, что хотите удалить информацию об оплате?"
 
-#: templates/plans/current.html:9
+#: templates/plans/current.html:7
 msgid "Account"
 msgstr "Аккаунт"
 
-#: templates/plans/current.html:12
+#: templates/plans/current.html:10
 msgid "State"
 msgstr "Область"
 
-#: templates/plans/current.html:12
+#: templates/plans/current.html:10
 msgid "expired"
 msgstr "закончился"
 
-#: templates/plans/current.html:13
+#: templates/plans/current.html:11
 msgid "Expire"
 msgstr "Оплачен до"
 
-#: templates/plans/current.html:15
+#: templates/plans/current.html:13
 msgid "upgrade"
 msgstr "расширить"
+
+#: templates/plans/current.html:19
+msgid "Plan details"
+msgstr "Детали пакета"
+
+#: templates/plans/current.html:24
+msgid "Need more?"
+msgstr "Нужно больше?"
+
+#: templates/plans/current.html:27
+#, python-format
+msgid ""
+"\n"
+"        Please see other <a href=\"%(upgrade_url)s\">currently available plans</a>.\n"
+"    "
+msgstr ""
+"\n"
+"Посмотрите другие <a href=\"%(upgrade_url)s\">имеющиеся пакеты</a>."
 
 #: templates/plans/expiration_messages.html:5
 #, python-format
@@ -495,15 +532,15 @@ msgstr ""
 "Ваш аккаунт скоро истечет (через %(days_to_expire)s дней).\n"
 "Рекомендуем <a href=\"%(extend_url)s\">продлить его сегодня.</a>"
 
-#: templates/plans/extend.html:32 templates/plans/upgrade.html:24
+#: templates/plans/extend.html:33
 msgid "yes"
 msgstr "да"
 
-#: templates/plans/extend.html:32 templates/plans/upgrade.html:24
+#: templates/plans/extend.html:33
 msgid "no"
 msgstr "нет"
 
-#: templates/plans/extend.html:54
+#: templates/plans/extend.html:55
 #, python-format
 msgid ""
 "\n"
@@ -513,23 +550,23 @@ msgstr ""
 "\n"
 "К сожалению ваш текущий пакет больше не действует. Вам нужно <a href=\"%(upgrade_url)s\">расширить Ваш пакет</a>."
 
-#: templates/plans/plan_table.html:12
+#: templates/plans/plan_table.html:14
 msgid "your current plan"
 msgstr "Ваш текущий тарифный план"
 
-#: templates/plans/plan_table.html:34
+#: templates/plans/plan_table.html:40
 msgid "no limit"
 msgstr "без ограничений"
 
-#: templates/plans/plan_table.html:56
+#: templates/plans/plan_table.html:62
 msgid "Change"
 msgstr "Изменить"
 
-#: templates/plans/plan_table.html:77
+#: templates/plans/plan_table.html:85
 msgid "Buy"
 msgstr "Купить"
 
-#: templates/plans/plan_table.html:85
+#: templates/plans/plan_table.html:93
 #, python-format
 msgid ""
 "\n"
@@ -541,10 +578,25 @@ msgstr ""
 "Этот пакет больше не действует и не может быть расширен.<p>\n"
 "Вам нужно расширить ваш аккаунт до любого пакета <a href=\"%(upgrade_url)s\">имеющегося в наличии</a>."
 
-#: templates/plans/plan_table.html:100
+#: templates/plans/plan_table.html:108
 msgid "Net prices"
 msgstr "Цена"
 
-#: templates/plans/upgrade.html:15
-msgid "Description"
-msgstr "Описание"
+#: templates/plans/upgrade.html:6
+msgid "Choose plan"
+msgstr "Выбрать пакет"
+
+#: templates/plans/upgrade.html:11
+msgid "Need even more?"
+msgstr "Нужно больше?"
+
+#: templates/plans/upgrade.html:14
+msgid ""
+"\n"
+"        Please <a href=\"mailto:\">contact our sales</a> for an exclusive\n"
+"        customised offer tailored to your needs.\n"
+"    "
+msgstr ""
+
+#~ msgid "Description"
+#~ msgstr "Описание"

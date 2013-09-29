@@ -34,7 +34,7 @@ class Plan(OrderedModel):
     created = models.DateTimeField(_('created'), db_index=True)
     customized = models.ForeignKey('auth.User', null=True, blank=True, verbose_name=_('customized'))
     quotas = models.ManyToManyField('Quota', through='PlanQuota', verbose_name=_('quotas'))
-    url = models.CharField(max_length=200, blank=True, help_text=_('Optional link to page with more information (for clickable pricing table headers'))
+    url = models.CharField(max_length=200, blank=True, help_text=_('Optional link to page with more information (for clickable pricing table headers)'))
 
     class Meta:
         ordering = ('order',)
@@ -259,7 +259,7 @@ class UserPlan(models.Model):
 class Pricing(models.Model):
     name = models.CharField(_('name'), max_length=100)
     period = models.PositiveIntegerField(_('period'), default=30, null=True, blank=True, db_index=True)
-    url = models.CharField(max_length=200, blank=True, help_text=_('Optional link to page with more information (for clickable pricing table headers'))
+    url = models.CharField(max_length=200, blank=True, help_text=_('Optional link to page with more information (for clickable pricing table headers)'))
 
     class Meta:
         ordering = ('period',)
@@ -278,7 +278,7 @@ class Quota(OrderedModel):
     unit = models.CharField(_('unit'), max_length=100, blank=True)
     description = models.TextField(_('description'), blank=True)
     is_boolean = models.BooleanField(_('is boolean'), default=False)
-    url = models.CharField(max_length=200, blank=True, help_text=_('Optional link to page with more information (for clickable pricing table headers'))
+    url = models.CharField(max_length=200, blank=True, help_text=_('Optional link to page with more information (for clickable pricing table headers)'))
 
     class Meta:
         ordering = ('order',)
