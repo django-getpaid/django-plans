@@ -91,12 +91,12 @@ class UpgradePlanView(PlanTableMixin, ListView):
                                                                                 'planquota_set__quota')
         if self.request.user.is_authenticated():
             queryset = queryset.filter(
-                Q(available=True) & (
+                Q(available=True, visible=True) & (
                     Q(customized=self.request.user) | Q(customized__isnull=True)
                 )
             )
         else:
-            queryset = queryset.filter(Q(available=True) & Q(customized__isnull=True))
+            queryset = queryset.filter(Q(available=True, visible=True) & Q(customized__isnull=True))
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -139,7 +139,7 @@ class ChangePlanView(View):
     """
     A view for instant changing user plan when it does not require additional payment.
     Plan can be changed without payment when:
-    * user can enable this plan (it is available and if it is customized it is for him,
+    * user can enable this plan (it is available & visible and if it is customized it is for him,
     * plan is different from the current one that user have,
     * within current change plan policy this does not require any additional payment (None)
 
@@ -151,7 +151,7 @@ class ChangePlanView(View):
         return HttpResponseRedirect(reverse('upgrade_plan'))
 
     def post(self, request, *args, **kwargs):
-        plan = get_object_or_404(Plan, Q(pk=kwargs['pk']) & Q(available=True) & (
+        plan = get_object_or_404(Plan, Q(pk=kwargs['pk']) & Q(available=True, visible=True) & (
             Q(customized=request.user) | Q(customized__isnull=True)))
         if request.user.userplan.plan != plan:
             policy = import_name(
@@ -284,7 +284,7 @@ class CreateOrderPlanChangeView(CreateOrderView):
     form_class = CreateOrderForm
 
     def get_all_context(self):
-        self.plan = get_object_or_404(Plan, Q(pk=self.kwargs['pk']) & Q(available=True) & (
+        self.plan = get_object_or_404(Plan, Q(pk=self.kwargs['pk']) & Q(available=True, visible=True) & (
             Q(customized=self.request.user) | Q(customized__isnull=True)))
         self.pricing = None
 

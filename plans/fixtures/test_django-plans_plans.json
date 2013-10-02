@@ -5,6 +5,7 @@
         "fields": {
             "default" : true,
             "available": true,
+            "visible": true,
             "created": "2012-05-05T15:24:44.966Z",
             "customized": null,
             "description": "Plan for small company",
@@ -17,6 +18,7 @@
         "model": "plans.plan",
         "fields": {
             "available": true,
+            "visible": true,
             "created": "2012-05-05T15:36:31.671Z",
             "customized": null,
             "description": "For better use",
@@ -29,6 +31,7 @@
         "model": "plans.plan",
         "fields": {
             "available": true,
+            "visible": true,
             "created": "2012-07-12T13:07:23.038Z",
             "customized": null,
             "description": "Professional plan",
@@ -42,7 +45,8 @@
         "model": "plans.plan", 
         "fields": {
             "available": true, 
-            "created": "2012-07-12T17:33:30.112Z", 
+            "visible": true,
+            "created": "2012-07-12T17:33:30.112Z",
             "customized": [
                 "test1"
             ], 
@@ -56,7 +60,8 @@
         "model": "plans.plan", 
         "fields": {
             "available": true, 
-            "created": "2012-07-24T12:51:57.438Z", 
+            "visible": true,
+            "created": "2012-07-24T12:51:57.438Z",
             "customized": [
                 "test2"
             ], 
