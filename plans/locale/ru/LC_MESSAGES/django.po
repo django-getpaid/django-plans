@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-09-27 16:47+0200\n"
-"PO-Revision-Date: 2013-09-27 16:58+0124\n"
+"PO-Revision-Date: 2013-10-02 09:13+0124\n"
 "Last-Translator:   <cypreess@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -60,6 +60,8 @@ msgid ""
 "Optional link to page with more information (for clickable pricing table "
 "headers)"
 msgstr ""
+"Необязательная ссылка на страницу с подробной информацией (ссылка в "
+"заголовке таблицы с ценником)"
 
 #: models.py:41 models.py:372 templates/plans/current.html:12
 #: templates/plans/extend.html:25
@@ -310,10 +312,9 @@ msgstr ""
 "Лимит %(model_name_plural)s превышен. Лимит составляет %(quota)s лотов."
 
 #: validators.py:87
-#, fuzzy, python-format
+#, python-format
 msgid "Following %(model_name_plural)s are not in limits: %(objects)s"
-msgstr ""
-"Лимит %(model_name_plural)s превышен. Лимит составляет %(quota)s лотов."
+msgstr "Такие \"%(model_name_plural)s\" превышают лимиты пакета: %(objects)s"
 
 #: views.py:37
 msgid "Your account is now active"
@@ -330,6 +331,9 @@ msgid ""
 " activated or will not work fully after completing this "
 "order.<br><br>Following limits will be exceeded: <ul><li>%(reasons)s</ul>"
 msgstr ""
+"Избранный пакет не достаточен для вашего аккаунта. Ваш аккаунт может быть "
+"деактивирован или может не действовать полностью если вы реализуете этот "
+"заказ. <br><br>Такие лимиты были превышены: <ul><li>%(reasons)s</ul>"
 
 #: views.py:377
 msgid ""
@@ -597,6 +601,8 @@ msgid ""
 "        customised offer tailored to your needs.\n"
 "    "
 msgstr ""
+"\n"
+"Свяжитесь с нашим <a href=\"mailto:\">отделом продаж</a>для получения индивидуального пакета."
 
 #~ msgid "Description"
 #~ msgstr "Описание"
