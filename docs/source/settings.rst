@@ -250,7 +250,7 @@ Class that realises taxation of an order.
 
 Example::
 
-    TAXATION_POLICY='plans.taxation.EUTaxationPolicy'
+    TAXATION_POLICY='plans.locale.eu.taxation.EUTaxationPolicy'
 
 
 Further reading: :doc:`taxation`
