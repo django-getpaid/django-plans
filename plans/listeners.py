@@ -1,33 +1,32 @@
-from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch.dispatcher import receiver
 from django.db.models import get_model
+from django.db.models.signals import post_save
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import User
+from django.dispatch.dispatcher import receiver
+
 from plans.signals import order_completed, activate_user_plan
-
-Order = get_model('plans', 'Order')
-Invoice = get_model('plans', 'Invoice')
-UserPlan = get_model('plans', 'UserPlan')
-Plan = get_model('plans', 'Plan')
-
-print "models", Order, Invoice, UserPlan, Plan
+from plans.abstract_models import (AbstractOrder, AbstractInvoice, 
+    AbstractUserPlan, AbstractPlan)
 
 
-@receiver(post_save, sender=Order)
+@receiver(post_save, sender=AbstractOrder)
 def create_proforma_invoice(sender, instance, created, **kwargs):
     """
     For every Order if there are defined billing_data creates invoice proforma,
     which is an order confirmation document
     """
     if created:
+        Invoice = get_model('plans', Invoice)
         Invoice.create(instance, Invoice.INVOICE_TYPES['PROFORMA'])
 
 
 @receiver(order_completed)
 def create_invoice(sender, **kwargs):
+    Invoice = get_model('plans', Invoice)
     Invoice.create(sender, Invoice.INVOICE_TYPES['INVOICE'])
 
 
-@receiver(post_save, sender=Invoice)
+@receiver(post_save, sender=AbstractInvoice)
 def send_invoice_by_email(sender, instance, created, **kwargs):
     if created:
         instance.send_invoice_by_email()
@@ -40,7 +39,7 @@ def set_default_user_plan(sender, instance, created, **kwargs):
     """
 
     if created:
-        default_plan = Plan.get_default_plan()
+        default_plan = get_model('plans', 'Plan').get_default_plan()
         if default_plan is not None:
             UserPlan.objects.create(user=instance, plan=default_plan, active=False, expire=None)
 
@@ -51,7 +50,7 @@ def set_default_user_plan(sender, instance, created, **kwargs):
 def initialize_plan_generic(sender, user, **kwargs):
     try:
         user.userplan.initialize()
-    except UserPlan.DoesNotExist:
+    except ObjectDoesNotExist:
         return
 
 
@@ -61,7 +60,7 @@ try:
     def initialize_plan_django_registration(sender, user, request, **kwargs):
         try:
              user.userplan.initialize()
-        except UserPlan.DoesNotExist:
+        except ObjectDoesNotExist:
             return
 
 
