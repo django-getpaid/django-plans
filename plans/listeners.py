@@ -16,13 +16,13 @@ def create_proforma_invoice(sender, instance, created, **kwargs):
     which is an order confirmation document
     """
     if created:
-        Invoice = get_model('plans', Invoice)
+        Invoice = get_model('plans', 'Invoice')
         Invoice.create(instance, Invoice.INVOICE_TYPES['PROFORMA'])
 
 
 @receiver(order_completed)
 def create_invoice(sender, **kwargs):
-    Invoice = get_model('plans', Invoice)
+    Invoice = get_model('plans', 'Invoice')
     Invoice.create(sender, Invoice.INVOICE_TYPES['INVOICE'])
 
 

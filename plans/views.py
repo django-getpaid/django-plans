@@ -301,6 +301,7 @@ class CreateOrderPlanChangeView(CreateOrderView):
     def get_price(self):
         policy = self.get_policy()
         period = self.request.user.userplan.days_left()
+        print "policy", policy, period, self.request.user.userplan
         return policy.get_change_price(self.request.user.userplan.plan, self.plan, period)
 
     def get_context_data(self, **kwargs):

@@ -391,9 +391,9 @@ class AbstractOrder(models.Model):
             status = self.user.userplan.extend_account(self.plan, self.pricing)
             self.completed = datetime.utcnow().replace(tzinfo=utc)
             if status:
-                self.status = Order.STATUS.COMPLETED
+                self.status = AbstractOrder.STATUS.COMPLETED
             else:
-                self.status = Order.STATUS.NOT_VALID
+                self.status = AbstractOrder.STATUS.NOT_VALID
             self.save()
             order_completed.send(self)
             return True
