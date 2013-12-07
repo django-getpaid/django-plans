@@ -1,7 +1,10 @@
 from datetime import date, datetime
 from django.core.urlresolvers import reverse
+from django.db.models import get_model
 from pytz import utc
-from plans.models import UserPlan
+
+UserPlan = get_model('plans', 'UserPlan')
+
 
 def account_status(request):
     """

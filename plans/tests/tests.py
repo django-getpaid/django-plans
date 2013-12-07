@@ -7,14 +7,19 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core import mail
-from django.db.models import Q
+from django.db.models import Q, get_model
 
 import mock
-from plans.models import PlanPricing, Invoice, Order, Plan, Pricing
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.locale.eu.taxation import EUTaxationPolicy
 from plans.quota import get_user_quota
 from plans.validators import ModelCountValidator, ModelAttributeValidator
+
+PlanPricing = get_model('plans', 'PlanPricing')
+Invoice = get_model('plans', 'Invoice')
+Order = get_model('plans', 'Order')
+Plan = get_model('plans', 'Plan')
+Pricing = get_model('plans', 'Pricing')
 
 
 class PlansTestCase(TestCase):

@@ -2,11 +2,19 @@ from copy import deepcopy
 
 from django.contrib import admin
 from django.core import urlresolvers
+from django.db.models import get_model
 from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import ugettext_lazy as _
 
-from models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
-from plans.models import Invoice
+UserPlan = get_model('plans', 'UserPlan')
+Plan = get_model('plans', 'Plan')
+PlanQuota = get_model('plans', 'PlanQuota')
+Quota = get_model('plans', 'Quota')
+PlanPricing = get_model('plans', 'PlanPricing')
+Pricing = get_model('plans', 'Pricing')
+Order = get_model('plans', 'Order')
+BillingInfo = get_model('plans', 'BillingInfo')
+Invoice= get_model('plans', 'Invoice')
 
 
 class UserLinkMixin(object):

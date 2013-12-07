@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, RedirectView, CreateView, UpdateView, View
-from django.db.models import Q
+from django.db.models import Q, get_model
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.conf import settings
 from django.contrib import messages
@@ -13,11 +13,17 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import DeleteView, ModelFormMixin
 from django.views.generic.list import ListView
 from plans.importer import import_name
-from plans.models import UserPlan, PlanPricing, Plan, Order, BillingInfo
 from plans.forms import CreateOrderForm, BillingInfoForm
-from plans.models import Quota, Invoice
 from plans.signals import order_started
 from plans.validators import plan_validation
+
+UserPlan = get_model('plans', 'UserPlan')
+PlanPricing = get_model('plans', 'PlanPricing')
+Plan = get_model('plans', 'Plan')
+Order = get_model('plans', 'Order')
+BillingInfo = get_model('plans', 'BillingInfo')
+Quota = get_model('plans', 'Quota')
+Invoice = get_model('plans', 'Invoice')
 
 
 class AccountActivationView(TemplateView):

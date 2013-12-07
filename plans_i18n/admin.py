@@ -1,7 +1,11 @@
 from django.contrib import admin
+from django.db.models import get_model
 from modeltranslation.admin import TranslationAdmin
 from plans.admin import UserLinkMixin, PlanAdmin, QuotaAdmin
-from plans.models import Plan, Quota, Pricing
+
+Plan = get_model('plans', 'Plan')
+Quota = get_model('plans', 'Quota')
+Pricing = get_model('plans', 'Pricing')
 
 # Admin translation for django-plans
 

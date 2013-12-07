@@ -1,8 +1,16 @@
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
-from plans.models import Order, Invoice, UserPlan, Plan
+from django.db.models import get_model
 from plans.signals import order_completed, activate_user_plan
+
+Order = get_model('plans', 'Order')
+Invoice = get_model('plans', 'Invoice')
+UserPlan = get_model('plans', 'UserPlan')
+Plan = get_model('plans', 'Plan')
+
+print "models", Order, Invoice, UserPlan, Plan
+
 
 @receiver(post_save, sender=Order)
 def create_proforma_invoice(sender, instance, created, **kwargs):
