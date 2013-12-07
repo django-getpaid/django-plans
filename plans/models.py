@@ -270,7 +270,8 @@ class Pricing(models.Model):
     def __unicode__(self):
         return u"%s (%d "  % (self.name, self.period) + unicode(_("days")) + u")"
 
-
+    def get_absolute_url(self):
+        return self.url
 
 
 class Quota(OrderedModel):
