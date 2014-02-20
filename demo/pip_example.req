@@ -1,3 +1,0 @@
-Django==1.4.1
-git+https://github.com/cypreess/django-plans.git
-pytz

@@ -1,12 +1,14 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from models import PlanPricing, BillingInfo
 from django.forms.widgets import HiddenInput
+
+from models import PlanPricing, BillingInfo
 from plans.models import Order
 
 
 class OrderForm(forms.Form):
-    plan_pricing = forms.ModelChoiceField(queryset=PlanPricing.objects.all(), widget=HiddenInput, required = True)
+    plan_pricing = forms.ModelChoiceField(queryset=PlanPricing.objects.all(), widget=HiddenInput, required=True)
+
 
 class CreateOrderForm(forms.ModelForm):
     """
@@ -15,6 +17,7 @@ class CreateOrderForm(forms.ModelForm):
     Therefore, when implementing for example a rabat coupons, you can add some fields here
      and create "recalculate" button.
     """
+
     class Meta:
         model = Order
         fields = tuple()
@@ -23,19 +26,25 @@ class CreateOrderForm(forms.ModelForm):
 class BillingInfoForm(forms.ModelForm):
     class Meta:
         model = BillingInfo
-        exclude=('user',)
+        exclude = ('user',)
 
     def clean(self):
         cleaned_data = super(BillingInfoForm, self).clean()
 
         try:
-            cleaned_data['tax_number'] = BillingInfo.clean_tax_number(cleaned_data['tax_number'], cleaned_data.get('country', None))
+            cleaned_data['tax_number'] = BillingInfo.clean_tax_number(cleaned_data['tax_number'],
+                                                                      cleaned_data.get('country', None))
         except ValidationError, e:
             self._errors['tax_number'] = e.messages
 
         return cleaned_data
 
+
 class BillingInfoWithoutShippingForm(BillingInfoForm):
     class Meta:
         model = BillingInfo
         exclude = ('user', 'shipping_name', 'shipping_street', 'shipping_zipcode', 'shipping_city')
+
+
+class FakePaymentsForm(forms.Form):
+    payment_result = forms.ChoiceField(choices=Order.STATUS)

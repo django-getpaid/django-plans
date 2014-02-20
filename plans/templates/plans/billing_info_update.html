@@ -1,18 +1,19 @@
 {% extends 'plans/base.html' %}
+{% load i18n %}
 {% load url from future %}
 
 {% block body %}
-
-{% for message in messages %}
-    <div class="messages {{ message.tags }}">
-        {{ message }}
+    <div class="row">
+        <div class="col-sm-6">
+            <form action="{% url 'billing_info_update' %}" method="post" class="form">
+                <legend>{% trans "Provide billing data" %}</legend>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <a class="btn btn-danger" href="{% url 'billing_info_delete' %}">Delete</a>
+                <button type="submit" class="btn btn-primary">
+                    Save
+                </button>
+            </form>
+        </div>
     </div>
-{% endfor %}
-    <form method="post" action="{% url 'billing_info_update' %}">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit">
-    </form>
-
-<a href="{% url 'billing_info_delete' %}">Delete billing info</a>
 {% endblock %}

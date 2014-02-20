@@ -1,0 +1,25 @@
+{% extends 'plans/base.html' %}
+{% load i18n %}
+{% load url from future %}
+{% load bootstrap3 %}
+
+{# This template is overriden from django-plans because we want to make use of django-bootstrap3 forms #}
+
+{% block body %}
+    <div class="row">
+        <div class="col-sm-6">
+            <form action="{% url 'billing_info_update' %}" method="post" class="form">
+                <legend>{% trans "Provide billing data" %}</legend>
+                {% csrf_token %}
+                {% bootstrap_form form %}
+                {% buttons %}
+                    <a class="btn btn-danger" href="{% url 'billing_info_delete' %}">{% bootstrap_icon "trash" %} Delete</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% bootstrap_icon "edit" %} Save
+                    </button>
+                {% endbuttons %}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

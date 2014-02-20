@@ -1,0 +1,9 @@
+django==1.6.2
+django-bootstrap3
+Sphinx
+django-debug-toolbar
+django-extensions
+fabric
+mock
+-e git+https://github.com/cypreess/suds-htj.git#egg=suds
+-e ../

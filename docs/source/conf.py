@@ -11,28 +11,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
-
-
-sys.path.append( os.path.join(
-                                os.path.join(
-                                        os.path.join(os.path.dirname(__file__), os.pardir),
-                                        os.pardir
-                                ),
-                                'demo'
-                        )
-                )
-
-sys.path.append(os.path.join(
-    os.path.join(os.path.dirname(__file__), os.pardir),
-    os.pardir
-)
-)
-
-print sys.path
-
-#import django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example.settings_docs")
+from django.conf import settings
+settings.configure()
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -192,21 +172,21 @@ htmlhelp_basename = 'django-plansdoc'
 # -- Options for LaTeX output --------------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'django-plans.tex', u'django-plans Documentation',
-   u'Krzysztof Dorosz', 'manual'),
+    ('index', 'django-plans.tex', u'django-plans Documentation',
+     u'Krzysztof Dorosz', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -249,9 +229,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'django-plans', u'django-plans Documentation',
-   u'Krzysztof Dorosz', 'django-plans', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'django-plans', u'django-plans Documentation',
+     u'Krzysztof Dorosz', 'django-plans', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -263,6 +243,3 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
 
-from ..example import settings
-from django.core.management import setup_environ
-setup_environ(settings)

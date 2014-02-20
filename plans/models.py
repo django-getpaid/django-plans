@@ -1,10 +1,13 @@
 from decimal import Decimal
+import re
+from datetime import date, timedelta, datetime
+import logging
+
 from django.contrib.sites.models import Site
 from django.db.models import Max
 from django.utils import translation
 from django_countries import CountryField
 from pytz import utc
-import re
 from django.core.urlresolvers import reverse
 from django.template.base import Template
 from django.utils.translation import ugettext_lazy as _, pgettext_lazy
@@ -13,14 +16,14 @@ from ordered_model.models import OrderedModel
 import vatnumber
 from django.template import Context
 from django.conf import settings
-from datetime import date, timedelta, datetime
 from django.core.exceptions import ImproperlyConfigured, ValidationError
-import logging
+
 from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
 from plans.signals import order_completed, account_activated, account_expired, account_change_plan, account_deactivated
 from validators import plan_validation
-from plans.locale.eu.taxation import EUTaxationPolicy
+from plans.taxation.eu import EUTaxationPolicy
+
 
 accounts_logger = logging.getLogger('accounts')
 
@@ -340,8 +343,8 @@ class Order(models.Model):
 
     user = models.ForeignKey('auth.User', verbose_name=_('user'))
     flat_name = models.CharField(max_length=200, blank=True, null=True)
-    plan = models.ForeignKey('plan', verbose_name=_('plan'), related_name="plan_order")
-    pricing = models.ForeignKey('pricing', blank=True, null=True, verbose_name=_(
+    plan = models.ForeignKey('Plan', verbose_name=_('plan'), related_name="plan_order")
+    pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_(
         'pricing'))  # if pricing is None the order is upgrade plan, not buy new pricing
     created = models.DateTimeField(_('created'), db_index=True)
     completed = models.DateTimeField(_('completed'), null=True, blank=True, db_index=True)
@@ -351,7 +354,7 @@ class Order(models.Model):
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
     status = models.IntegerField(_('status'), choices=STATUS, default=STATUS.NEW)
 
-    def save(self, force_insert=False, force_update=False, using=None):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.created is None:
             self.created = datetime.utcnow().replace(tzinfo=utc)
         return super(Order, self).save(force_insert, force_update, using)

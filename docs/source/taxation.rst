@@ -16,7 +16,7 @@ Django-plans application is shipped with some default taxation policies. You can
 ``EUTaxationPolicy``
 --------------------
 
-.. autoclass:: plans.locale.eu.taxation.EUTaxationPolicy
+.. autoclass:: plans.taxation.eu.EUTaxationPolicy
 
 
 
@@ -31,7 +31,7 @@ Django-plans application is shipped with some default taxation policies. You can
 
 FIXME: under developement
 
-.. autoclass:: plans.locale.ru.taxation.RussianTaxationPolicy
+.. autoclass:: plans.taxation.ru.RussianTaxationPolicy
     :members:
     :undoc-members:
 

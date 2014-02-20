@@ -1,10 +1,22 @@
 {% extends "base.html" %}
-
+{% load bootstrap3 %}
 {% block body %}
+    <div class="jumbotron">
+        <h1>Hello!</h1>
 
-    <p>Sample project that demonstrates some principles of django-plans.</p>
-    <p>
+        <p>
+            This is a sample project that demonstrates some principles of django-plans.
+            You need to login in order to use this app. After you login you can create and delete some objects Foo.
+            Number of objects you can create and the ability to delete them depends on plan selected for your account.
+        </p>
 
-    </p>
+        <p>
+            <a href="{% url 'login' %}" class="btn btn-success btn-lg" role="button">
+            {% bootstrap_icon "euro" %} See pricing</a>
+            or
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg" role="button">
+            {% bootstrap_icon "log-in" %} Sign-in</a>
+        </p>
+    </div>
 
 {% endblock body %}

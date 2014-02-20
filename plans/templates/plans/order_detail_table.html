@@ -1,0 +1,26 @@
+{% load i18n %}
+<table class="table">
+    <thead>
+    <th>{% trans "Name" %}</th>
+    <th>{% trans "Net price" %}</th>
+    <th>{% trans "VAT" %}</th>
+    <th>{% trans "VAT total" %}</th>
+    <th>{% trans "Total" %}</th>
+    </thead>
+    <tbody>
+    <td>{{ order.name }}</td>
+    <td>{{ order.amount }} {{ order.currency }}</td>
+    <td>{% ifequal order.tax None %}n/a{% else %}{{ order.tax }} %{% endifequal %}</td>
+    <td>{% ifequal order.tax_total None %}n/a{% else %}{{ order.tax_total }} {{ order.currency }}{% endifequal %}</td>
+    <td class="number total">{{ order.total }} {{ order.currency }}</td>
+    </tbody>
+</table>
+
+{% ifequal order.tax None %}
+    <h2>{% trans "EU VAT" %}</h2>
+    <div class="bg-info">
+        {% blocktrans %}
+            VAT is not applied to order.
+        {% endblocktrans %}
+    </div>
+{% endifequal %}

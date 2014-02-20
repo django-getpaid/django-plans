@@ -1,12 +1,23 @@
 {% extends "base.html" %}
-
+{% load bootstrap3 %}
+{% load url from future %}
 {% block body %}
 
-    <h2>Sure to delete Foo "{{ object }}"?</h2>
-    <form method="POST">
-        {%  csrf_token %}
-        {{ form.as_table }}
-        <input type="submit">
-    </form>
+    <div class="row">
+        <div class="col-sm-6">
+
+            <form action="" method="post" class="form">
+                <legend>Sure to delete Foo "{{ object }}"?</legend>
+                {% csrf_token %}
+                {{ form.as_p }}
+                {% buttons %}
+                    <button type="submit" class="btn btn-danger">
+                        {% bootstrap_icon "trash" %} Delete
+                    </button>
+                {% endbuttons %}
+            </form>
+        </div>
+    </div>
+
 
 {% endblock %}

@@ -1,3 +1,9 @@
+body {
+  padding-top: 70px;
+  padding-bottom: 30px;
+}
+
+
 
 /* @group Plan Table */
 
@@ -173,42 +179,42 @@ table.plan_table th.periods_footer {
 
 
 
-.messages,
-ul.errorlist li,
-.messages.error,
-.messages.warning,
-.messages.success
+/*.messages,*/
+/*ul.errorlist li,*/
+/*.messages.error,*/
+/*.messages.warning,*/
+/*.messages.success*/
 
- {
-    position: relative;
-    padding: 1em 1em 1em 36px;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    list-style-type: none;
+ /*{*/
+    /*position: relative;*/
+    /*padding: 1em 1em 1em 36px;*/
+    /*margin-top: 1em;*/
+    /*margin-bottom: 1em;*/
+    /*list-style-type: none;*/
 
 
-    -webkit-border-radius: 5px; /* Safari, Chrome */
-    -khtml-border-radius: 5px;    /* Konqueror */
-    -moz-border-radius: 5px; /* Firefox */
-    border-radius: 5px;
+    /*-webkit-border-radius: 5px; *//* Safari, Chrome */
+    /*-khtml-border-radius: 5px;    *//* Konqueror */
+    /*-moz-border-radius: 5px; *//* Firefox */
+    /*border-radius: 5px;*/
 
-    -moz-box-shadow: 3px 3px 5px #ddd;
-    -webkit-box-shadow: 3px 3px 5px #ddd;
-    box-shadow: 3px 3px 5px #ddd;
+    /*-moz-box-shadow: 3px 3px 5px #ddd;*/
+    /*-webkit-box-shadow: 3px 3px 5px #ddd;*/
+    /*box-shadow: 3px 3px 5px #ddd;*/
 
-}
+/*}*/
 
-.messages.warning,
-.messages_permanent.warning {
-    background: #fefed3 url("/static/img/messages/icon_alert.png") no-repeat 10px;
-    border: 1px solid #fcd47a;
-}
-.messages.success,
-.messages_permanent.success {
-    background: #f7fef5 url("/static/img/messages/icon_success.png") no-repeat 10px;
-    border: 1px solid #5da700;
-}
-.error, ul.errorlist li{
-    background: #ffefef url("/static/img/messages/icon_error.png") no-repeat 10px;
-    border: 1px solid #da8e90;
-}
+/*.messages.warning,*/
+/*.messages_permanent.warning {*/
+    /*background: #fefed3 url("/static/img/messages/icon_alert.png") no-repeat 10px;*/
+    /*border: 1px solid #fcd47a;*/
+/*}*/
+/*.messages.success,*/
+/*.messages_permanent.success {*/
+    /*background: #f7fef5 url("/static/img/messages/icon_success.png") no-repeat 10px;*/
+    /*border: 1px solid #5da700;*/
+/*}*/
+/*.error, ul.errorlist li{*/
+    /*background: #ffefef url("/static/img/messages/icon_error.png") no-repeat 10px;*/
+    /*border: 1px solid #da8e90;*/
+/*}*/

@@ -25,21 +25,18 @@ setup(
         'Programming Language :: Python',
     ],
     install_requires=[
-        'django',
-        'django-countries',
+        'django-countries<2.0',
         'pytz',
+        'django-ordered-model',
+        'vatnumber',
+        'celery',
     ],
-    extras_require = {
-        'i18n' : [
+    extras_require={
+        'i18n': [
             'django-modeltranslation>=0.5b1',
-        ],
-        'eu': [
-            'vatnumber',
-            'suds==0.4.1-htj',
         ],
     },
     dependency_links=[
-        'https://github.com/sbrandtb/django-ordered-model/downloads',
         'https://github.com/htj/suds-htj/downloads'
     ],
     include_package_data=True,

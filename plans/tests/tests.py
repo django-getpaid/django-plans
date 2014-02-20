@@ -8,17 +8,20 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core import mail
 from django.db.models import Q
-
 import mock
+
 from plans.models import PlanPricing, Invoice, Order, Plan, Pricing
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
-from plans.locale.eu.taxation import EUTaxationPolicy
+from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
 from plans.validators import ModelCountValidator, ModelAttributeValidator
 
 
 class PlansTestCase(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
+
+    def setUp(self):
+        mail.outbox = []
 
     def test_get_user_quota(self):
         u = User.objects.get(username='test1')
@@ -65,12 +68,10 @@ class PlansTestCase(TestCase):
         Tests if account has been activated
         """
         u = User.objects.get(username='test1')
-        print u.userplan
         u.userplan.expire = date.today() - timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
-        print plan_pricing
         u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
         self.assertEqual(u.userplan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
@@ -459,24 +460,31 @@ class EUTaxationPolicyTestCase(TestCase):
 
 
 class ValidatorsTestCase(TestCase):
+
     def test_model_count_validator(self):
-        class V(ModelCountValidator):
-            code = 'TEST'
+        """
+        We create a test model validator for User. It will raise ValidationError when QUOTA_NAME value
+        will be lower than number of elements of model User.
+        """
+
+        class TestValidator(ModelCountValidator):
+            code = 'QUOTA_NAME'
             model = User
 
-        validator = V()
-        u = User.objects.get(username='test1')
-        self.assertRaises(ValidationError, validator, None, {'TEST': 1})
-        self.assertEqual(validator(None, {'TEST': 2}), None)
-        self.assertEqual(validator(None, {'TEST': 3}), None)
+        validator_object = TestValidator()
+        self.assertRaises(ValidationError, validator_object, user=None, quota_dict={'QUOTA_NAME': 1})
+        self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 2}), None)
+        self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 3}), None)
 
     def test_model_attribute_validator(self):
-        class V(ModelAttributeValidator):
-            code = 'TEST'
+        """
+        We create a test attribute validator which will validate if Pricing objects has a specific value set.
+        """
+        class TestValidator(ModelAttributeValidator):
+            code = 'QUOTA_NAME'
             attribute = 'period'
             model = Pricing
 
-        validator = V()
-        u = User.objects.get(username='test1')
-        self.assertRaises(ValidationError, validator, None, {'TEST': 360})
-        self.assertEqual(validator(None, {'TEST': 365}), None)
+        validator_object = TestValidator()
+        self.assertRaises(ValidationError, validator_object, None, {'TEST': 360})
+        self.assertEqual(validator_object(None, {'TEST': 365}), None)

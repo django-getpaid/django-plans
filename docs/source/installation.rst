@@ -29,8 +29,8 @@ Optionally create virtual environment and get required packages to run example p
 
 .. code-block:: bash
 
-    $ cd django-plans/example
-    $ pip install -r pip_example.req
+    $ cd django-plans/demo/
+    $ pip install -r requirements.txt
 
 
 Initialize example project database:
@@ -52,3 +52,5 @@ Start development web server:
 .. code-block:: bash
 
     $ python manage.py runserver
+
+Visit http://localhost:8000/

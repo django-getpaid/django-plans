@@ -1,6 +1,9 @@
 {% extends 'plans/base.html' %}
 {% load i18n %}
 {% load url from future %}
+{% load bootstrap3 %}
+
+{# This template is overriden from django-plans because we want to make use of django-bootstrap3 forms #}
 
 {% block body %}
     <div class="row">
@@ -9,10 +12,12 @@
                 <legend>{% trans "Provide billing data" %}</legend>
 
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary">
-                    Save
-                </button>
+                {% bootstrap_form form %}
+                {% buttons %}
+                    <button type="submit" class="btn btn-primary">
+                        {% bootstrap_icon "edit" %} Save
+                    </button>
+                {% endbuttons %}
             </form>
         </div>
     </div>

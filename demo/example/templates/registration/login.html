@@ -1,22 +1,25 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% load url from future %}
 
 {% block body %}
+    <div class="row">
+        <div class="col-sm-6">
 
-    <h2>Login:</h2>
-    <p>Please use test1/test1</p>
-    {% if form.errors %}
-        <p>Your username and password didn't match. Please try again.</p>
-    {% endif %}
+        <form action="" method="post" class="form">
+            <legend>Sign-in</legend>
+            <div class="well well-sm">To login use test1/test1 for username/password.</div>
 
-    <form method="post">
-        {% csrf_token %}
-            <table>
-                {{ form.as_table }}
-            </table>
-
-        <input type="submit" value="login" />
-        <input type="hidden" name="next" value="{{ next }}" />
-    </form>
-
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                <button type="submit" class="btn btn-primary">
+                    {% bootstrap_icon "log-in" %} Sign-in
+                </button>
+            {% endbuttons %}
+          {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
+        </form>
+        </div>
+    </div>
 
 {% endblock %}

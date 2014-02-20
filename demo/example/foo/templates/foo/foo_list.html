@@ -1,14 +1,39 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load bootstrap3 %}
 {% load url from future %}
 
 {% block body %}
 
-    <h2>List of Foo items of user {{ user }}</h2>
-    <ol>
-    {% for object in object_list %}
-        <li>{{ object }} (<a href="{% url 'foo_del' pk=object.pk %}">delete</a>)</li>
-    {% empty %}
-        There are no Foo objects for this user.
-    {% endfor %}
-    </ol>
+    <div class="row">
+        <div class="page-header">
+            <h1>List Foo items</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <ul class="list-group">
+                {% for object in object_list %}
+
+                    <li class="list-group-item">
+                                    {{ object }}
+                                    <a href="{% url 'foo_del' pk=object.pk %}" class="btn btn-xs btn-danger pull-right">
+                                        {% bootstrap_icon "trash" %}
+                                    </a>
+
+                    </li>
+                {% empty %}
+                    There are no Foo objects for this user.
+                {% endfor %}
+            </ul>
+            <p>
+                <a href="{% url 'foo_add' %}" class="btn btn-primary">
+                    {% bootstrap_icon "plus" %} Add new foo
+                </a>
+            </p>
+        </div>
+    </div>
+
+
+
+
 {% endblock %}
