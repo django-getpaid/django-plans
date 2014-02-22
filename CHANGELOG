@@ -8,10 +8,13 @@ current dev
   table header (requires schema migration)
 * Rename settings variable PLAN_ACTIVATION_VALIDATORS to PLAN_VALIDATORS
 * Major refactoring of Validators API providing new feature - required_to_activate False/True for validators
-* updating dependency to django-countries>=2.0
-* support for django1.6
-* complete demo application using Boostrap3 for cool look
+* updating dependency to django-countries>=2.0 (fixes #29)
+* support for django1.6 (fixes #28)
+* complete demo application using Boostrap v3 for cool look
 * adding missing default templates
+* refactored login_required decorator usage (issue #20)
+* taxation policies are moved from locale directory (issue #13) warning: backward incompatible!
+* dependencies (apart from suds) are reviewed and refactored in setup.py (issue #9)
 
 v.0.5 - v0.6
 ------------
