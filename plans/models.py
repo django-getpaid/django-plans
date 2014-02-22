@@ -6,7 +6,7 @@ import logging
 from django.contrib.sites.models import Site
 from django.db.models import Max
 from django.utils import translation
-from django_countries import CountryField
+from django_countries.fields import CountryField
 from pytz import utc
 from django.core.urlresolvers import reverse
 from django.template.base import Template
@@ -31,6 +31,16 @@ accounts_logger = logging.getLogger('accounts')
 
 
 class Plan(OrderedModel):
+    """
+    Single plan defined in the system. A plan can customized (referred to user) which means
+    that only this user can purchase this plan and have it selected.
+
+    Plan also can be visible and available. Plan is displayed on the list of currently available plans
+    for user if it is visible. User cannot change plan to a plan that is not visible. Available means
+    that user can buy a plan. If plan is not visible but still available it means that user which
+    is using this plan already will be able to extend this plan again. If plan is not visible and not
+    available, he will be forced then to change plan next time he extends an account.
+    """
     name = models.CharField(_('name'), max_length=100)
     description = models.TextField(_('description'), blank=True)
     default = models.BooleanField(default=False, db_index=True)
@@ -121,6 +131,9 @@ class BillingInfo(models.Model):
 #        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
 
 class UserPlan(models.Model):
+    """
+    Currently selected plan for user account.
+    """
     user = models.OneToOneField('auth.User', verbose_name=_('user'))
     plan = models.ForeignKey('Plan', verbose_name=_('plan'))
     expire = models.DateField(_('expire'), default=None, blank=True, null=True, db_index=True)
@@ -261,6 +274,9 @@ class UserPlan(models.Model):
 
 
 class Pricing(models.Model):
+    """
+    Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
+    """
     name = models.CharField(_('name'), max_length=100)
     period = models.PositiveIntegerField(_('period'), default=30, null=True, blank=True, db_index=True)
     url = models.CharField(max_length=200, blank=True, help_text=_(
@@ -276,6 +292,9 @@ class Pricing(models.Model):
 
 
 class Quota(OrderedModel):
+    """
+    Single countable or boolean property of system (limitation).
+    """
     codename = models.CharField(_('codename'), max_length=50, unique=True, db_index=True)
     name = models.CharField(_('name'), max_length=100)
     unit = models.CharField(_('unit'), max_length=100, blank=True)
@@ -332,6 +351,14 @@ class PlanQuota(models.Model):
 
 
 class Order(models.Model):
+    """
+    Order in this app supports only one item per order. This item is defined by
+    plan and pricing attributes. If both are defined the order represents buying
+    an account extension.
+
+    If only plan is provided (with pricing set to None) this means that user purchased
+    a plan upgrade.
+    """
     STATUS = Enumeration([
         (1, 'NEW', pgettext_lazy(u'Order status', u'new')),
         (2, 'COMPLETED', pgettext_lazy(u'Order status', u'completed')),

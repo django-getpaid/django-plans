@@ -72,7 +72,8 @@ class ModelCountValidator(QuotaValidator):
 
 class ModelAttributeValidator(ModelCountValidator):
     """
-    Validator checks if every model object have a given attribute meets given criteria.
+    Validator checks if every obj.attribute value for a given model satisfy condition
+    provided in check_attribute_value() method.
 
     .. warning::
         ModelAttributeValidator requires `get_absolute_url()` method on provided model.

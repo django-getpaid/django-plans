@@ -5,5 +5,7 @@ django-debug-toolbar
 django-extensions
 fabric
 mock
+transifex-client
+tox
 -e git+https://github.com/cypreess/suds-htj.git#egg=suds
 -e ../

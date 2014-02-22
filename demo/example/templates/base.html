@@ -1,8 +1,9 @@
+{% load i18n %}
 {% load staticfiles %}
 {% load bootstrap3 %}
 {% load url from future %}
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="utf-8">
     <!-- Latest compiled and minified CSS -->
@@ -60,10 +61,10 @@
 </div>
 
 
-{% include "plans/expiration_messages.html" %}
 
 
 <div class="container">
+    {% include "plans/expiration_messages.html" %}
     {% bootstrap_messages %}
     {% block body %}{% endblock %}
 </div>

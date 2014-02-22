@@ -2,27 +2,21 @@
 {% load i18n %}
 
 {% block body %}
-
     <h1>{% trans "Confirm order" %}</h1>
-
-
     {% if FREE_ORDER %}
-
+        {#  Free order is when user downgrades a plan and there is no additional payment it is handle by special a view. #}
         {% with object as order %}
             {% include "plans/order_detail_table.html" %}
         {% endwith %}
 
-
-        <div  class="bg-info">
+        <div class="alert alert-warning">
             {% blocktrans %}If you downgrade your plan please remember that new lower limits are used immediately after
                 finishing the order.{% endblocktrans %}
         </div>
 
-        <form method="post" action="{% url change_plan pk=plan.pk %}">
+        <form method="post" action="{% url "change_plan" pk=plan.pk %}">
             {% csrf_token %}
-            <div style="text-align: right">
-                <input type="submit" value="{% trans "Continue" %}" class="biglink">
-            </div>
+            <input type="submit" class="btn btn-primary" value="{% trans "Continue" %}">
         </form>
 
     {% else %}
@@ -35,7 +29,7 @@
             <h2>{% trans "Invoice" %}</h2>
             {% url "billing_info" as billing_info_url %}
             {% if billing_info %}
-                <p  class="bg-info">
+                <p class="alert alert-info">
                     {% blocktrans %}
                         Invoice for this order will be issued for:
                     {% endblocktrans %}
@@ -57,7 +51,7 @@
                     {% endblocktrans %}
                 </p>
             {% else %}
-                <p class="bg-info">
+                <p class="alert alert-info">
                     {% blocktrans %}
                         Invoice will <b>not</b> be issued. If you need an invoice please provide
                         <a href="{{ billing_info_url }}">billing data</a> before making an order.
@@ -67,12 +61,11 @@
 
             <p>
 
-                <input type="submit" class="btn btn-primary"  value="{% trans "Continue" %}">
+                <input type="submit" class="btn btn-primary" value="{% trans "Continue" %}">
 
 
-
-            {{ form.as_p }}
-            {% csrf_token %}
+                {{ form.as_p }}
+                {% csrf_token %}
         </form>
 
     {% endif %}

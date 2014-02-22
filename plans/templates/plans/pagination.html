@@ -1,25 +1,22 @@
 {% load i18n %}
 {% if is_paginated %}
-    <div class="pagination">
-        {% trans "Page" %}:
-                <span class="page-links">
-                    {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&query={{ query }}">&#x25C0;</a>
-                    {% else %}
-                        <span class='spacer'>&nbsp;</span>
-                    {% endif %}
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+            <li><a href="?page={{ page_obj.previous_page_number }}&query={{ query }}">&laquo;</a></li>
+        {% else %}
+            <li class="disabled"><span>&laquo;</span></li>
+        {% endif %}
 
-                    {% for page in page_obj.paginator.page_range %}
-                        <a href="?page={{ page }}&query={{ query }}" {% ifequal page page_obj.number  %}class="selected"{% endifequal %} >{{ page }}</a>
-                    {% endfor %}
+        {% for page in page_obj.paginator.page_range %}
 
+            <li {% ifequal page page_obj.number %}class="active"{% endifequal %}>
+                <a href="?page={{ page }}&query={{ query }}">{{ page }}</a></li>
+        {% endfor %}
 
-
-                    {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&query={{ query }}">&#x25BA;</a>
-                    {% else %}
-                        <span class='spacer'>&nbsp;</span>
-                    {% endif %}
-                </span>
-    </div>
+        {% if page_obj.has_next %}
+            <li><a href="?page={{ page_obj.next_page_number }}&query={{ query }}">&raquo;</a></li>
+        {% else %}
+            <li class="disabled"><span>&raquo;</span></li>
+        {% endif %}
+    </ul>
 {% endif %}

@@ -18,7 +18,7 @@
 
 {% ifequal order.tax None %}
     <h2>{% trans "EU VAT" %}</h2>
-    <div class="bg-info">
+    <div class="alert alert-info">
         {% blocktrans %}
             VAT is not applied to order.
         {% endblocktrans %}

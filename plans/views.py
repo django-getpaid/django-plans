@@ -1,5 +1,4 @@
 from decimal import Decimal
-from itertools import chain
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
@@ -14,6 +13,7 @@ from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import DeleteView, ModelFormMixin, FormView
 from django.views.generic.list import ListView
 
+from itertools import chain
 from plans.importer import import_name
 from plans.mixins import LoginRequired
 from plans.models import UserPlan, PlanPricing, Plan, Order, BillingInfo
@@ -135,10 +135,8 @@ class UpgradePlanView(LoginRequired, PlanTableViewBase):
     template_name = "plans/upgrade.html"
 
 
-
 class PricingView(PlanTableViewBase):
     template_name = "plans/pricing.html"
-
 
 
 class ChangePlanView(LoginRequired, View):
@@ -459,10 +457,11 @@ class InvoiceDetailView(LoginRequired, DetailView):
         else:
             return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user)
 
+
 class FakePaymentsView(LoginRequired, SingleObjectMixin, FormView):
-    form = FakePaymentsForm
+    form_class = FakePaymentsForm
     model = Order
-    template = 'plans/fake_payments.html'
+    template_name = 'plans/fake_payments.html'
 
     def get_success_url(self):
         return self.object.get_absolute_url()
@@ -472,17 +471,17 @@ class FakePaymentsView(LoginRequired, SingleObjectMixin, FormView):
         return super(FakePaymentsView, self).get_queryset().filter(user=self.request.user)
 
     def dispatch(self, *args, **kwargs):
-        if getattr(settings, 'DEBUG', False):
+        if not getattr(settings, 'DEBUG', False):
             return HttpResponseForbidden('This view is accessible only in debug mode.')
         self.object = self.get_object()
         return super(FakePaymentsView, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
-
-        if form['complete_order'] == Order.STATUS.COMPLETED:
+        if int(form['status'].value()) == Order.STATUS.COMPLETED:
             self.object.complete_order()
+            return HttpResponseRedirect(reverse('order_payment_success', kwargs={'pk': self.object.pk}))
         else:
-            self.object.status = form['complete_order']
+            self.object.status = form['status'].value()
             self.object.save()
-        return super(FakePaymentsView, self).form_valid(form)
+            return HttpResponseRedirect(reverse('order_payment_failure', kwargs={'pk': self.object.pk}))
 

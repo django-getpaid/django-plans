@@ -460,7 +460,6 @@ class EUTaxationPolicyTestCase(TestCase):
 
 
 class ValidatorsTestCase(TestCase):
-
     def test_model_count_validator(self):
         """
         We create a test model validator for User. It will raise ValidationError when QUOTA_NAME value
@@ -480,11 +479,12 @@ class ValidatorsTestCase(TestCase):
         """
         We create a test attribute validator which will validate if Pricing objects has a specific value set.
         """
+
         class TestValidator(ModelAttributeValidator):
             code = 'QUOTA_NAME'
             attribute = 'period'
             model = Pricing
 
         validator_object = TestValidator()
-        self.assertRaises(ValidationError, validator_object, None, {'TEST': 360})
-        self.assertEqual(validator_object(None, {'TEST': 365}), None)
+        self.assertRaises(ValidationError, validator_object, user=None, quota_dict={'QUOTA_NAME': 360})
+        self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 365}), None)

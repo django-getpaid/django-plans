@@ -22,14 +22,12 @@
         </thead>
         <tbody>
             {% for order in object_list %}
-            <tr>
+            <tr class="{% if order.status == 2 %}success{% elif order.status == 3 %}danger{% elif order.status == 4 %}warning{% elif order.status == 5 %}info{% endif %}">
                 <td><a href="{{ order.get_absolute_url }}">{{ order.pk }}</a></td>
                 <td><a href="{{ order.get_absolute_url }}">{{ order.name }}</a></td>
                 <td class="date">{{ order.created|date }}</td>
                 <td class="status">{{ order.get_status_display }}</td>
-
                 <td class="date">{{ order.completed|date|default:"-" }}</td>
-
                 <td class="number">{{ order.total }}&nbsp;{{ CURRENCY }}</td>
             </tr>
             {% endfor %}

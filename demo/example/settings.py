@@ -1,8 +1,8 @@
 # Django settings for example project.
 import os
 from decimal import Decimal
+from django.conf import global_settings
 
-TAX = Decimal(23)
 EMAIL_FROM = "Test <test@server.com>"
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
@@ -118,6 +118,15 @@ LOGGING = {
     }
 }
 
+
+# This is required for django-plans
+
+TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
+    'django.core.context_processors.request',
+    'plans.context_processors.account_status'
+)
+
+
 LANGUAGES = (
     ('en', 'English'),
 )
@@ -139,7 +148,7 @@ PLAN_VALIDATORS = {
     'MAX_FOO_COUNT': 'example.foo.validators.max_foos_validator',
 }
 
-CURRENCY = 'PLN'
+CURRENCY = 'EUR'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

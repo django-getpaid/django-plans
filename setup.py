@@ -7,7 +7,7 @@ with open('README.rst') as file:
 
 setup(
     name='django-plans',
-    version='0.6',
+    version='0.6.1',
     description='Pluggable django app for managing pricing plans with quotas and accounts expiration',
     long_description=long_description,
     author='Krzysztof Dorosz',
@@ -25,7 +25,7 @@ setup(
         'Programming Language :: Python',
     ],
     install_requires=[
-        'django-countries<2.0',
+        'django-countries>=2.0',
         'pytz',
         'django-ordered-model',
         'vatnumber',

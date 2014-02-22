@@ -5,7 +5,7 @@
 {% block body %}
 
     <h1>FakePayments™</h1>
-    <p> Please select desired order status after performing fake payment. </p>
+    <p> Please select desired status after performing payment for an <strong>{{ object }}</strong>. </p>
     <form method="POST">
         {% csrf_token %}
         {{ form.as_p }}

@@ -1,21 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
-# Translators:
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: django-plans\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-02-20 20:02+0100\n"
-"PO-Revision-Date: 2014-02-20 19:02+0000\n"
-"Last-Translator: cypreess <cypreess@gmail.com>\n"
-"Language-Team: Russian (http://www.transifex.com/projects/p/django-plans/language/ru/)\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ru\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: admin.py:56
 msgid "Make a plan copy"
@@ -340,9 +340,9 @@ msgstr ""
 #: views.py:216
 #, python-format
 msgid ""
-"The selected plan is insufficient for your account. Your account will not be"
-" activated or will not work fully after completing this "
-"order.<br><br>Following limits will be exceeded: <ul><li>%(reasons)s</ul>"
+"The selected plan is insufficient for your account. Your account will not be "
+"activated or will not work fully after completing this order."
+"<br><br>Following limits will be exceeded: <ul><li>%(reasons)s</ul>"
 msgstr ""
 
 #: views.py:362
@@ -436,7 +436,8 @@ msgstr ""
 #: templates/mail/invoice_created_body.txt:4
 #, python-format
 msgid ""
-"We are writing to inform you, that %(invoice_type)s %(invoice_number)s has been issued. You can view it and print it at:\n"
+"We are writing to inform you, that %(invoice_type)s %(invoice_number)s has "
+"been issued. You can view it and print it at:\n"
 "http://%(site_domain)s%(url)s\n"
 msgstr ""
 
@@ -465,7 +466,6 @@ msgid "Your account %(user)s will expire in %(days)s day"
 msgid_plural "Your account %(user)s will expire in %(days)s days"
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
 
 #: templates/plans/billing_info_create.html:9
 #: templates/plans/billing_info_update.html:9
@@ -482,7 +482,8 @@ msgstr ""
 
 #: templates/plans/create_order.html:17
 msgid ""
-"If you downgrade your plan please remember that new lower limits are used immediately after\n"
+"If you downgrade your plan please remember that new lower limits are used "
+"immediately after\n"
 "                finishing the order."
 msgstr ""
 
@@ -501,7 +502,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                        If this data is not correct please <a href=\"%(billing_info_url)s\">edit billing data</a> before\n"
+"                        If this data is not correct please <a href="
+"\"%(billing_info_url)s\">edit billing data</a> before\n"
 "                        making an order.\n"
 "                    "
 msgstr ""
@@ -510,8 +512,10 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                        Invoice will <b>not</b> be issued. If you need an invoice please provide\n"
-"                        <a href=\"%(billing_info_url)s\">billing data</a> before making an order.\n"
+"                        Invoice will <b>not</b> be issued. If you need an "
+"invoice please provide\n"
+"                        <a href=\"%(billing_info_url)s\">billing data</a> "
+"before making an order.\n"
 "                    "
 msgstr ""
 
@@ -551,7 +555,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"        Please see other <a href=\"%(upgrade_url)s\">currently available plans</a>.\n"
+"        Please see other <a href=\"%(upgrade_url)s\">currently available "
+"plans</a>.\n"
 "    "
 msgstr ""
 
@@ -559,7 +564,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"            Your account has expired. Please <a href=\"%(url)s\">extend your account</a>.\n"
+"            Your account has expired. Please <a href=\"%(url)s\">extend your "
+"account</a>.\n"
 "        "
 msgstr ""
 
@@ -567,7 +573,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                Your account is not active. Possibly you are over some limits.\n"
+"                Your account is not active. Possibly you are over some "
+"limits.\n"
 "                Try to <a href=\"%(url)s\">activate your account</a>.\n"
 "            "
 msgstr ""
@@ -577,7 +584,8 @@ msgstr ""
 msgid ""
 "\n"
 "                Your account will expire soon (in %(days_to_expire)s days).\n"
-"                We recommend to <a href=\"%(extend_url)s\">extend your account now.</a>\n"
+"                We recommend to <a href=\"%(extend_url)s\">extend your "
+"account now.</a>\n"
 "            "
 msgstr ""
 
@@ -593,7 +601,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                Unfortunately your current plan is not available any more. You need to <a href=\"%(upgrade_url)s\">upgrade your plan</a>.\n"
+"                Unfortunately your current plan is not available any more. "
+"You need to <a href=\"%(upgrade_url)s\">upgrade your plan</a>.\n"
 "        "
 msgstr ""
 
@@ -623,7 +632,8 @@ msgstr ""
 #: templates/plans/order_detail.html:76
 msgid ""
 "\n"
-"                    This order is expired. It will accept an incoming payment made earlier, but new payment cannot be\n"
+"                    This order is expired. It will accept an incoming "
+"payment made earlier, but new payment cannot be\n"
 "                    initialized. Please make a new order if necessary.\n"
 "                "
 msgstr ""
@@ -631,7 +641,8 @@ msgstr ""
 #: templates/plans/order_detail.html:88
 msgid ""
 "\n"
-"                This order could not be processed as it is not valid. Please contact with customer service.\n"
+"                This order could not be processed as it is not valid. Please "
+"contact with customer service.\n"
 "            "
 msgstr ""
 
@@ -714,8 +725,10 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                        This plan is not available anymore and cannot be extended.<p>\n"
-"                        You need to upgrade your account to any of <a href=\"%(upgrade_url)s\">currently available plans</a>.\n"
+"                        This plan is not available anymore and cannot be "
+"extended.<p>\n"
+"                        You need to upgrade your account to any of <a href="
+"\"%(upgrade_url)s\">currently available plans</a>.\n"
 "                    "
 msgstr ""
 

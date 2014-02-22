@@ -53,12 +53,12 @@ def copy_plan(modeladmin, request, queryset):
             quota.save(force_insert=True)
 
 
-copy_plan.short_description = _('Make plan copy')
+copy_plan.short_description = _('Make a plan copy')
 
 
 class PlanAdmin(OrderedModelAdmin):
     search_fields = ('name', 'customized__username', 'customized__email', )
-    list_filter = ( 'available', 'visible')
+    list_filter = ('available', 'visible')
     list_display = ('name', 'description', 'customized', 'default', 'available', 'created', 'move_up_down_links')
     inlines = (PlanPricingInline, PlanQuotaInline)
     list_select_related = True
