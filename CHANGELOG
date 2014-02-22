@@ -8,11 +8,15 @@ current dev
   table header (requires schema migration)
 * Rename settings variable PLAN_ACTIVATION_VALIDATORS to PLAN_VALIDATORS
 * Major refactoring of Validators API providing new feature - required_to_activate False/True for validators
+* updating dependency to django-countries>=2.0
+* support for django1.6
+* complete demo application using Boostrap3 for cool look
+* adding missing default templates
 
 v.0.5 - v0.6
 ------------
 
-[...] (FIXME: history changelog from git commits
+[...] (FIXME: write history changelog from git commits
 
 v.0.4
 -----
