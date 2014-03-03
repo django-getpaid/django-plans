@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.forms.widgets import HiddenInput
 from django.utils.translation import ugettext
 
-from models import PlanPricing, BillingInfo
+from .models import PlanPricing, BillingInfo
 from plans.models import Order
 
 
@@ -35,7 +35,7 @@ class BillingInfoForm(forms.ModelForm):
         try:
             cleaned_data['tax_number'] = BillingInfo.clean_tax_number(cleaned_data['tax_number'],
                                                                       cleaned_data.get('country', None))
-        except ValidationError, e:
+        except ValidationError as e:
             self._errors['tax_number'] = e.messages
 
         return cleaned_data

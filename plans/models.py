@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from decimal import Decimal
 import re
 from datetime import date, timedelta, datetime
@@ -6,6 +8,7 @@ import logging
 from django.contrib.sites.models import Site
 from django.db.models import Max
 from django.utils import translation
+from django.utils.encoding import python_2_unicode_compatible
 from django_countries.fields import CountryField
 from pytz import utc
 from django.core.urlresolvers import reverse
@@ -21,7 +24,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
 from plans.signals import order_completed, account_activated, account_expired, account_change_plan, account_deactivated
-from validators import plan_validation
+from .validators import plan_validation
 from plans.taxation.eu import EUTaxationPolicy
 
 
@@ -29,7 +32,7 @@ accounts_logger = logging.getLogger('accounts')
 
 # Create your models here.
 
-
+@python_2_unicode_compatible
 class Plan(OrderedModel):
     """
     Single plan defined in the system. A plan can customized (referred to user) which means
@@ -71,7 +74,7 @@ class Plan(OrderedModel):
         except IndexError:
             return None
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def get_quota_dict(self):
@@ -113,23 +116,24 @@ class BillingInfo(models.Model):
                     number = tax_number[len(country):]
 
                 if not vatnumber.check_vat(country + number):
-
-                #           This is a proper solution to bind ValidationError to a Field but it is not
-                #           working due to django bug :(
-                #                    errors = defaultdict(list)
-                #                    errors['tax_number'].append(_('VAT ID is not correct'))
-                #                    raise ValidationError(errors)
+                    #           This is a proper solution to bind ValidationError to a Field but it is not
+                    #           working due to django bug :(
+                    #                    errors = defaultdict(list)
+                    #                    errors['tax_number'].append(_('VAT ID is not correct'))
+                    #                    raise ValidationError(errors)
                     raise ValidationError(_('VAT ID is not correct'))
 
             return tax_number
         else:
             return ''
 
+
 # FIXME: How to make validation in Model clean and attach it to a field? Seems that it is not working right now
 #    def clean(self):
 #        super(BillingInfo, self).clean()
 #        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
 
+@python_2_unicode_compatible
 class UserPlan(models.Model):
     """
     Currently selected plan for user account.
@@ -143,8 +147,8 @@ class UserPlan(models.Model):
         verbose_name = _("User plan")
         verbose_name_plural = _("Users plans")
 
-    def __unicode__(self):
-        return u"%s [%s]" % (self.user, self.plan)
+    def __str__(self):
+        return "%s [%s]" % (self.user, self.plan)
 
     def is_active(self):
         return self.active
@@ -200,7 +204,7 @@ class UserPlan(models.Model):
         :return:
         """
 
-        status = False      # flag; if extending account was successful?
+        status = False  # flag; if extending account was successful?
         if pricing is None:
             # Process a plan change request (downgrade or upgrade)
             # No account activation or extending at this point
@@ -211,7 +215,7 @@ class UserPlan(models.Model):
             send_template_email([self.user.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
                                 mail_context, get_user_language(self.user))
             accounts_logger.info(
-                u"Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.user, self.user.pk, plan, plan.pk))
+                "Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.user, self.user.pk, plan, plan.pk))
             status = True
         else:
             # Processing standard account extending procedure
@@ -231,7 +235,7 @@ class UserPlan(models.Model):
                     status = True
                 elif self.expire > date.today():
                     status = False
-                    accounts_logger.warning(u"Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
+                    accounts_logger.warning("Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
                         self.user, self.user.pk, plan, plan.pk))
                 else:
                     status = True
@@ -241,7 +245,7 @@ class UserPlan(models.Model):
 
             if status:
                 self.save()
-                accounts_logger.info(u"Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
+                accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
                     self.user, self.user.pk, pricing.period, plan, plan.pk))
                 mail_context = Context({'user': self.user, 'userplan': self, 'plan': plan, 'pricing': pricing})
                 send_template_email([self.user.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
@@ -257,7 +261,7 @@ class UserPlan(models.Model):
 
         self.deactivate()
 
-        accounts_logger.info(u"Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
+        accounts_logger.info("Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
 
         mail_context = Context({'user': self.user, 'userplan': self})
         send_template_email([self.user.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
@@ -273,6 +277,7 @@ class UserPlan(models.Model):
                             mail_context, get_user_language(self.user))
 
 
+@python_2_unicode_compatible
 class Pricing(models.Model):
     """
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
@@ -287,10 +292,11 @@ class Pricing(models.Model):
         verbose_name = _("Pricing")
         verbose_name_plural = _("Pricings")
 
-    def __unicode__(self):
-        return u"%s (%d " % (self.name, self.period) + unicode(_("days")) + u")"
+    def __str__(self):
+        return "%s (%d " % (self.name, self.period) + "%s)" % _("days")
 
 
+@python_2_unicode_compatible
 class Quota(OrderedModel):
     """
     Single countable or boolean property of system (limitation).
@@ -308,8 +314,8 @@ class Quota(OrderedModel):
         verbose_name = _("Quota")
         verbose_name_plural = _("Quotas")
 
-    def __unicode__(self):
-        return u"%s" % (self.codename, )
+    def __str__(self):
+        return "%s" % (self.codename, )
 
 
 class PlanPricingManager(models.Manager):
@@ -317,6 +323,7 @@ class PlanPricingManager(models.Manager):
         return super(PlanPricingManager, self).get_query_set().select_related('plan', 'pricing')
 
 
+@python_2_unicode_compatible
 class PlanPricing(models.Model):
     plan = models.ForeignKey('Plan')
     pricing = models.ForeignKey('Pricing')
@@ -329,8 +336,8 @@ class PlanPricing(models.Model):
         verbose_name = _("Plan pricing")
         verbose_name_plural = _("Plans pricings")
 
-    def __unicode__(self):
-        return u"%s %s" % (self.plan.name, self.pricing)
+    def __str__(self):
+        return "%s %s" % (self.plan.name, self.pricing)
 
 
 class PlanQuotaManager(models.Manager):
@@ -350,6 +357,7 @@ class PlanQuota(models.Model):
         verbose_name_plural = _("Plans quotas")
 
 
+@python_2_unicode_compatible
 class Order(models.Model):
     """
     Order in this app supports only one item per order. This item is defined by
@@ -360,11 +368,11 @@ class Order(models.Model):
     a plan upgrade.
     """
     STATUS = Enumeration([
-        (1, 'NEW', pgettext_lazy(u'Order status', u'new')),
-        (2, 'COMPLETED', pgettext_lazy(u'Order status', u'completed')),
-        (3, 'NOT_VALID', pgettext_lazy(u'Order status', u'not valid')),
-        (4, 'CANCELED', pgettext_lazy(u'Order status', u'canceled')),
-        (5, 'RETURNED', pgettext_lazy(u'Order status', u'returned')),
+        (1, 'NEW', pgettext_lazy('Order status', 'new')),
+        (2, 'COMPLETED', pgettext_lazy('Order status', 'completed')),
+        (3, 'NOT_VALID', pgettext_lazy('Order status', 'not valid')),
+        (4, 'CANCELED', pgettext_lazy('Order status', 'canceled')),
+        (5, 'RETURNED', pgettext_lazy('Order status', 'returned')),
 
     ])
 
@@ -377,7 +385,7 @@ class Order(models.Model):
     completed = models.DateTimeField(_('completed'), null=True, blank=True, db_index=True)
     amount = models.DecimalField(_('amount'), max_digits=7, decimal_places=2, db_index=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
-                              blank=True) # Tax=None is when tax is not applicable
+                              blank=True)  # Tax=None is when tax is not applicable
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
     status = models.IntegerField(_('status'), choices=STATUS, default=STATUS.NEW)
 
@@ -386,7 +394,7 @@ class Order(models.Model):
             self.created = datetime.utcnow().replace(tzinfo=utc)
         return super(Order, self).save(force_insert, force_update, using)
 
-    def __unicode__(self):
+    def __str__(self):
         return _("Order #%(id)d") % {'id': self.id}
 
     @property
@@ -402,8 +410,8 @@ class Order(models.Model):
         if self.flat_name:
             return self.flat_name
         else:
-            return _('Plan') + u' ' + unicode(self.plan.name) + (
-                u" (upgrade)" if self.pricing is None else u' - ' + unicode(self.pricing))
+            return "%s %s %s " % (
+                _('Plan'), self.plan.name, "(upgrade)" if self.pricing is None else '- %s' % self.pricing)
 
 
     def is_ready_for_payment(self):
@@ -470,15 +478,16 @@ class InvoiceDuplicateManager(models.Manager):
         return super(InvoiceDuplicateManager, self).get_query_set().filter(type=Invoice.INVOICE_TYPES['DUPLICATE'])
 
 
+@python_2_unicode_compatible
 class Invoice(models.Model):
     """
     Single invoice document.
     """
 
     INVOICE_TYPES = Enumeration([
-        (1, 'INVOICE', _(u'Invoice')),
-        (2, 'DUPLICATE', _(u'Invoice Duplicate')),
-        (3, 'PROFORMA', pgettext_lazy(u'proforma', u'Order confirmation')),
+        (1, 'INVOICE', _('Invoice')),
+        (2, 'DUPLICATE', _('Invoice Duplicate')),
+        (3, 'PROFORMA', pgettext_lazy('proforma', 'Order confirmation')),
 
     ])
 
@@ -536,8 +545,8 @@ class Invoice(models.Model):
         verbose_name = _("Invoice")
         verbose_name_plural = _("Invoices")
 
-    def __unicode__(self):
-        return unicode(self.full_number)
+    def __str__(self):
+        return self.full_number
 
     def get_absolute_url(self):
         return reverse('invoice_preview_html', kwargs={'pk': self.pk})
@@ -645,7 +654,7 @@ class Invoice(models.Model):
         self.tax_total = order.total() - order.amount
         self.tax = order.tax
         self.currency = order.currency
-        self.item_description = u"%s - %s" % (Site.objects.get_current().name, order.name)
+        self.item_description = "%s - %s" % (Site.objects.get_current().name, order.name)
 
     @classmethod
     def create(cls, order, invoice_type):
@@ -681,7 +690,7 @@ class Invoice(models.Model):
         if language_code is not None:
             translation.activate(language_code)
         mail_context = Context({'user': self.user,
-                                'invoice_type': unicode(self.get_type_display()),
+                                'invoice_type': self.get_type_display(),
                                 'invoice_number': self.get_full_number(),
                                 'order': self.order.id,
                                 'url': self.get_absolute_url(),

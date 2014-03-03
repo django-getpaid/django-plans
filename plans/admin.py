@@ -5,7 +5,7 @@ from django.core import urlresolvers
 from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import ugettext_lazy as _
 
-from models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
+from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
 from plans.models import Invoice
 
 

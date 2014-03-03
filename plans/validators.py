@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.utils.translation import ugettext_lazy as _
+import six
 
 from plans.importer import import_name
 from plans.quota import get_user_quota
@@ -90,7 +91,7 @@ class ModelAttributeValidator(ModelCountValidator):
     def get_error_message(self, quota_value, **kwargs):
         return _('Following %(model_name_plural)s are not in limits: %(objects)s') % {
             'model_name_plural': self.model._meta.verbose_name_plural.title().lower(),
-            'objects': u', '.join(map(lambda o: u'<a href="%s">%s</a>' % (o.get_absolute_url(), unicode(o)),
+            'objects': u', '.join(map(lambda o: u'<a href="%s">%s</a>' % (o.get_absolute_url(), six.u(o)),
                                       kwargs['not_valid_objects'])),
         }
 
@@ -124,7 +125,7 @@ def plan_validation(user, plan=None, on_activation=False):
         'other': [],
     }
     for quota in quota_dict:
-        if validators.has_key(quota):
+        if quota in validators:
             validator = import_name(validators[quota])
 
             if on_activation:
@@ -132,7 +133,7 @@ def plan_validation(user, plan=None, on_activation=False):
             else:
                 try:
                     validator(user, quota_dict)
-                except ValidationError, e:
+                except ValidationError as e:
                     if validator.required_to_activate:
                         errors['required_to_activate'].extend(e.messages)
                     else:

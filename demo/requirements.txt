@@ -3,9 +3,11 @@ django-bootstrap3
 Sphinx
 django-debug-toolbar
 django-extensions
-fabric
 mock
-transifex-client
 tox
--e git+https://github.com/cypreess/suds-htj.git#egg=suds
--e ../
+suds-jurko
+
+
+# Not supported in py3
+#fabric
+#transifex-client
