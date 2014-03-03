@@ -7,4 +7,8 @@ Documentation: https://django-plans.readthedocs.org/
 
 Master branch: experimental support for django 1.6, experimental support for py2.7 & py3.3
 
-.. image:: docs/source/_static/images/pricing_table.png
+.. image:: docs/source/_static/images/django-plans-1.png
+
+.. image:: docs/source/_static/images/django-plans-2.png
+
+.. image:: docs/source/_static/images/django-plans-3.png
