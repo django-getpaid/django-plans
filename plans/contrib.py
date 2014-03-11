@@ -12,6 +12,10 @@ email_logger = logging.getLogger('emails')
 def send_template_email(recipients, title_template, body_template, context, language):
     """Sends e-mail using templating system"""
 
+    send_emails = getattr(settings, 'SEND_PLANS_EMAILS', True)
+    if not send_emails:
+        return
+
     site_name = getattr(settings, 'SITE_NAME', 'Please define settings.SITE_NAME')
     domain = getattr(settings, 'SITE_URL', None)
 

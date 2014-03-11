@@ -102,6 +102,17 @@ class PlansTestCase(TestCase):
         self.assertEqual(u.userplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
+    def test_disable_emails(self):
+        with self.settings(SEND_PLANS_EMAILS=False):
+            # Re-run the remind_expire test, but look for 0 emails sent
+            u = User.objects.get(username='test1')
+            u.userplan.expire = date.today() + timedelta(days=14)
+            u.userplan.active = True
+            u.userplan.save()
+            u.userplan.remind_expire_soon()
+            self.assertEqual(u.userplan.active, True)
+            self.assertEqual(len(mail.outbox), 0)
+
 
 class TestInvoice(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']

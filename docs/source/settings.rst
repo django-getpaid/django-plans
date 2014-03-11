@@ -220,6 +220,15 @@ Example::
 
 Further reading: :doc:`quota_validators`
 
+``SEND_PLANS_EMAILS``
+------------------------------
+
+**Optional**
+
+Default: ``True``
+
+Boolean value for enabling (default) or disabling the sending of plan related emails.
+
 ``TAX``
 -------
 
