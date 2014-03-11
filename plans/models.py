@@ -2,8 +2,7 @@ from decimal import Decimal
 from django.contrib.sites.models import Site
 from django.db.models import Max
 from django.utils import translation
-from django_countries import CountryField
-from pytz import utc
+from django_countries.fields import CountryField
 import re
 from django.core.urlresolvers import reverse
 from django.template.base import Template
@@ -21,6 +20,7 @@ from plans.enum import Enumeration
 from plans.signals import order_completed, account_activated, account_expired, account_change_plan, account_deactivated
 from validators import plan_validation
 from plans.locale.eu.taxation import EUTaxationPolicy
+from django.utils.timezone import now
 
 accounts_logger = logging.getLogger('accounts')
 
@@ -47,7 +47,7 @@ class Plan(OrderedModel):
 
     def save(self, *args, **kwargs):
         if not self.created:
-            self.created = datetime.utcnow().replace(tzinfo=utc)
+            self.created = now()
 
         super(Plan, self).save(*args, **kwargs)
 
@@ -172,7 +172,7 @@ class UserPlan(models.Model):
         """
         if not self.is_active():
             if self.expire is None:
-                self.expire = datetime.utcnow().replace(tzinfo=utc) + timedelta(
+                self.expire = now() + timedelta(
                     days=getattr(settings, 'PLAN_DEFAULT_GRACE_PERIOD', 30))
             self.activate()  # this will call self.save()
 
@@ -353,7 +353,7 @@ class Order(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None):
         if self.created is None:
-            self.created = datetime.utcnow().replace(tzinfo=utc)
+            self.created = now()
         return super(Order, self).save(force_insert, force_update, using)
 
     def __unicode__(self):
@@ -377,13 +377,13 @@ class Order(models.Model):
 
 
     def is_ready_for_payment(self):
-        return self.status == self.STATUS.NEW and (datetime.utcnow().replace(tzinfo=utc) - self.created).days < getattr(
+        return self.status == self.STATUS.NEW and (now() - self.created).days < getattr(
             settings, 'ORDER_EXPIRATION', 14)
 
     def complete_order(self):
         if self.completed is None:
             status = self.user.userplan.extend_account(self.plan, self.pricing)
-            self.completed = datetime.utcnow().replace(tzinfo=utc)
+            self.completed = now()
             if status:
                 self.status = Order.STATUS.COMPLETED
             else:
