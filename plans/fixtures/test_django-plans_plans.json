@@ -71,6 +71,18 @@
         }
     },
     {
+        "pk": 9,
+        "model": "plans.plan",
+        "fields": {
+            "available": true,
+            "visible": true,
+            "created": "2014-03-30T10:41:52.428Z",
+            "description": "Free Test",
+            "name": "Free",
+            "order": 6
+        }
+    },
+    {
         "pk": 6,
         "model": "plans.billinginfo",
         "fields": {

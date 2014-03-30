@@ -370,12 +370,17 @@ msgstr ""
 msgid "Hi"
 msgstr ""
 
-#: templates/mail/change_plan_body.txt:4
+#: templates/mail/change_plan_body.txt:5
 #, python-format
 msgid "Your current plan is %(plan_name)s and it will expire on %(expire)s. "
 msgstr ""
 
-#: templates/mail/change_plan_body.txt:6
+#: templates/mail/change_plan_body.txt:7
+#, python-format
+msgid "Your current plan is %(plan_name)s. "
+msgstr ""
+
+#: templates/mail/change_plan_body.txt:10
 #: templates/mail/expired_account_body.txt:11
 #: templates/mail/extend_account_body.txt:8
 #: templates/mail/invoice_created_body.txt:11
@@ -721,7 +726,19 @@ msgstr ""
 msgid "Buy"
 msgstr ""
 
-#: templates/plans/plan_table.html:93
+#: templates/plans/plan_table.html:90
+msgid "Free"
+msgstr ""
+
+#: templates/plans/plan_table.html:91
+msgid "no expiry"
+msgstr ""
+
+#: templates/plans/plan_table.html:96
+msgid "Select"
+msgstr ""
+
+#: templates/plans/plan_table.html:109
 #, python-format
 msgid ""
 "\n"
