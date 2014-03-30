@@ -83,6 +83,8 @@ class Plan(OrderedModel):
             quota_dic[plan_quota.quota.codename] = plan_quota.value
         return quota_dic
 
+    def is_free(self):
+        return self.planpricing_set.count() == 0
 
 class BillingInfo(models.Model):
     """
@@ -191,7 +193,8 @@ class UserPlan(models.Model):
         Set up user plan for first use
         """
         if not self.is_active():
-            if self.expire is None:
+            # Plans without pricings don't need to expire
+            if self.expire is None and self.plan.planpricing_set.count():
                 self.expire = now() + timedelta(
                     days=getattr(settings, 'PLAN_DEFAULT_GRACE_PERIOD', 30))
             self.activate()  # this will call self.save()
@@ -209,6 +212,11 @@ class UserPlan(models.Model):
             # Process a plan change request (downgrade or upgrade)
             # No account activation or extending at this point
             self.plan = plan
+
+            if self.expire is not None and not plan.planpricing_set.count():
+                # Assume no expiry date for plans without pricing.
+                self.expire = None
+
             self.save()
             account_change_plan.send(sender=self, user=self.user)
             mail_context = Context({'user': self.user, 'userplan': self, 'plan': plan})
@@ -221,9 +229,7 @@ class UserPlan(models.Model):
             # Processing standard account extending procedure
             if self.plan == plan:
                 status = True
-                if self.expire is None:
-                    pass
-                elif self.expire > date.today():
+                if self.expire is not None and self.expire > date.today():
                     self.expire += timedelta(days=pricing.period)
                 else:
                     self.expire = date.today() + timedelta(days=pricing.period)
@@ -231,9 +237,9 @@ class UserPlan(models.Model):
             else:
                 # This should not ever happen (as this case should be managed by plan change request)
                 # but just in case we consider a case when user has a different plan
-                if self.expire is None:
+                if not self.plan.is_free and self.expire is None:
                     status = True
-                elif self.expire > date.today():
+                elif not self.plan.is_free and self.expire > date.today():
                     status = False
                     accounts_logger.warning("Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
                         self.user, self.user.pk, plan, plan.pk))

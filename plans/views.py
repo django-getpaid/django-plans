@@ -230,10 +230,12 @@ class CreateOrderView(LoginRequired, CreateView):
                                                   Q(plan__customized=self.request.user) | Q(
                                                       plan__customized__isnull=True)))
 
-
         # User is not allowed to create new order for Plan when he has different Plan
-        # He should use Plan Change View for this kind of action
-        if not self.request.user.userplan.is_expired() and self.request.user.userplan.plan != self.plan_pricing.plan:
+        # unless it's a free plan. Otherwise, the should use Plan Change View for this
+        # kind of action
+        if not self.request.user.userplan.is_expired() \
+                and not self.request.user.userplan.plan.is_free() \
+                and self.request.user.userplan.plan != self.plan_pricing.plan:
             raise Http404
 
         self.plan = self.plan_pricing.plan
@@ -300,7 +302,14 @@ class CreateOrderPlanChangeView(CreateOrderView):
 
     def get_price(self):
         policy = self.get_policy()
-        period = self.request.user.userplan.days_left()
+        userplan = self.request.user.userplan
+
+        if userplan.expire is not None:
+            period = self.request.user.userplan.days_left()
+        else:
+            # Use the default period of the new plan
+            period = 30
+
         return policy.get_change_price(self.request.user.userplan.plan, self.plan, period)
 
     def get_context_data(self, **kwargs):
