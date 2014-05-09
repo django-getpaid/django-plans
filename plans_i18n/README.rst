@@ -17,7 +17,7 @@ and you should also define your languages in django ``LANGUAGES`` variable, eg.:
         ('en', 'English'),
         )
 
-Please note that adding those to ``INSTALLED_APPS`` **changes** django models. Concretely it adds for every registered ``field`` that should translated, additional fields with name ``field_<lang_code>``, e.g. for given model::
+Please note that adding those to ``INSTALLED_APPS`` **changes** django models. Concretely for every registered ``field`` that should be translated  it adds  number of fields using format ``field_<lang_code>``, e.g. for given model::
 
     class MyModel(models.Model):
         name = models.CharField(max_length=10)
