@@ -10,7 +10,7 @@ Assuming you have correctly installed django-plans in your app you only need to 
 
     INSTALLED_APPS += ('modeltranslation', 'plans_i18n')
 
-and you should also define your languages in django ``LANG`` variable, eg.::
+and you should also define your languages in django ``LANGUAGES`` variable, eg.::
 
     LANGUAGES = (
         ('pl', 'Polski'),
