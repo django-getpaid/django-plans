@@ -35,6 +35,7 @@ class EUTaxationPolicy(TaxationPolicy):
         'FR', # France
         'DE', # Germany
         'GR', # Greece
+        'HR', # Croatia
         'HU', # Hungary
         'IE', # Ireland
         'IT', # Italy
