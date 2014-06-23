@@ -3,7 +3,7 @@ import logging
 from celery.schedules import crontab
 from celery.task.base import periodic_task
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 logger = logging.getLogger('plans.tasks')
 
@@ -19,5 +19,5 @@ def expire_account():
 
     if notifications_days_before:
         days = map(lambda x: datetime.date.today() + datetime.timedelta(days=x), notifications_days_before)
-        for user in User.objects.select_related('userplan').filter(userplan__active=True, userplan__expire__in=days):
+        for user in get_user_model().objects.select_related('userplan').filter(userplan__active=True, userplan__expire__in=days):
             user.userplan.remind_expire_soon()

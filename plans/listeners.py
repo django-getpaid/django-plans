@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
 from plans.models import Order, Invoice, UserPlan, Plan
@@ -25,7 +25,7 @@ def send_invoice_by_email(sender, instance, created, **kwargs):
         instance.send_invoice_by_email()
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=get_user_model())
 def set_default_user_plan(sender, instance, created, **kwargs):
     """
     Creates default plan for the new user but also extending an account for default grace period.
