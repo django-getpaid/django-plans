@@ -11,8 +11,7 @@ from plans.models import Invoice
 
 class UserLinkMixin(object):
     def user_link(self, obj):
-        change_url = urlresolvers.reverse('admin:auth_user_change', args=(obj.user.id,))
-        return '<a href="%s">%s</a>' % (change_url, obj.user.username)
+        return '<a href="">%s</a>' % obj.user.username
 
     user_link.short_description = 'User'
     user_link.allow_tags = True
