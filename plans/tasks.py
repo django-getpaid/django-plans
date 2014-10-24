@@ -10,9 +10,12 @@ logger = logging.getLogger('plans.tasks')
 @periodic_task(run_every=crontab(hour=0, minute=5))
 def expire_account():
 
-    logger.info('Started')
+    logger.info('Started expire_account periodic task')
 
-    for user in User.objects.select_related('userplan').filter(userplan__active=True,         userplan__expire__lt=datetime.date.today()).exclude(userplan__expire=None):
+    _user_model = get_user_model()
+
+    for user in _user_model.objects.select_related('userplan').filter(userplan__active=True,
+                                                                      userplan__expire__lt=datetime.date.today()).exclude(userplan__expire=None):
         user.userplan.expire_account()
 
     notifications_days_before = getattr(settings, 'PLAN_EXPIRATION_REMIND', [])
