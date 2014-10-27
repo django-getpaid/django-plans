@@ -33,6 +33,7 @@ setup(
         'vatnumber>=1.1',
         'celery',
         'suds-jurko',
+        'six',
     ],
     extras_require={
         'i18n': [
