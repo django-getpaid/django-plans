@@ -35,6 +35,7 @@ class EUTaxationPolicy(TaxationPolicy):
         'FR', # France
         'DE', # Germany
         'GR', # Greece
+        'HR', # Croatia
         'HU', # Hungary
         'IE', # Ireland
         'IT', # Italy
@@ -68,7 +69,7 @@ class EUTaxationPolicy(TaxationPolicy):
             # No vat id, no country
             return cls.get_default_tax()
 
-        elif tax_id and not country_code:
+        elif not tax_id and country_code:
             # Customer is not a company, we know his country
 
            if cls.is_in_EU(country_code):
