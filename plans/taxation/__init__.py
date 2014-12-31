@@ -14,7 +14,7 @@ class TaxationPolicy(object):
     @classmethod
     def get_default_tax(cls):
         """
-        Gets default tax rate. Simple returns ``settings.TAX``
+        Gets default tax rate. Simply returns ``settings.TAX``
 
         :return: Decimal()
         """

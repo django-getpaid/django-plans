@@ -188,9 +188,9 @@ class CreateOrderView(LoginRequired, CreateView):
             country = country.code
         tax_number = getattr(billing_info, 'tax_number', None)
 
-        # Calculating session can be complex task (e.g. VIES webservice call)
-        # To ensure that once we get what tax we display to confirmation it will
-        # not change, tax rate is cached for a given billing data (as it mainly depends on it)
+        # Calculating tax can be complex task (e.g. VIES webservice call)
+        # To ensure that tax calculated on order preview will be the same on final order
+        # tax rate is cached for a given billing data (as this value only depends on it)
         tax_session_key = "tax_%s_%s" % (tax_number, country)
 
         tax = self.request.session.get(tax_session_key)
