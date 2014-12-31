@@ -455,7 +455,7 @@ class EUTaxationPolicyTestCase(TestCase):
 
     def test_private_EU_notsame(self):
         with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate(None, 'AT'), Decimal('23.0'))
+            self.assertEqual(self.policy.get_tax_rate(None, 'AT'), Decimal('20.0'))
 
     def test_company_nonEU(self):
         with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
@@ -473,7 +473,7 @@ class EUTaxationPolicyTestCase(TestCase):
     @mock.patch("vatnumber.check_vies", lambda x: False)
     def test_company_EU_notsame_vies_not_ok(self):
         with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), Decimal('23.0'))
+            self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), Decimal('20.0'))
 
 
 class ValidatorsTestCase(TestCase):
