@@ -145,7 +145,7 @@ class TestInvoice(TestCase):
         self.assertEqual(i.get_full_number(), "123/PF/05/2010")
 
     def test_get_full_number_with_settings(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.issued|date:'Y' }}." \
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.issued|date:'Y' }}." \
                                          "{{ invoice.number }}.{{ invoice.issued|date:'m' }}"
         i = Invoice()
         i.number = 123
@@ -153,21 +153,21 @@ class TestInvoice(TestCase):
         self.assertEqual(i.get_full_number(), "2010.123.05")
 
     def test_set_issuer_invoice_data_raise(self):
-        issdata = settings.ISSUER_DATA
-        del settings.ISSUER_DATA
+        issdata = settings.PLANS_INVOICE_ISSUER
+        del settings.PLANS_INVOICE_ISSUER
         i = Invoice()
         self.assertRaises(ImproperlyConfigured, i.set_issuer_invoice_data)
-        settings.ISSUER_DATA = issdata
+        settings.PLANS_INVOICE_ISSUER = issdata
 
     def test_set_issuer_invoice_data(self):
         i = Invoice()
         i.set_issuer_invoice_data()
-        self.assertEqual(i.issuer_name, settings.ISSUER_DATA['issuer_name'])
-        self.assertEqual(i.issuer_street, settings.ISSUER_DATA['issuer_street'])
-        self.assertEqual(i.issuer_zipcode, settings.ISSUER_DATA['issuer_zipcode'])
-        self.assertEqual(i.issuer_city, settings.ISSUER_DATA['issuer_city'])
-        self.assertEqual(i.issuer_country, settings.ISSUER_DATA['issuer_country'])
-        self.assertEqual(i.issuer_tax_number, settings.ISSUER_DATA['issuer_tax_number'])
+        self.assertEqual(i.issuer_name, settings.PLANS_INVOICE_ISSUER['issuer_name'])
+        self.assertEqual(i.issuer_street, settings.PLANS_INVOICE_ISSUER['issuer_street'])
+        self.assertEqual(i.issuer_zipcode, settings.PLANS_INVOICE_ISSUER['issuer_zipcode'])
+        self.assertEqual(i.issuer_city, settings.PLANS_INVOICE_ISSUER['issuer_city'])
+        self.assertEqual(i.issuer_country, settings.PLANS_INVOICE_ISSUER['issuer_country'])
+        self.assertEqual(i.issuer_tax_number, settings.PLANS_INVOICE_ISSUER['issuer_tax_number'])
 
     def set_buyer_invoice_data(self):
         i = Invoice()
@@ -186,7 +186,7 @@ class TestInvoice(TestCase):
         self.assertEqual(i.buyer_country, u.billinginfo.shipping_country)
 
     def test_invoice_number(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
                                          "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
                                          "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         o = Order.objects.all()[0]
@@ -202,15 +202,15 @@ class TestInvoice(TestCase):
         self.assertEqual(i.full_number, '1/FV/05/2010')
 
     def test_invoice_number_daily(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
                                          "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
                                          "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
-        settings.INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
+        settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
-        tax = getattr(settings, "TAX")
-        currency = getattr(settings, "CURRENCY")
+        tax = getattr(settings, "PLANS_TAX")
+        currency = getattr(settings, "PLANS_CURRENCY")
         o1 = Order(user=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
@@ -254,15 +254,15 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/04/05/2001")
 
     def test_invoice_number_monthly(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
                                          "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
                                          "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
-        settings.INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
+        settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
-        tax = getattr(settings, "TAX")
-        currency = getattr(settings, "CURRENCY")
+        tax = getattr(settings, "PLANS_TAX")
+        currency = getattr(settings, "PLANS_CURRENCY")
         o1 = Order(user=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
@@ -307,15 +307,15 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/06/2002")
 
     def test_invoice_number_annually(self):
-        settings.INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
                                          "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
                                          "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
-        settings.INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
+        settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
-        tax = getattr(settings, "TAX")
-        currency = getattr(settings, "CURRENCY")
+        tax = getattr(settings, "PLANS_TAX")
+        currency = getattr(settings, "PLANS_CURRENCY")
         o1 = Order(user=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
@@ -442,37 +442,37 @@ class EUTaxationPolicyTestCase(TestCase):
         self.policy = EUTaxationPolicy()
 
     def test_none(self):
-        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
+        with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate(None, None), Decimal('23.0'))
 
     def test_private_nonEU(self):
-        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
+        with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate(None, 'RU'), None)
 
     def test_private_EU_same(self):
-        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
+        with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate(None, 'PL'), Decimal('23.0'))
 
     def test_private_EU_notsame(self):
-        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
+        with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate(None, 'AT'), Decimal('20.0'))
 
     def test_company_nonEU(self):
-        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
+        with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'RU'), None)
 
     def test_company_EU_same(self):
-        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
+        with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'PL'), Decimal('23.0'))
 
     @mock.patch("vatnumber.check_vies", lambda x: True)
     def test_company_EU_notsame_vies_ok(self):
-        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
+        with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), None)
 
     @mock.patch("vatnumber.check_vies", lambda x: False)
     def test_company_EU_notsame_vies_not_ok(self):
-        with self.settings(TAX=Decimal('23.0'), TAX_COUNTRY='PL'):
+        with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), Decimal('20.0'))
 
 

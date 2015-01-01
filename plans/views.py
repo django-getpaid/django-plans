@@ -118,7 +118,7 @@ class PlanTableViewBase(PlanTableMixin, ListView):
                 pass
 
         context['plan_table'] = self.get_plan_table(self.object_list)
-        context['CURRENCY'] = settings.CURRENCY
+        context['CURRENCY'] = settings.PLANS_CURRENCY
 
         return context
 
@@ -159,7 +159,7 @@ class ChangePlanView(LoginRequired, View):
             Q(customized=request.user) | Q(customized__isnull=True)))
         if request.user.userplan.plan != plan:
             policy = import_name(
-                getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy'))()
+                getattr(settings, 'PLANS_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy'))()
 
             period = request.user.userplan.days_left()
             price = policy.get_change_price(request.user.userplan.plan, plan, period)
@@ -194,11 +194,10 @@ class CreateOrderView(LoginRequired, CreateView):
         tax_session_key = "tax_%s_%s" % (tax_number, country)
 
         tax = self.request.session.get(tax_session_key)
-
         if tax is None:
-            taxation_policy = getattr(settings, 'TAXATION_POLICY', None)
+            taxation_policy = getattr(settings, 'PLANS_TAXATION_POLICY', None)
             if not taxation_policy:
-                raise ImproperlyConfigured('TAXATION_POLICY is not set')
+                raise ImproperlyConfigured('PLANS_TAXATION_POLICY is not set')
             taxation_policy = import_name(taxation_policy)
             tax = str(taxation_policy.get_tax_rate(tax_number, country))
             # Because taxation policy could return None which clutters with saving this value
@@ -247,9 +246,9 @@ class CreateOrderView(LoginRequired, CreateView):
             return None
 
     def get_currency(self):
-        CURRENCY = getattr(settings, 'CURRENCY', '')
+        CURRENCY = getattr(settings, 'PLANS_CURRENCY', '')
         if len(CURRENCY) != 3:
-            raise ImproperlyConfigured('CURRENCY should be configured as 3-letter currency code.')
+            raise ImproperlyConfigured('PLANS_CURRENCY should be configured as 3-letter currency code.')
         return CURRENCY
 
     def get_price(self):
@@ -295,7 +294,7 @@ class CreateOrderPlanChangeView(CreateOrderView):
         self.pricing = None
 
     def get_policy(self):
-        policy_class = getattr(settings, 'PLAN_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy')
+        policy_class = getattr(settings, 'PLANS_CHANGE_POLICY', 'plans.plan_change.StandardPlanChangePolicy')
         return import_name(policy_class)()
 
     def get_price(self):
@@ -336,9 +335,9 @@ class OrderListView(LoginRequired, ListView):
 
     def get_context_data(self, **kwargs):
         context = super(OrderListView, self).get_context_data(**kwargs)
-        self.CURRENCY = getattr(settings, 'CURRENCY', None)
+        self.CURRENCY = getattr(settings, 'PLANS_CURRENCY', None)
         if len(self.CURRENCY) != 3:
-            raise ImproperlyConfigured('CURRENCY should be configured as 3-letter currency code.')
+            raise ImproperlyConfigured('PLANS_CURRENCY should be configured as 3-letter currency code.')
         context['CURRENCY'] = self.CURRENCY
         return context
 
@@ -442,20 +441,20 @@ class InvoiceDetailView(LoginRequired, DetailView):
     model = Invoice
 
     def get_template_names(self):
-        return getattr(settings, 'INVOICE_TEMPLATE', 'plans/invoices/PL_EN.html')
+        return getattr(settings, 'PLANS_INVOICE_TEMPLATE', 'plans/invoices/PL_EN.html')
 
 
     def get_context_data(self, **kwargs):
         context = super(InvoiceDetailView, self).get_context_data(**kwargs)
-        context['logo_url'] = getattr(settings, 'INVOICE_LOGO_URL', None)
+        context['logo_url'] = getattr(settings, 'PLANS_INVOICE_LOGO_URL', None)
         context['auto_print'] = True
         return context
 
     def get_queryset(self):
         if self.request.user.is_superuser:
-            return super(InvoiceDetailView, self).get_queryset()
+            return super(InvoiceDetailView, self).get_queryset().select_related('order')
         else:
-            return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user)
+            return super(InvoiceDetailView, self).get_queryset().filter(user=self.request.user).select_related('order')
 
 
 class FakePaymentsView(LoginRequired, SingleObjectMixin, FormView):

@@ -131,7 +131,7 @@ LANGUAGES = (
     ('en', 'English'),
 )
 
-ISSUER_DATA = {
+PLANS_INVOICE_ISSUER = {
     "issuer_name": "My Company Ltd",
     "issuer_street": "48th Suny street",
     "issuer_zipcode": "111-456",
@@ -140,15 +140,15 @@ ISSUER_DATA = {
     "issuer_tax_number": "PL123456789",
 }
 
-TAX = Decimal('23.0')
-TAXATION_POLICY = 'plans.taxation.eu.EUTaxationPolicy'
-TAX_COUNTRY = 'PL'
+PLANS_TAX = Decimal('23.0')
+PLANS_TAXATION_POLICY = 'plans.taxation.eu.EUTaxationPolicy'
+PLANS_TAX_COUNTRY = 'PL'
 
-PLAN_VALIDATORS = {
+PLANS_VALIDATORS = {
     'MAX_FOO_COUNT': 'example.foo.validators.max_foos_validator',
 }
 
-CURRENCY = 'EUR'
+PLANS_CURRENCY = 'EUR'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

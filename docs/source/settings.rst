@@ -2,7 +2,7 @@ Configuration via `settings`
 ============================
 
 
-``CURRENCY``
+``PLANS_CURRENCY``
 ------------
 
 **Required**
@@ -11,7 +11,7 @@ Three letter code for system currency. Should always be capitalized.
 
 Example::
 
-    CURRENCY = 'EUR'
+    PLANS_CURRENCY = 'EUR'
 
 
 ``DEFAULT_FROM_EMAIL``
@@ -21,7 +21,7 @@ Example::
 
 This is the default mail ``FROM`` value for sending system notifications.
 
-``INVOICE_COUNTER_RESET``
+``PLANS_INVOICE_COUNTER_RESET``
 -------------------------
 
 **Optional**
@@ -29,24 +29,24 @@ This is the default mail ``FROM`` value for sending system notifications.
 Default: ``monthly``
 
 This settings switches invoice counting per days, month or year basis. It requires to
-provide one of following string format:
+provide one of the value:
 
- * ``daily``
- * ``monthly``
- * ``annually``
+ * Invoice.NUMBERING.DAILY
+ * Invoice.NUMBERING.MONTHLY
+ * Invoice.NUMBERING.ANNUALY
 
 Example::
 
-    INVOICE_COUNTER_RESET = 'yearly'
+    PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
 .. warning::
 
-    Remember to set ``INVOICE_NUMBER_FORMAT`` manually to match preferred way of invoice numbering schema. For example if
-    you choose reset counter on daily basis, you need to use in ``INVOICE_NUMBER_FORMAT`` at least ``{{ invoice.issued|date:'d/m/Y' }}``
+    Remember to set ``PLANS_INVOICE_NUMBER_FORMAT`` manually to match preferred way of invoice numbering schema. For example if
+    you choose reset counter on daily basis, you need to use in ``PLANS_INVOICE_NUMBER_FORMAT`` at least ``{{ invoice.issued|date:'d/m/Y' }}``
     to distinguish invoice's full numbers between days.
 
 
-``INVOICE_NUMBER_FORMAT``
+``PLANS_INVOICE_NUMBER_FORMAT``
 -------------------------
 
 **Optional**
@@ -59,7 +59,7 @@ A django template syntax format for rendering invoice full number. Within this t
 
 Example::
 
-    INVOICE_NUMBER_FROMAT = "{{ invoice.number }}/{{ invoice.issued|date='m/FV/Y' }}"
+    PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{{ invoice.issued|date='m/FV/Y' }}"
 
 This example for invoice issued on ``March 5th, 2010``, with sequential number ``13``, will produce the full number
 ``13/03/FV/2010`` or ``13/03/PF/2010`` based on invoice type.
@@ -68,7 +68,7 @@ This example for invoice issued on ``March 5th, 2010``, with sequential number `
 
    Full number of an invoice is saved with the Invoice object. Changing this value in settings will affect only newly created invoices.
 
-``INVOICE_LOGO_URL``
+``PLANS_INVOICE_LOGO_URL``
 --------------------
 
 **Optional**
@@ -81,13 +81,13 @@ URL of logo image that should be placed in an invoice. It will be available in i
 Example::
 
     from urllib.parse import urljoin
-    INVOICE_LOGO_URL = urljoin(STATIC_URL, 'my_logo.png')
+    PLANS_INVOICE_LOGO_URL = urljoin(STATIC_URL, 'my_logo.png')
 
 
 
 
 
-``INVOICE_TEMPLATE``
+``PLANS_INVOICE_TEMPLATE``
 --------------------
 
 **Optional**
@@ -105,12 +105,12 @@ Template name for displaying invoice.
 
 Example::
 
-    INVOICE_TEMPLATE = 'plans/invoices/PL_EN.html'
+    PLANS_INVOICE_TEMPLATE = 'plans/invoices/PL_EN.html'
 
 
 
 
-``ISSUER_DATA``
+``PLANS_INVOICE_ISSUER``
 ---------------
 **Required**
 
@@ -118,7 +118,7 @@ You need to define a dictionary that will store information needed to issue an i
 
 Example::
 
-    ISSUER_DATA = {
+    PLANS_INVOICE_ISSUER = {
         "issuer_name": "Joe Doe Company",
         "issuer_street": "Django street, 34",
         "issuer_zipcode": "123-3444",
@@ -131,7 +131,7 @@ Example::
 
 
 
-``ORDER_EXPIRATION``
+``PLANS_ORDER_EXPIRATION``
 --------------------
 
 **Optional**
@@ -139,15 +139,15 @@ Example::
 Default: ``14``
 
 
-A number of days that an Order is valid (e.g. to start a payment) counting from order creation date. This value is only used in ``is_ready_for_payment()`` method for django-getpaid integration. This value has no effect on processing already paid orders before ``ORDER_EXPIRATION`` period, even if confirmation for this payment will came after ``ORDER_EXPIRATION`` period.
+A number of days that an Order is valid (e.g. to start a payment) counting from order creation date. This value is only used in ``is_ready_for_payment()`` method for django-getpaid integration. This value has no effect on processing already paid orders before ``PLANS_ORDER_EXPIRATION`` period, even if confirmation for this payment will came after ``PLANS_ORDER_EXPIRATION`` period.
 
 Example::
 
-    ORDER_EXPIRATION = 14
+    PLANS_ORDER_EXPIRATION = 14
 
 
-``PLAN_EXPIRATION_REMIND``
---------------------------
+``PLANS_EXPIRATION_REMIND``
+---------------------------
 
 **Optional**
 
@@ -159,13 +159,13 @@ Default: ``[]``
 
 Example::
 
-    PLAN_EXPIRATION_REMIND = [1, 3 , 7]
+    PLANS_EXPIRATION_REMIND = [1, 3 , 7]
 
 
 User will receive notification before 7 , 3 and 1 day to account expire.
 
 
-``PLAN_CHANGE_POLICY``
+``PLANS_CHANGE_POLICY``
 ----------------------
 
 **Optional**
@@ -174,7 +174,7 @@ Default: ``'plans.plan_change.StandardPlanChangePolicy'``
 
 A full python to path that should be used as plan change policy.
 
-``PLAN_DEFAULT_GRACE_PERIOD``
+``PLANS_DEFAULT_GRACE_PERIOD``
 -----------------------------
 
 **Optional**
@@ -187,7 +187,7 @@ New account default plan expiration period counted in days.
 
 Example::
 
-    PLAN_DEFAULT_GRACE_PERIOD = 30
+    PLANS_DEFAULT_GRACE_PERIOD = 30
 
 
 
@@ -197,7 +197,7 @@ Example::
 
 
 
-``PLAN_VALIDATORS``
+``PLANS_VALIDATORS``
 ------------------------------
 
 **Optional**
@@ -212,7 +212,7 @@ Given account will be activated only if calling all validators that are defined 
 Example::
 
 
-    PLAN_VALIDATORS = {
+    PLANS_VALIDATORS = {
         'CAN_DO_SOMETHING' :  'myproject.validators.can_do_something_validator',
         'MAX_STORAGE' :  'myproject.validators.max_storage_validator',
     }
@@ -229,28 +229,28 @@ Default: ``True``
 
 Boolean value for enabling (default) or disabling the sending of plan related emails.
 
-``TAX``
+``PLANS_TAX``
 -------
 
 **Required**
 
-Decimal or integer value for default TAX.
+Decimal or integer value for default TAX (usually referred as VAT).
 
 Example::
 
     from decimal import Decimal
-    TAX = Decimal(23.0) #for 23% VAT
+    PLANS_TAX = Decimal('23.0')  # for 23% VAT
 
 Default: ``None``
 
 .. warning::
 
-   The value ``None`` means "TAX not applicable, rather than value ``Decimal(0)`` which means 0% TAX.
+   The value ``None`` means "TAX not applicable, rather than value ``Decimal('0')`` which is 0% TAX.
 
 
 .. _settings-TAXATION_POLICY:
 
-``TAXATION_POLICY``
+``PLANS_TAXATION_POLICY``
 -------------------
 
 **Required**
@@ -259,12 +259,12 @@ Class that realises taxation of an order.
 
 Example::
 
-    TAXATION_POLICY='plans.locale.eu.taxation.EUTaxationPolicy'
+    PLANS_TAXATION_POLICY='plans.taxation.eu.EUTaxationPolicy'
 
 
 Further reading: :doc:`taxation`
 
-``TAX_COUNTRY``
+``PLANS_TAX_COUNTRY``
 ---------------
 
 **Optional**
@@ -273,10 +273,10 @@ Two letter ISO country code. This variable is used to determine origin issuers c
 
 Example::
 
-    TAX_COUNTRY = 'PL'
+    PLANS_TAX_COUNTRY = 'PL'
 
 
 
 .. note::
 
-    ``settings.TAX_COUNTRY`` is a separate value from ``settings.ISSUER_DATA.issuer_country`` on purpose. ``ISSUER_DATA`` is just what you want to have printed on an invoice.
+    ``settings.PLANS_TAX_COUNTRY`` is a separate value from ``settings.PLANS_INVOICE_ISSUER.issuer_country`` on purpose. ``PLANS_INVOICE_ISSUER`` is just what you want to have printed on an invoice.

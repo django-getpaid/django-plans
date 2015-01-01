@@ -1,8 +1,29 @@
 django-plans changelog
 ======================
 
-current dev
------------
+0.7
+---
+* Changes in plans.taxation.eu.EUTaxationPolicy to implement new EU VAT regulations (MOSS)
+* Clean up settings variables naming conventions prepending PLANS_ prefix:
+  * Renamed settings variable name TAXATION_POLICY to PLANS_TAXATION_POLICY
+  * Renamed settings variable name ISSUER_DATA to PLANS_INVOICE_ISSUER
+  * Renamed settings variable name PLAN_EXPIRATION_REMIND to PLANS_EXPIRATION_REMIND
+  * Renamed settings variable name PLAN_CHANGE_POLICY to PLANS_CHANGE_POLICY
+  * Renamed settings variable name PLAN_VALIDATORS to PLANS_VALIDATORS
+  * Renamed settings variable name CURRENCY to PLANS_CURRENCY
+  * Renamed settings variable name TAX to PLANS_TAX
+  * Renamed settings variable name TAX_COUNTRY to PLANS_TAX_COUNTRY
+  * Renamed settings variable name INVOICE_LOGO_URL to PLANS_INVOICE_LOGO_URL
+  * Renamed settings variable name INVOICE_NUMBER_FORMAT to PLANS_INVOICE_NUMBER_FORMAT
+  * Renamed settings variable name INVOICE_TEMPLATE to PLANS_INVOICE_TEMPLATE
+  * Renamed settings variable name INVOICE_COUNTER_RESET to PLANS_INVOICE_COUNTER_RESET
+  * Renamed settings variable name ORDER_EXPIRATION to PLANS_ORDER_EXPIRATION
+  * Renamed settings variable name PLAN_DEFAULT_GRACE_PERIOD to PLANS_DEFAULT_GRACE_PERIOD
+
+
+
+0.6+
+----
 * Changing `QuotaValidator` API. `ModelCountValidator` requires now to give `add` argument only as a kwarg.
 * Adding support for defining URL for plan, quota and pricing period that will act as a clickable pricing
   table header (requires schema migration)

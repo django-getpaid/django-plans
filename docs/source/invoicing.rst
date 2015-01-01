@@ -7,8 +7,8 @@ There is a built in support for creating invoices. This functionality brings pow
   * invoices can be marked as "requiring shipment"
   * invoices can be previewed as HTML or PDF
 
-Changing values of VAT tax and ISSUER_DATA in a living system
--------------------------------------------------------------
+Changing values of VAT tax and PLANS_INVOICE_ISSUER in a living system
+----------------------------------------------------------------------
 
 Your system can be running for a while. You can have a multiple orders and you could have issued a multiple invoices already.
 There can be a situation that you need to change after a while a tax
@@ -24,8 +24,8 @@ After changing those settings every new order, payment, invoice will use those n
     all your already created orders but not yet paid will have old tax. If this is what you don't want you
     need to cancel those orders manually and remember to contact your client that theirs orders were cancelled!
 
-    This  however is not a case with ``ISSUER_DATA`` change, because those data are taken in the same moment
-    of issuing invoice. Even an old order will use new ``ISSUER_DATA`` when invoicing a new payment.
+    This  however is not a case with ``PLANS_INVOICE_ISSUER`` change, because those data are taken in the same moment
+    of issuing invoice. Even an old order will use new ``PLANS_INVOICE_ISSUER`` when invoicing a new payment.
 
 Billing data
 ------------

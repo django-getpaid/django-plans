@@ -193,7 +193,7 @@ class UserPlan(models.Model):
         if not self.is_active():
             if self.expire is None:
                 self.expire = now() + timedelta(
-                    days=getattr(settings, 'PLAN_DEFAULT_GRACE_PERIOD', 30))
+                    days=getattr(settings, 'PLANS_DEFAULT_GRACE_PERIOD', 30))
             self.activate()  # this will call self.save()
 
     def extend_account(self, plan, pricing):
@@ -416,7 +416,7 @@ class Order(models.Model):
 
     def is_ready_for_payment(self):
         return self.status == self.STATUS.NEW and (now() - self.created).days < getattr(
-            settings, 'ORDER_EXPIRATION', 14)
+            settings, 'PLANS_ORDER_EXPIRATION', 14)
 
     def complete_order(self):
         if self.completed is None:
@@ -497,7 +497,7 @@ class Invoice(models.Model):
     duplicates = InvoiceDuplicateManager()
 
     class NUMBERING:
-        """Used as a choices for settings.INVOICE_COUNTER_RESET"""
+        """Used as a choices for settings.PLANS_INVOICE_COUNTER_RESET"""
 
         DAILY = 1
         MONTHLY = 2
@@ -553,7 +553,7 @@ class Invoice(models.Model):
 
     def clean(self):
         if self.number is None:
-            invoice_counter_reset = getattr(settings, 'INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
+            invoice_counter_reset = getattr(settings, 'PLANS_INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
 
             if invoice_counter_reset == Invoice.NUMBERING.DAILY:
                 last_number = Invoice.objects.filter(issued=self.issued, type=self.type).aggregate(Max('number'))[
@@ -567,7 +567,7 @@ class Invoice(models.Model):
                         'number__max'] or 0
             else:
                 raise ImproperlyConfigured(
-                    "INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly.")
+                    "PLANS_INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly.")
             self.number = last_number + 1
 
         if self.full_number == "":
@@ -585,7 +585,7 @@ class Invoice(models.Model):
 
     def get_full_number(self):
         """
-        Generates on the fly invoice full number from template provided by ``settings.INVOICE_NUMBER_FORMAT``.
+        Generates on the fly invoice full number from template provided by ``settings.PLANS_INVOICE_NUMBER_FORMAT``.
         ``Invoice`` object is provided as ``invoice`` variable to the template, therefore all object fields
         can be used to generate full number format.
 
@@ -596,21 +596,21 @@ class Invoice(models.Model):
 
         :return: string (generated full number)
         """
-        format = getattr(settings, "INVOICE_NUMBER_FORMAT",
+        format = getattr(settings, "PLANS_INVOICE_NUMBER_FORMAT",
                          "{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'m/Y' }}")
         return Template(format).render(Context({'invoice': self}))
 
 
     def set_issuer_invoice_data(self):
         """
-        Fills models object with issuer data copied from ``settings.ISSUER_DATA``
+        Fills models object with issuer data copied from ``settings.PLANS_INVOICE_ISSUER``
 
         :raise: ImproperlyConfigured
         """
         try:
-            issuer = getattr(settings, 'ISSUER_DATA')
+            issuer = getattr(settings, 'PLANS_INVOICE_ISSUER')
         except:
-            raise ImproperlyConfigured("Please set ISSUER_DATA in order to make an invoice.")
+            raise ImproperlyConfigured("Please set PLANS_INVOICE_ISSUER in order to make an invoice.")
         self.issuer_name = issuer['issuer_name']
         self.issuer_street = issuer['issuer_street']
         self.issuer_zipcode = issuer['issuer_zipcode']

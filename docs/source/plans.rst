@@ -81,7 +81,7 @@ List of ``pricing`` periods
 **type**: Many-to-many with ``Pricing`` by ``PlanPricing``
 
 Many pricing periods can be defined for a given plan. For each entry there is a need of defining price. The currency
-of price is defined by ``settings.CURRENCY``.
+of price is defined by ``settings.PLANS_CURRENCY``.
 
 .. warning::
 

@@ -14,20 +14,20 @@ class TaxationPolicy(object):
     @classmethod
     def get_default_tax(cls):
         """
-        Gets default tax rate. Simply returns ``settings.TAX``
+        Gets default tax rate. Simply returns ``settings.PLANS_TAX``
 
         :return: Decimal()
         """
-        return getattr(settings, 'TAX', None)
+        return getattr(settings, 'PLANS_TAX', None)
 
     @classmethod
     def get_issuer_country_code(cls):
         """
-        Gets issuers country. Simply returns ``settings.TAX_COUNTRY``
+        Gets issuers country. Simply returns ``settings.PLANS_TAX_COUNTRY``
 
         :return: unicode
         """
-        return getattr(settings, 'TAX_COUNTRY', None)
+        return getattr(settings, 'PLANS_TAX_COUNTRY', None)
 
     @classmethod
     def get_tax_rate(cls, tax_id, country_code):

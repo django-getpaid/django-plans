@@ -35,7 +35,7 @@ def pytest_configure(config):
         TEMPLATE_DEBUG=True,
         USE_TZ=True,
         ALLOWED_HOSTS=['*'],
-        ISSUER_DATA={
+        PLANS_INVOICE_ISSUER={
             "issuer_name": "My Company Ltd",
             "issuer_street": "48th Suny street",
             "issuer_zipcode": "111-456",
@@ -43,11 +43,11 @@ def pytest_configure(config):
             "issuer_country": "PL",
             "issuer_tax_number": "PL123456789",
         },
-        TAX=Decimal(23.0),
-        TAXATION_POLICY='plans.locale.eu.taxation.EUTaxationPolicy',
-        TAX_COUNTRY='PL',
-        CURRENCY='PLN',
-        PLAN_VALIDATORS={
+        PLANS_TAX=Decimal(23.0),
+        PLANS_TAXATION_POLICY='plans.taxation.eu.EUTaxationPolicy',
+        PLANS_TAX_COUNTRY='PL',
+        PLANS_CURRENCY='PLN',
+        PLANS_VALIDATORS={
             'MAX_FOO_COUNT': 'example.foo.validators.max_foos_validator',
         },
         EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend',

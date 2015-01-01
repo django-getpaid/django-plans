@@ -10,10 +10,10 @@ class RussianTaxationPolicy(TaxationPolicy):
 
 #   This could be inherited unless there is a reason to be custom
 #    def get_default_tax(self):
-#        return getattr(settings, 'TAX', None)
+#        return getattr(settings, 'PLANS_TAX', None)
 #
 #    def get_issuer_country_code(self):
-#        return getattr(settings, 'TAX_COUNTRY', None)
+#        return getattr(settings, 'PLANS_TAX_COUNTRY', None)
 
     def get_tax_rate(self, tax_id, country_code):
         # TODO
