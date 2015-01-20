@@ -86,9 +86,9 @@ class BillingInfoAdmin(UserLinkMixin, admin.ModelAdmin):
         _email_field = None
 
     if _email_field:
-        search_fields = ('user_{0}'.format(_username_field), 'user__email', 'tax_number', 'name')
+        search_fields = ('user__{0}'.format(_username_field), 'user__email', 'tax_number', 'name')
     else:
-        search_fields = ('user_{0}'.format(_username_field), 'tax_number', 'name')
+        search_fields = ('user__{0}'.format(_username_field), 'tax_number', 'name')
 
     list_display = ('user', 'tax_number', 'name', 'street', 'zipcode', 'city', 'country')
     list_select_related = True
