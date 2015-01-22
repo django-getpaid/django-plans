@@ -703,7 +703,4 @@ class Invoice(models.Model):
     def is_UE_customer(self):
         return EUTaxationPolicy.is_in_EU(self.buyer_country.code)
 
-#noinspection PyUnresolvedReferences
-import plans.listeners
-
 
