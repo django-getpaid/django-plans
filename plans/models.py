@@ -70,9 +70,12 @@ class Plan(OrderedModel):
     @classmethod
     def get_default_plan(cls):
         try:
-            return cls.objects.filter(default=True)[0]
-        except IndexError:
-            return None
+            return_value = cls.objects.get(default=True)
+        except cls.MultipleObjectsReturned:
+            return_value = cls.objects.first()
+        except cls.DoesNotExist:
+            return_value = None
+        return return_value
 
     def __str__(self):
         return self.name
