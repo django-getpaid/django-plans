@@ -125,18 +125,18 @@ def plan_validation(user, plan=None, on_activation=False):
         'required_to_activate': [],
         'other': [],
     }
-    for quota in quota_dict:
-        if quota in validators:
-            validator = import_name(validators[quota])
 
-            if on_activation:
-                validator.on_activation(user, quota_dict)
-            else:
-                try:
-                    validator(user, quota_dict)
-                except ValidationError as e:
-                    if validator.required_to_activate:
-                        errors['required_to_activate'].extend(e.messages)
-                    else:
-                        errors['other'].extend(e.messages)
+    for quota in validators:
+        validator = import_name(validators[quota])
+
+        if on_activation:
+            validator.on_activation(user, quota_dict)
+        else:
+            try:
+                validator(user, quota_dict)
+            except ValidationError as e:
+                if validator.required_to_activate:
+                    errors['required_to_activate'].extend(e.messages)
+                else:
+                    errors['other'].extend(e.messages)
     return errors
