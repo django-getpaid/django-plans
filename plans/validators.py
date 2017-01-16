@@ -13,6 +13,7 @@ class QuotaValidator(object):
     """
 
     required_to_activate = True
+    default_quota_value = None
 
     @property
     def code(self):
@@ -25,7 +26,7 @@ class QuotaValidator(object):
         if quota_dict is None:
             quota_dict = get_user_quota(user)
 
-        return quota_dict.get(self.code, None)
+        return quota_dict.get(self.code, self.default_quota_value)
 
     def get_error_message(self, quota_value, **kwargs):
         return u'Plan validation error'
