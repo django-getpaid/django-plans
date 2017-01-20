@@ -33,3 +33,6 @@ pip-log.txt
 
 #Virtualenv
 venv
+
+#sqlite
+*.sqlite

@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.core import urlresolvers
 from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import ugettext_lazy as _
@@ -12,7 +13,7 @@ from plans.models import Invoice
 class UserLinkMixin(object):
     def user_link(self, obj):
         change_url = urlresolvers.reverse('admin:auth_user_change', args=(obj.user.id,))
-        return '<a href="%s">%s</a>' % (change_url, obj.user.username)
+        return '<a href="%s">%s</a>' % (change_url, obj.user.get_username())
 
     user_link.short_description = 'User'
     user_link.allow_tags = True
@@ -57,6 +58,7 @@ copy_plan.short_description = _('Make a plan copy')
 
 
 class PlanAdmin(OrderedModelAdmin):
+
     search_fields = ('name', 'customized__username', 'customized__email', )
     list_filter = ('available', 'visible')
     list_display = ('name', 'description', 'customized', 'default', 'available', 'created', 'move_up_down_links')
@@ -70,7 +72,24 @@ class PlanAdmin(OrderedModelAdmin):
 
 
 class BillingInfoAdmin(UserLinkMixin, admin.ModelAdmin):
-    search_fields = ('user__username', 'user__email', 'tax_number', 'name')
+
+    _user_model = get_user_model()
+    try:
+        _username_field = _user_model._meta.model.USERNAME_FIELD
+    except:
+        _username_field = "username"
+
+    # TODO: is there a better approach?
+    try:
+        _email_field = _user_model._meta.get_field_by_name("email")
+    except:
+        _email_field = None
+
+    if _email_field:
+        search_fields = ('user__{0}'.format(_username_field), 'user__email', 'tax_number', 'name')
+    else:
+        search_fields = ('user__{0}'.format(_username_field), 'tax_number', 'name')
+
     list_display = ('user', 'tax_number', 'name', 'street', 'zipcode', 'city', 'country')
     list_select_related = True
     readonly_fields = ('user_link',)
@@ -100,9 +119,27 @@ class InvoiceInline(admin.TabularInline):
 
 
 class OrderAdmin(admin.ModelAdmin):
+
+    _user_model = get_user_model()
+    try:
+        _username_field = _user_model._meta.model.USERNAME_FIELD
+    except:
+        _username_field = "username"
+
+    # TODO: is there a better approach?
+    try:
+        _email_field = _user_model._meta.get_field_by_name("email")
+    except:
+        _email_field = None
+
     list_filter = ('status', 'created', 'completed', 'plan__name', 'pricing')
     raw_id_fields = ('user',)
-    search_fields = ('id', 'user__username', 'user__email')
+
+    if _email_field:
+        search_fields = ('id', 'user__{0}'.format(_username_field), 'user__email')
+    else:
+        search_fields = ('id', 'user__{0}'.format(_username_field))
+
     list_display = (
         'id', 'name', 'created', 'user', 'status', 'completed', 'tax', 'amount', 'currency', 'plan', 'pricing')
     actions = [make_order_completed, make_order_invoice]
@@ -122,8 +159,26 @@ class InvoiceAdmin(admin.ModelAdmin):
 
 
 class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
+
+    _user_model = get_user_model()
+    try:
+        _username_field = _user_model._meta.model.USERNAME_FIELD
+    except:
+        _username_field = "username"
+
+    # TODO: is there a better approach?
+    try:
+        _email_field = _user_model._meta.get_field_by_name("email")
+    except:
+        _email_field = None
+
     list_filter = ('active', 'expire', 'plan__name', 'plan__available', 'plan__visible',)
-    search_fields = ('user__username', 'user__email', 'plan__name',)
+
+    if _email_field:
+        search_fields = ('user__{0}'.format(_username_field), 'user__email', 'plan__name',)
+    else:
+        search_fields = ('user__{0}'.format(_username_field), 'plan__name',)
+
     list_display = ('user', 'plan', 'expire', 'active')
     list_select_related = True
     readonly_fields = ['user_link', ]
