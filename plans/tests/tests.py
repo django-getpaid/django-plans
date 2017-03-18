@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core import mail
 from django.db.models import Q
@@ -30,19 +30,19 @@ class PlansTestCase(TestCase):
         mail.outbox = []
 
     def test_get_user_quota(self):
-        u = User.objects.get(username='test1')
+        u = get_user_model().objects.get(username='test1')
         self.assertEqual(get_user_quota(u),
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
     def test_get_plan_quota(self):
-        u = User.objects.get(username='test1')
+        u = get_user_model().objects.get(username='test1')
         p = u.userplan.plan
         self.assertEqual(p.get_quota_dict(),
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
 
     def test_extend_account_same_plan_future(self):
-        u = User.objects.get(username='test1')
+        u = get_user_model().objects.get(username='test1')
         u.userplan.expire = date.today() + timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
@@ -55,7 +55,7 @@ class PlansTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_extend_account_same_plan_before(self):
-        u = User.objects.get(username='test1')
+        u = get_user_model().objects.get(username='test1')
         u.userplan.expire = date.today() - timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
@@ -73,7 +73,7 @@ class PlansTestCase(TestCase):
         Tests if mail has been send
         Tests if account has been activated
         """
-        u = User.objects.get(username='test1')
+        u = get_user_model().objects.get(username='test1')
         u.userplan.expire = date.today() - timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
@@ -85,7 +85,7 @@ class PlansTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_expire_account(self):
-        u = User.objects.get(username='test1')
+        u = get_user_model().objects.get(username='test1')
         u.userplan.expire = date.today() + timedelta(days=50)
         u.userplan.active = True
         u.userplan.save()
@@ -94,7 +94,7 @@ class PlansTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_remind_expire(self):
-        u = User.objects.get(username='test1')
+        u = get_user_model().objects.get(username='test1')
         u.userplan.expire = date.today() + timedelta(days=14)
         u.userplan.active = True
         u.userplan.save()
@@ -105,7 +105,7 @@ class PlansTestCase(TestCase):
     def test_disable_emails(self):
         with self.settings(SEND_PLANS_EMAILS=False):
             # Re-run the remind_expire test, but look for 0 emails sent
-            u = User.objects.get(username='test1')
+            u = get_user_model().objects.get(username='test1')
             u.userplan.expire = date.today() + timedelta(days=14)
             u.userplan.active = True
             u.userplan.save()
@@ -171,7 +171,7 @@ class TestInvoice(TestCase):
 
     def set_buyer_invoice_data(self):
         i = Invoice()
-        u = User.objects.get(username='test1')
+        u = get_user_model().objects.get(username='test1')
         i.set_buyer_invoice_data(u.billinginfo)
         self.assertEqual(i.buyer_name, u.billinginfo.name)
         self.assertEqual(i.buyer_street, u.billinginfo.street)
@@ -207,7 +207,7 @@ class TestInvoice(TestCase):
                                          "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
 
-        user = User.objects.get(username='test1')
+        user = get_user_model().objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
@@ -259,7 +259,7 @@ class TestInvoice(TestCase):
                                          "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
-        user = User.objects.get(username='test1')
+        user = get_user_model().objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
@@ -312,7 +312,7 @@ class TestInvoice(TestCase):
                                          "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
 
-        user = User.objects.get(username='test1')
+        user = get_user_model().objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
@@ -485,7 +485,7 @@ class ValidatorsTestCase(TestCase):
 
         class TestValidator(ModelCountValidator):
             code = 'QUOTA_NAME'
-            model = User
+            model = get_user_model()
 
         validator_object = TestValidator()
         self.assertRaises(ValidationError, validator_object, user=None, quota_dict={'QUOTA_NAME': 1})
