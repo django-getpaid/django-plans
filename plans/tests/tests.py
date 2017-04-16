@@ -113,6 +113,26 @@ class PlansTestCase(TestCase):
             self.assertEqual(u.userplan.active, True)
             self.assertEqual(len(mail.outbox), 0)
 
+    def test_switch_to_free_no_expiry(self):
+        """
+        Tests switching to a free Plan and checks that their expiry is cleared
+        Tests if expire date is set correctly
+        Tests if mail has been send
+        Tests if account has been activated
+        """
+        u = User.objects.get(username='test1')
+        self.assertIsNotNone(u.userplan.expire)
+
+        plan = Plan.objects.get(name="Free")
+        self.assertTrue(plan.is_free())
+        self.assertNotEqual(u.userplan.plan, plan)
+
+        # Switch to Free Plan
+        u.userplan.extend_account(plan, None)
+        self.assertEquals(u.userplan.plan, plan)
+        self.assertIsNone(u.userplan.expire)
+        self.assertEqual(u.userplan.active, True)
+
 
 class TestInvoice(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
