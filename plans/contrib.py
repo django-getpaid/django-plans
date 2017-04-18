@@ -1,11 +1,12 @@
 import logging
-from django.conf import settings
+
 from django.core import mail
-from django.core.exceptions import ImproperlyConfigured
+from django.conf import settings
+from django.apps import apps
 from django.template import loader
 from django.utils import translation
-from django.db.models.loading import cache
 from plans.signals import user_language
+from django.core.exceptions import ImproperlyConfigured
 
 email_logger = logging.getLogger('emails')
 
@@ -20,7 +21,7 @@ def send_template_email(recipients, title_template, body_template, context, lang
     domain = getattr(settings, 'SITE_URL', None)
 
     if domain is None:
-        Site = cache.get_model('sites', 'Site')
+        Site = apps.get_model('sites', 'Site')
         current_site = Site.objects.get_current()
         site_name = current_site.name
         domain = current_site.domain

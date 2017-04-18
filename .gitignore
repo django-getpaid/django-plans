@@ -3,6 +3,7 @@
 # Packages
 *.egg
 *.egg-info
+.python-version
 dist
 build
 eggs
