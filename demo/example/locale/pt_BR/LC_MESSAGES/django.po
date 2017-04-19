@@ -19,5 +19,5 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 #: example/templates/plans/billing_info_create.html:11
 #: example/templates/plans/billing_info_update.html:11
-msgid "Fornecer dados de faturamento"
-msgstr ""
+msgid "Provide billing data"
+msgstr "Fornecer dados de faturamento"

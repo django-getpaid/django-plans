@@ -181,45 +181,45 @@ msgstr ""
 
 #: models.py:325
 msgid "unit"
-msgstr ""
+msgstr "unidade"
 
 #: models.py:327
 msgid "is boolean"
-msgstr ""
+msgstr "É booleano"
 
 #: models.py:333
 msgid "Quota"
-msgstr ""
+msgstr "Cota"
 
 #: models.py:334 templates/plans/extend.html:25
 msgid "Quotas"
-msgstr ""
+msgstr "Cotas"
 
 #: models.py:355
 msgid "Plan pricing"
-msgstr ""
+msgstr "Preços do plano"
 
 #: models.py:356
 msgid "Plans pricings"
-msgstr ""
+msgstr "Preços dos planos"
 
 #: models.py:375
 msgid "Plan quota"
-msgstr ""
+msgstr "Cota do plano"
 
 #: models.py:376
 msgid "Plans quotas"
-msgstr ""
+msgstr "Cotas dos planos"
 
 #: models.py:390
 msgctxt "Order status"
 msgid "new"
-msgstr ""
+msgstr "Novo"
 
 #: models.py:391
 msgctxt "Order status"
 msgid "completed"
-msgstr ""
+msgstr "completo"
 
 #: models.py:392
 msgctxt "Order status"
@@ -238,78 +238,78 @@ msgstr "retornar"
 
 #: models.py:402
 msgid "pricing"
-msgstr ""
+msgstr "preços"
 
 #: models.py:404
 msgid "completed"
-msgstr ""
+msgstr "completo"
 
 #: models.py:405
 msgid "amount"
-msgstr ""
+msgstr "quantia"
 
 #: models.py:406
 msgid "tax"
-msgstr ""
+msgstr "imposto"
 
 #: models.py:408
 msgid "currency"
-msgstr ""
+msgstr "moeda"
 
 #: models.py:409
 msgid "status"
-msgstr ""
+msgstr "status"
 
 #: models.py:417
 #, python-format
 msgid "Order #%(id)d"
-msgstr ""
+msgstr "Pedido #%(id)d"
 
 #: models.py:481 templates/mail/invoice_created_title.txt:1
 msgid "Order"
-msgstr ""
+msgstr "Pedido"
 
 #: models.py:482
 msgid "Orders"
-msgstr ""
+msgstr "Pedidos"
 
 #: models.py:507 models.py:564 templates/plans/create_order.html:29
 msgid "Invoice"
-msgstr ""
+msgstr "Fatura"
 
 #: models.py:508
 msgid "Invoice Duplicate"
-msgstr ""
+msgstr "Duplicar fatura"
 
 #: models.py:509
 msgctxt "proforma"
 msgid "Order confirmation"
-msgstr ""
+msgstr "Confirmação do pedido"
 
 #: models.py:526
 msgid "order"
-msgstr ""
+msgstr "pedido"
 
 #: models.py:544 models.py:550 models.py:556
 #: templates/plans/order_detail_table.html:4 templates/plans/order_list.html:15
 msgid "Name"
-msgstr ""
+msgstr "Nome"
 
 #: models.py:545 models.py:551 models.py:557
 msgid "Street"
-msgstr ""
+msgstr "Rua"
 
 #: models.py:546 models.py:552 models.py:558
 msgid "Zip code"
-msgstr ""
+msgstr "CEP"
 
 #: models.py:547 models.py:553 models.py:559
 msgid "City"
-msgstr ""
+msgstr "Cidade"
 
 #: models.py:548 models.py:554 models.py:560
 msgid "Country"
-msgstr ""
+msgstr "País"
 
 #: models.py:549 models.py:561
 msgid "TAX/VAT number"
@@ -317,7 +317,7 @@ msgstr ""
 
 #: models.py:565
 msgid "Invoices"
-msgstr ""
+msgstr "Faturas"
 
 #: templates/mail/change_plan_body.txt:2
 #: templates/mail/expired_account_body.txt:2
@@ -325,12 +325,12 @@ msgstr ""
 #: templates/mail/invoice_created_body.txt:2
 #: templates/mail/remind_expire_body.txt:2
 msgid "Hi"
-msgstr ""
+msgstr "Olá"
 
 #: templates/mail/change_plan_body.txt:4
 #, python-format
 msgid "Your current plan is %(plan_name)s and it will expire on %(expire)s. "
-msgstr ""
+msgstr "Seu plano atual é %(plan_name)s e ele expirará em %(expire)s."
 
 #: templates/mail/change_plan_body.txt:6
 #: templates/mail/expired_account_body.txt:11
@@ -338,7 +338,7 @@ msgstr ""
 #: templates/mail/invoice_created_body.txt:11
 #: templates/mail/remind_expire_body.txt:12
 msgid "Thank you"
-msgstr ""
+msgstr "Obrigado"
 
 #: templates/mail/change_plan_body.txt:8
 #: templates/mail/expired_account_body.txt:13
@@ -347,21 +347,21 @@ msgstr ""
 #: templates/mail/remind_expire_body.txt:14
 #, python-format
 msgid "The Team at %(site_name)s"
-msgstr ""
+msgstr "A Equipe %(site_name)s"
 
 #: templates/mail/change_plan_title.txt:1
 #, python-format
 msgid "Your account %(user)s has new plan %(plan)s"
-msgstr ""
+msgstr "Sua conta %(user)s tem um novo plano %(plan)s"
 
 #: templates/mail/expired_account_body.txt:4
 msgid "Your account has just expired."
-msgstr ""
+msgstr "A sua conta expirou."
 
 #: templates/mail/expired_account_body.txt:6
 #, python-format
 msgid "You can restore your current plan %(plan_name)s here:"
-msgstr ""
+msgstr "Você pode restaurar seu plano atual %(plan_name)s aqui:"
 
 #: templates/mail/expired_account_body.txt:8
 #: templates/mail/remind_expire_body.txt:9
@@ -371,7 +371,7 @@ msgstr ""
 #: templates/mail/expired_account_title.txt:1
 #, python-format
 msgid "Your account %(user)s has just expired"
-msgstr ""
+msgstr "Sua conta %(user)s acabou de expirar"
 
 #: templates/mail/extend_account_body.txt:4
 #, python-format
@@ -451,7 +451,7 @@ msgstr ""
 #: templates/plans/billing_info_create.html:8
 #: templates/plans/billing_info_update.html:8
 msgid "Provide billing data"
-msgstr ""
+msgstr "Fornecer dados de faturamento"
 
 #: templates/plans/billing_info_delete.html:9
 msgid "Are you sure to delete billing info?"
@@ -502,15 +502,15 @@ msgstr ""
 
 #: templates/plans/current.html:6
 msgid "Your account"
-msgstr ""
+msgstr "Sua conta"
 
 #: templates/plans/current.html:9
 msgid "Account"
-msgstr ""
+msgstr "Conta"
 
 #: templates/plans/current.html:11
 msgid "State"
-msgstr ""
+msgstr "Estado"
 
 #: templates/plans/current.html:13
 msgid "expired"
@@ -518,15 +518,15 @@ msgstr ""
 
 #: templates/plans/current.html:14
 msgid "Expire"
-msgstr ""
+msgstr "Expirado"
 
 #: templates/plans/current.html:17
 msgid "upgrade"
-msgstr ""
+msgstr "atualizar"
 
 #: templates/plans/current.html:20
 msgid "Plan details"
-msgstr ""
+msgstr "Detalhes do plano"
 
 #: templates/plans/current.html:29
 msgid "Need more?"
