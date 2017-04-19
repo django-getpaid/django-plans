@@ -41,18 +41,15 @@ CACHES = {
     }
 }
 
-TIME_ZONE = 'America/Sao_Paulo'
-# TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'America/Chicago'
 USE_TZ = True
-# LANGUAGE_CODE = 'en-us'
-LANGUAGE_CODE = 'pt-br'
+LANGUAGE_CODE = 'en-us'
 SITE_ID = 1
 USE_I18N = True
 USE_L10N = True
 
 LANGUAGES = (
-    ('pt-br', 'Português'),
-    # ('en', 'English'),
+    ('en', 'English'),
 )
 
 MEDIA_ROOT = ''
