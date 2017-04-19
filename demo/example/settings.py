@@ -154,7 +154,6 @@ LOGGING = {
 
 # This is required for django-plans
 
-
 PLANS_INVOICE_ISSUER = {
     "issuer_name": "My Company Ltd",
     "issuer_street": "48th Suny street",
