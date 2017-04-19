@@ -41,32 +41,32 @@
     },
 
     {
-        "pk": 6, 
-        "model": "plans.plan", 
+        "pk": 6,
+        "model": "plans.plan",
         "fields": {
-            "available": true, 
+            "available": true,
             "visible": true,
             "created": "2012-07-12T17:33:30.112Z",
             "customized": [
                 "test1"
-            ], 
-            "description": "Custom for test1", 
-            "name": "Custom", 
+            ],
+            "description": "Custom for test1",
+            "name": "Custom",
             "order": 4
         }
-    }, 
+    },
     {
-        "pk": 8, 
-        "model": "plans.plan", 
+        "pk": 8,
+        "model": "plans.plan",
         "fields": {
-            "available": true, 
+            "available": true,
             "visible": true,
             "created": "2012-07-24T12:51:57.438Z",
             "customized": [
                 "test2"
-            ], 
-            "description": "Custom test 2", 
-            "name": "Custom 2", 
+            ],
+            "description": "Custom test 2",
+            "name": "Custom 2",
             "order": 5
         }
     },
