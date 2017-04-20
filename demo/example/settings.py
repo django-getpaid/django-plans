@@ -110,7 +110,7 @@ TEMPLATES = [
 ROOT_URLCONF = 'example.urls'
 WSGI_APPLICATION = 'example.wsgi.application'
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -125,8 +125,7 @@ INSTALLED_APPS = (
     'plans',
     'example.foo',
     'django_extensions'
-
-)
+]
 
 LOGGING = {
     'version': 1,

@@ -16,7 +16,7 @@ if six.PY2:
 elif six.PY3:
     from unittest import mock
 
-from plans.models import PlanPricing, Invoice, Order, Plan
+from plans.models import PlanPricing, Invoice, Order, Plan, PlanQuota
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
@@ -477,6 +477,8 @@ class EUTaxationPolicyTestCase(TestCase):
 
 
 class ValidatorsTestCase(TestCase):
+    fixtures = ['test_django-plans_auth']
+
     def test_model_count_validator(self):
         """
         We create a test model validator for User. It will raise ValidationError when QUOTA_NAME value

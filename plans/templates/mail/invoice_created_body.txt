@@ -1,4 +1,4 @@
-{% load i18n %}{% autoescape off %}{% load url from future %}
+{% load i18n %}{% autoescape off %}
 {% trans "Hi" %} {% firstof user.get_full_name user.username %},
 
 {% blocktrans %}We are writing to inform you, that {{ invoice_type }} {{ invoice_number }} has been issued. You can view it and print it at:

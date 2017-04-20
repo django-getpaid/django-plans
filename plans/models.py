@@ -82,7 +82,7 @@ class Plan(OrderedModel):
     @classmethod
     def get_default_plan(cls):
         try:
-            return cls.objects.filter(default=True).first()
+            return cls.objects.filter(default=True)[0]
         except IndexError:
             return None
 
