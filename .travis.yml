@@ -11,4 +11,4 @@ install:
   - "pip install -q Django==$DJANGO_VERSION"
 
 # command to run tests
-script: "cd demo && python manage.py test plans"
+script: "cd demo && python manage.py makemigrations && python manage.py test plans"
