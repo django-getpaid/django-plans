@@ -1,1 +1,430 @@
-[{"pk": 1, "model": "auth.user", "fields": {"username": "test1", "first_name": "", "last_name": "", "is_active": true, "is_superuser": true, "is_staff": true, "last_login": "2013-06-10T17:02:25.098Z", "groups": [], "user_permissions": [], "password": "pbkdf2_sha256$10000$ctivEUR01xGq$fl7djmAcS7WitwuTqcndUfbi+cUInSaS8iMtKnSayHw=", "email": "test1@test1.com", "date_joined": "2012-11-12T10:45:40.716Z"}}, {"pk": 2, "model": "auth.user", "fields": {"username": "test2", "first_name": "", "last_name": "", "is_active": true, "is_superuser": true, "is_staff": true, "last_login": "2012-11-12T10:45:53.931Z", "groups": [], "user_permissions": [], "password": "pbkdf2_sha256$10000$beNhUGohojeu$EP8CgR5km6LqhZ5+6Vzk5h2u9/KT730s9+nhTWjZETA=", "email": "test2@test2.com", "date_joined": "2012-11-12T10:45:53.931Z"}}, {"pk": 6, "model": "plans.billinginfo", "fields": {"city": "Krak\u00f3w", "name": "Spolka Sp z o.o.", "shipping_name": "", "country": "PL", "shipping_street": "", "zipcode": "12-234", "shipping_zipcode": "", "street": "Sloneczna 15", "user": 1, "tax_number": "PL5521465632", "shipping_city": ""}}, {"pk": 3, "model": "plans.plan", "fields": {"available": true, "visible": true, "description": "Plan for small company", "created": "2012-05-05T15:24:44Z", "default": true, "customized": null, "order": 0, "name": "Standard"}}, {"pk": 4, "model": "plans.plan", "fields": {"available": true, "visible": true, "description": "Most recommended", "created": "2012-05-05T15:36:31Z", "default": false, "customized": null, "order": 1, "name": "Premium"}}, {"pk": 5, "model": "plans.plan", "fields": {"available": true, "visible": true, "description": "Professional plan", "created": "2012-07-12T13:07:23Z", "default": false, "customized": null, "order": 2, "name": "PRO"}}, {"pk": 6, "model": "plans.plan", "fields": {"available": true, "visible": true, "description": "Custom for test1", "created": "2012-07-12T17:33:30.112Z", "default": false, "customized": 1, "order": 4, "name": "Custom"}}, {"pk": 8, "model": "plans.plan", "fields": {"available": true, "visible": true, "description": "Custom test 2", "created": "2012-07-24T12:51:57.438Z", "default": false, "customized": 2, "order": 5, "name": "Custom 2"}}, {"pk": 1, "model": "plans.pricing", "fields": {"name": "monthly", "period": 30}}, {"pk": 2, "model": "plans.pricing", "fields": {"name": "half-year", "period": 180}}, {"pk": 3, "model": "plans.pricing", "fields": {"name": "year", "period": 365}}, {"pk": 1, "model": "plans.planpricing", "fields": {"price": "10", "plan": 3, "pricing": 1}}, {"pk": 4, "model": "plans.planpricing", "fields": {"price": "20", "plan": 4, "pricing": 1}}, {"pk": 7, "model": "plans.planpricing", "fields": {"price": "200", "plan": 5, "pricing": 1}}, {"pk": 10, "model": "plans.planpricing", "fields": {"price": "11", "plan": 6, "pricing": 1}}, {"pk": 16, "model": "plans.planpricing", "fields": {"price": "1", "plan": 8, "pricing": 1}}, {"pk": 2, "model": "plans.planpricing", "fields": {"price": "50", "plan": 3, "pricing": 2}}, {"pk": 5, "model": "plans.planpricing", "fields": {"price": "100", "plan": 4, "pricing": 2}}, {"pk": 8, "model": "plans.planpricing", "fields": {"price": "400", "plan": 5, "pricing": 2}}, {"pk": 11, "model": "plans.planpricing", "fields": {"price": "22", "plan": 6, "pricing": 2}}, {"pk": 17, "model": "plans.planpricing", "fields": {"price": "2", "plan": 8, "pricing": 2}}, {"pk": 3, "model": "plans.planpricing", "fields": {"price": "90", "plan": 3, "pricing": 3}}, {"pk": 6, "model": "plans.planpricing", "fields": {"price": "180", "plan": 4, "pricing": 3}}, {"pk": 9, "model": "plans.planpricing", "fields": {"price": "800", "plan": 5, "pricing": 3}}, {"pk": 12, "model": "plans.planpricing", "fields": {"price": "33", "plan": 6, "pricing": 3}}, {"pk": 18, "model": "plans.planpricing", "fields": {"price": "3", "plan": 8, "pricing": 3}}, {"pk": 1, "model": "plans.quota", "fields": {"description": "Number of separate foos you can have on your account.", "name": "Number of Foo's", "codename": "MAX_FOO_COUNT", "order": 0, "unit": "foos", "is_boolean": false}}, {"pk": 3, "model": "plans.quota", "fields": {"description": "Allows to deletes Foo's", "name": "Foo deletion", "codename": "CAN_DELETE_FOO", "order": 2, "unit": "", "is_boolean": true}}, {"pk": 5, "model": "plans.quota", "fields": {"description": "Should not be visible", "name": "Should not be visible", "codename": "NOT_USED_QUOTA", "order": 3, "unit": "", "is_boolean": false}}, {"pk": 1, "model": "plans.planquota", "fields": {"plan": 3, "value": 3, "quota": 1}}, {"pk": 3, "model": "plans.planquota", "fields": {"plan": 4, "value": 15, "quota": 1}}, {"pk": 6, "model": "plans.planquota", "fields": {"plan": 3, "value": 0, "quota": 3}}, {"pk": 8, "model": "plans.planquota", "fields": {"plan": 6, "value": 1, "quota": 1}}, {"pk": 10, "model": "plans.planquota", "fields": {"plan": 6, "value": 3, "quota": 3}}, {"pk": 13, "model": "plans.planquota", "fields": {"plan": 4, "value": 1, "quota": 3}}, {"pk": 14, "model": "plans.planquota", "fields": {"plan": 5, "value": 1, "quota": 3}}, {"pk": 16, "model": "plans.planquota", "fields": {"plan": 8, "value": 1, "quota": 3}}, {"pk": 18, "model": "plans.planquota", "fields": {"plan": 8, "value": 13, "quota": 1}}, {"pk": 19, "model": "plans.planquota", "fields": {"plan": 5, "value": null, "quota": 1}}, {"pk": 1, "model": "plans.userplan", "fields": {"active": false, "expire": "2012-07-12", "user": 1, "plan": 3}}, {"pk": 2, "model": "plans.userplan", "fields": {"active": false, "expire": "2012-07-12", "user": 2, "plan": 5}}]
+[
+  {
+    "pk": 1,
+    "model": "auth.user",
+    "fields": {
+      "username": "test1",
+      "first_name": "",
+      "last_name": "",
+      "is_active": true,
+      "is_superuser": true,
+      "is_staff": true,
+      "last_login": "2013-06-10T17:02:25.098Z",
+      "groups": [],
+      "user_permissions": [],
+      "password": "pbkdf2_sha256$10000$ctivEUR01xGq$fl7djmAcS7WitwuTqcndUfbi+cUInSaS8iMtKnSayHw=",
+      "email": "test1@test1.com",
+      "date_joined": "2012-11-12T10:45:40.716Z"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "auth.user",
+    "fields": {
+      "username": "test2",
+      "first_name": "",
+      "last_name": "",
+      "is_active": true,
+      "is_superuser": true,
+      "is_staff": true,
+      "last_login": "2012-11-12T10:45:53.931Z",
+      "groups": [],
+      "user_permissions": [],
+      "password": "pbkdf2_sha256$10000$beNhUGohojeu$EP8CgR5km6LqhZ5+6Vzk5h2u9/KT730s9+nhTWjZETA=",
+      "email": "test2@test2.com",
+      "date_joined": "2012-11-12T10:45:53.931Z"
+    }
+  },
+  {
+    "pk": 6,
+    "model": "plans.billinginfo",
+    "fields": {
+      "city": "Kraków",
+      "name": "Spolka Sp z o.o.",
+      "shipping_name": "",
+      "country": "PL",
+      "shipping_street": "",
+      "zipcode": "12-234",
+      "shipping_zipcode": "",
+      "street": "Sloneczna 15",
+      "user": 1,
+      "tax_number": "PL5521465632",
+      "shipping_city": ""
+    }
+  },
+  {
+    "pk": 3,
+    "model": "plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "description": "Plan for small company",
+      "created": "2012-05-05T15:24:44Z",
+      "default": true,
+      "customized": null,
+      "order": 0,
+      "name": "Standard"
+    }
+  },
+  {
+    "pk": 4,
+    "model": "plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "description": "Most recommended",
+      "created": "2012-05-05T15:36:31Z",
+      "default": false,
+      "customized": null,
+      "order": 1,
+      "name": "Premium"
+    }
+  },
+  {
+    "pk": 5,
+    "model": "plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "description": "Professional plan",
+      "created": "2012-07-12T13:07:23Z",
+      "default": false,
+      "customized": null,
+      "order": 2,
+      "name": "PRO"
+    }
+  },
+  {
+    "pk": 6,
+    "model": "plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "description": "Custom for test1",
+      "created": "2012-07-12T17:33:30.112Z",
+      "default": false,
+      "customized": 1,
+      "order": 4,
+      "name": "Custom"
+    }
+  },
+  {
+    "pk": 8,
+    "model": "plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "description": "Custom test 2",
+      "created": "2012-07-24T12:51:57.438Z",
+      "default": false,
+      "customized": 2,
+      "order": 5,
+      "name": "Custom 2"
+    }
+  },
+  {
+    "pk": 1,
+    "model": "plans.pricing",
+    "fields": {
+      "name": "monthly",
+      "period": 30
+    }
+  },
+  {
+    "pk": 2,
+    "model": "plans.pricing",
+    "fields": {
+      "name": "half-year",
+      "period": 180
+    }
+  },
+  {
+    "pk": 3,
+    "model": "plans.pricing",
+    "fields": {
+      "name": "year",
+      "period": 365
+    }
+  },
+  {
+    "pk": 1,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "10",
+      "plan": 3,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 4,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "20",
+      "plan": 4,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 7,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "200",
+      "plan": 5,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 10,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "11",
+      "plan": 6,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 16,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "1",
+      "plan": 8,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 2,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "50",
+      "plan": 3,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 5,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "100",
+      "plan": 4,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 8,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "400",
+      "plan": 5,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 11,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "22",
+      "plan": 6,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 17,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "2",
+      "plan": 8,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 3,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "90",
+      "plan": 3,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 6,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "180",
+      "plan": 4,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 9,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "800",
+      "plan": 5,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 12,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "33",
+      "plan": 6,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 18,
+    "model": "plans.planpricing",
+    "fields": {
+      "price": "3",
+      "plan": 8,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 1,
+    "model": "plans.quota",
+    "fields": {
+      "description": "Number of separate foos you can have on your account.",
+      "name": "Number of Foo's",
+      "codename": "MAX_FOO_COUNT",
+      "order": 0,
+      "unit": "foos",
+      "is_boolean": false
+    }
+  },
+  {
+    "pk": 3,
+    "model": "plans.quota",
+    "fields": {
+      "description": "Allows to deletes Foo's",
+      "name": "Foo deletion",
+      "codename": "CAN_DELETE_FOO",
+      "order": 2,
+      "unit": "",
+      "is_boolean": true
+    }
+  },
+  {
+    "pk": 5,
+    "model": "plans.quota",
+    "fields": {
+      "description": "Should not be visible",
+      "name": "Should not be visible",
+      "codename": "NOT_USED_QUOTA",
+      "order": 3,
+      "unit": "",
+      "is_boolean": false
+    }
+  },
+  {
+    "pk": 1,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 3,
+      "value": 3,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 3,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 4,
+      "value": 15,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 6,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 3,
+      "value": 0,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 8,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 6,
+      "value": 1,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 10,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 6,
+      "value": 3,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 13,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 4,
+      "value": 1,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 14,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 5,
+      "value": 1,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 16,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 8,
+      "value": 1,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 18,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 8,
+      "value": 13,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 19,
+    "model": "plans.planquota",
+    "fields": {
+      "plan": 5,
+      "value": null,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 1,
+    "model": "plans.userplan",
+    "fields": {
+      "active": false,
+      "expire": "2012-07-12",
+      "user": 1,
+      "plan": 3
+    }
+  },
+  {
+    "pk": 2,
+    "model": "plans.userplan",
+    "fields": {
+      "active": false,
+      "expire": "2012-07-12",
+      "user": 2,
+      "plan": 5
+    }
+  }
+]

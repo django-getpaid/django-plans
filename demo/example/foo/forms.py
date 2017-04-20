@@ -7,6 +7,7 @@ from .validators import max_foos_validator
 class FooForm(ModelForm):
     class Meta:
         model = Foo
+        fields = '__all__'
         widgets = {
             'user': HiddenInput,
         }

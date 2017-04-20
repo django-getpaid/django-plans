@@ -1,13 +1,12 @@
 from django.conf import settings
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from plans.views import CreateOrderView, OrderListView, InvoiceDetailView, AccountActivationView, \
     OrderPaymentReturnView, CurrentPlanView, UpgradePlanView, OrderView, BillingInfoRedirectView, \
     BillingInfoCreateView, BillingInfoUpdateView, BillingInfoDeleteView, CreateOrderPlanChangeView, ChangePlanView, \
     PricingView, FakePaymentsView
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^pricing/$', PricingView.as_view(), name='pricing'),
     url(r'^account/$', CurrentPlanView.as_view(), name='current_plan'),
     url(r'^account/activation/$', AccountActivationView.as_view(), name='account_activation'),
@@ -26,9 +25,9 @@ urlpatterns = patterns(
     url(r'^billing/update/$', BillingInfoUpdateView.as_view(), name='billing_info_update'),
     url(r'^billing/delete/$', BillingInfoDeleteView.as_view(), name='billing_info_delete'),
     url(r'^invoice/(?P<pk>\d+)/preview/html/$', InvoiceDetailView.as_view(), name='invoice_preview_html'),
-)
+]
 
 if getattr(settings, 'DEBUG', False):
-    urlpatterns += (
+    urlpatterns += [
         url(r'^fakepayments/(?P<pk>\d+)/$', FakePaymentsView.as_view(), name='fake_payments'),
-    )
+    ]

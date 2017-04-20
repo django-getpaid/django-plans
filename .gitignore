@@ -3,6 +3,7 @@
 # Packages
 *.egg
 *.egg-info
+.python-version
 dist
 build
 eggs
@@ -12,6 +13,7 @@ var
 sdist
 develop-eggs
 .installed.cfg
+*.sqlite
 
 # Installer logs
 pip-log.txt
