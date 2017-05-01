@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from setuptools import find_packages, setup
+from plans import __version__ as VERSION
 
 with open('README.rst') as file:
     long_description = file.read()
 
 setup(
     name='django-plans',
-    version='django1.10',
+    version=VERSION,
     description='Pluggable django app for managing pricing plans with quotas and accounts expiration',
     long_description=long_description,
     author='Krzysztof Dorosz',
