@@ -43,12 +43,13 @@ CACHES = {
 
 TIME_ZONE = 'America/Chicago'
 USE_TZ = True
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pl'
 SITE_ID = 1
 USE_I18N = True
 USE_L10N = True
 
 LANGUAGES = (
+    ('pl', 'Polski'),
     ('en', 'English'),
 )
 
@@ -124,7 +125,9 @@ INSTALLED_APPS = [
 
     'plans',
     'example.foo',
-    'django_extensions'
+    'django_extensions',
+    'modeltranslation', 
+    'plans_i18n'
 ]
 
 LOGGING = {
