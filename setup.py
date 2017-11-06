@@ -14,7 +14,7 @@ setup(
     long_description=long_description,
     author='Krzysztof Dorosz',
     author_email='cypreess@gmail.com',
-    url='https://github.com/arianerocha/django-plans',
+    url='https://github.com/cypreess/django-plans',
     license='MIT',
 
     packages=find_packages(),
