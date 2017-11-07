@@ -43,7 +43,7 @@ CACHES = {
 
 TIME_ZONE = 'America/Chicago'
 USE_TZ = True
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 SITE_ID = 1
 USE_I18N = True
 USE_L10N = True
