@@ -14,6 +14,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 
+from django.template import Context
 from django.template.base import Template
 from django.utils import translation
 from django.utils.timezone import now

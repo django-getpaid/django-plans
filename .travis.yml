@@ -4,6 +4,7 @@ python:
   - "3.4"
 env:
   - DJANGO_VERSION=1.10.7
+  - DJANGO_VERSION=1.11.7
 # command to install dependencies
 install:
   - "pip install -q -e ."
