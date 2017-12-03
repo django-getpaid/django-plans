@@ -1,0 +1,763 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Translators:
+# arianerocha <arianedematos@gmail.com>, 2017
+msgid ""
+msgstr ""
+"Project-Id-Version: django-plans\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-04-18 22:15-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: arianerocha <arianedematos@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: admin.py:56
+msgid "Make a plan copy"
+msgstr "Criar cópia do plano"
+
+#: admin.py:85
+msgid "Make selected orders completed"
+msgstr "Concluir pedidos selecionados"
+
+#: admin.py:94
+msgid "Make invoices for orders"
+msgstr "Criar fatura para pedidos"
+
+#: forms.py:51
+msgid "Change order status to"
+msgstr "Alterar o status do pedido para"
+
+#: models.py:52 models.py:109 models.py:304 models.py:324
+msgid "name"
+msgstr "Nome"
+
+#: models.py:53 models.py:326
+msgid "description"
+msgstr "Descrição"
+
+#: models.py:56
+msgid "available"
+msgstr "Acessível"
+
+#: models.py:57
+msgid "Is still available for purchase"
+msgstr "Ainda está disponível para compra"
+
+#: models.py:60
+msgid "visible"
+msgstr "Visível"
+
+#: models.py:61
+msgid "Is visible in current offer"
+msgstr "Visível na oferta atual"
+
+#: models.py:63 models.py:403
+msgid "created"
+msgstr "Criado"
+
+#: models.py:66
+msgid "customized"
+msgstr "Personalizado"
+
+#: models.py:69 models.py:307 models.py:329
+msgid ""
+"Optional link to page with more information (for clickable pricing table "
+"headers)"
+msgstr "Link opcional à página com mais informações (para tabela de preços clicável)"
+
+#: models.py:73 models.py:433 templates/plans/current.html:16
+#: templates/plans/extend.html:24
+msgid "Plan"
+msgstr "Plano"
+
+#: models.py:74
+msgid "Plans"
+msgstr "Planos"
+
+#: models.py:104 models.py:156 models.py:398 models.py:525
+msgid "user"
+msgstr "usuário"
+
+#: models.py:107 templates/plans/create_order.html:44
+msgid "VAT ID"
+msgstr ""
+
+#: models.py:110
+msgid "street"
+msgstr "Rua"
+
+#: models.py:111
+msgid "zip code"
+msgstr "CEP"
+
+#: models.py:112
+msgid "city"
+msgstr "Cidade"
+
+#: models.py:113
+msgid "country"
+msgstr "País"
+
+#: models.py:114
+msgid "name (shipping)"
+msgstr ""
+
+#: models.py:114 models.py:115 models.py:116 models.py:117
+msgid "optional"
+msgstr "opcional"
+
+#: models.py:115
+msgid "street (shipping)"
+msgstr ""
+
+#: models.py:116
+msgid "zip code (shipping)"
+msgstr ""
+
+#: models.py:117
+msgid "city (shipping)"
+msgstr ""
+
+#: models.py:120
+msgid "Billing info"
+msgstr ""
+
+#: models.py:121
+msgid "Billing infos"
+msgstr "Informação de pagamento"
+
+#: models.py:139
+msgid "VAT ID is not correct"
+msgstr ""
+
+#: models.py:157 models.py:400
+msgid "plan"
+msgstr "plano"
+
+#: models.py:158
+msgid "expire"
+msgstr "expirar"
+
+#: models.py:159 templates/plans/current.html:12
+msgid "active"
+msgstr "ativo"
+
+#: models.py:162
+msgid "User plan"
+msgstr "Plano do usuário"
+
+#: models.py:163
+msgid "Users plans"
+msgstr "planos dos usuários"
+
+#: models.py:305
+msgid "period"
+msgstr "período"
+
+#: models.py:311
+msgid "Pricing"
+msgstr "Preço"
+
+#: models.py:312 templates/plans/extend.html:40
+#: templates/plans/plan_table.html:51
+msgid "Pricings"
+msgstr "Preços"
+
+#: models.py:315 templates/plans/extend.html:44
+#: templates/plans/plan_table.html:80
+msgid "days"
+msgstr "dias"
+
+#: models.py:323
+msgid "codename"
+msgstr ""
+
+#: models.py:325
+msgid "unit"
+msgstr "unidade"
+
+#: models.py:327
+msgid "is boolean"
+msgstr "É booleano"
+
+#: models.py:333
+msgid "Quota"
+msgstr "Cota"
+
+#: models.py:334 templates/plans/extend.html:25
+msgid "Quotas"
+msgstr "Cotas"
+
+#: models.py:355
+msgid "Plan pricing"
+msgstr "Preços do plano"
+
+#: models.py:356
+msgid "Plans pricings"
+msgstr "Preços dos planos"
+
+#: models.py:375
+msgid "Plan quota"
+msgstr "Cota do plano"
+
+#: models.py:376
+msgid "Plans quotas"
+msgstr "Cotas dos planos"
+
+#: models.py:390
+msgctxt "Order status"
+msgid "new"
+msgstr "Novo"
+
+#: models.py:391
+msgctxt "Order status"
+msgid "completed"
+msgstr "completo"
+
+#: models.py:392
+msgctxt "Order status"
+msgid "not valid"
+msgstr "inválido"
+
+#: models.py:393
+msgctxt "Order status"
+msgid "canceled"
+msgstr "cancelado"
+
+#: models.py:394
+msgctxt "Order status"
+msgid "returned"
+msgstr "retornar"
+
+#: models.py:402
+msgid "pricing"
+msgstr "preços"
+
+#: models.py:404
+msgid "completed"
+msgstr "completo"
+
+#: models.py:405
+msgid "amount"
+msgstr "quantia"
+
+#: models.py:406
+msgid "tax"
+msgstr "imposto"
+
+#: models.py:408
+msgid "currency"
+msgstr "moeda"
+
+#: models.py:409
+msgid "status"
+msgstr "status"
+
+#: models.py:417
+#, python-format
+msgid "Order #%(id)d"
+msgstr "Pedido #%(id)d"
+
+#: models.py:481 templates/mail/invoice_created_title.txt:1
+msgid "Order"
+msgstr "Pedido"
+
+#: models.py:482
+msgid "Orders"
+msgstr "Pedidos"
+
+#: models.py:507 models.py:564 templates/plans/create_order.html:29
+msgid "Invoice"
+msgstr "Fatura"
+
+#: models.py:508
+msgid "Invoice Duplicate"
+msgstr "Duplicar fatura"
+
+#: models.py:509
+msgctxt "proforma"
+msgid "Order confirmation"
+msgstr "Confirmação do pedido"
+
+#: models.py:526
+msgid "order"
+msgstr "pedido"
+
+#: models.py:544 models.py:550 models.py:556
+#: templates/plans/order_detail_table.html:4 templates/plans/order_list.html:15
+msgid "Name"
+msgstr "Nome"
+
+#: models.py:545 models.py:551 models.py:557
+msgid "Street"
+msgstr "Rua"
+
+#: models.py:546 models.py:552 models.py:558
+msgid "Zip code"
+msgstr "CEP"
+
+#: models.py:547 models.py:553 models.py:559
+msgid "City"
+msgstr "Cidade"
+
+#: models.py:548 models.py:554 models.py:560
+msgid "Country"
+msgstr "País"
+
+#: models.py:549 models.py:561
+msgid "TAX/VAT number"
+msgstr ""
+
+#: models.py:565
+msgid "Invoices"
+msgstr "Faturas"
+
+#: templates/mail/change_plan_body.txt:2
+#: templates/mail/expired_account_body.txt:2
+#: templates/mail/extend_account_body.txt:2
+#: templates/mail/invoice_created_body.txt:2
+#: templates/mail/remind_expire_body.txt:2
+msgid "Hi"
+msgstr "Olá"
+
+#: templates/mail/change_plan_body.txt:4
+#, python-format
+msgid "Your current plan is %(plan_name)s and it will expire on %(expire)s. "
+msgstr "Seu plano atual é %(plan_name)s e ele expirará em %(expire)s."
+
+#: templates/mail/change_plan_body.txt:6
+#: templates/mail/expired_account_body.txt:11
+#: templates/mail/extend_account_body.txt:8
+#: templates/mail/invoice_created_body.txt:11
+#: templates/mail/remind_expire_body.txt:12
+msgid "Thank you"
+msgstr "Obrigado"
+
+#: templates/mail/change_plan_body.txt:8
+#: templates/mail/expired_account_body.txt:13
+#: templates/mail/extend_account_body.txt:10
+#: templates/mail/invoice_created_body.txt:13
+#: templates/mail/remind_expire_body.txt:14
+#, python-format
+msgid "The Team at %(site_name)s"
+msgstr "A Equipe %(site_name)s"
+
+#: templates/mail/change_plan_title.txt:1
+#, python-format
+msgid "Your account %(user)s has new plan %(plan)s"
+msgstr "Sua conta %(user)s tem um novo plano %(plan)s"
+
+#: templates/mail/expired_account_body.txt:4
+msgid "Your account has just expired."
+msgstr "A sua conta expirou."
+
+#: templates/mail/expired_account_body.txt:6
+#, python-format
+msgid "You can restore your current plan %(plan_name)s here:"
+msgstr "Você pode restaurar seu plano atual %(plan_name)s aqui:"
+
+#: templates/mail/expired_account_body.txt:8
+#: templates/mail/remind_expire_body.txt:9
+msgid "or you can upgrade your plan here:"
+msgstr ""
+
+#: templates/mail/expired_account_title.txt:1
+#, python-format
+msgid "Your account %(user)s has just expired"
+msgstr "Sua conta %(user)s acabou de expirar"
+
+#: templates/mail/extend_account_body.txt:4
+#, python-format
+msgid ""
+"Your account has just been extended by %(days)s days. Your current plan is "
+"%(plan_name)s and it will expire on %(expire)s. "
+msgstr ""
+
+#: templates/mail/extend_account_body.txt:6
+msgid ""
+"An invoice will be sent with another e-mail, if billing data was provided."
+msgstr ""
+
+#: templates/mail/extend_account_title.txt:1
+#, python-format
+msgid "Your account %(user)s has been extended by %(days)s days"
+msgstr ""
+
+#: templates/mail/invoice_created_body.txt:4
+#, python-format
+msgid ""
+"We are writing to inform you, that %(invoice_type)s %(invoice_number)s has "
+"been issued. You can view it and print it at:\n"
+"http://%(site_domain)s%(url)s\n"
+msgstr ""
+
+#: templates/mail/invoice_created_body.txt:8
+msgid "Details of the order can be see on:"
+msgstr ""
+
+#: templates/mail/invoice_created_title.txt:1
+#, python-format
+msgid "%(invoice_type)s %(invoice_number)s has been issued for %(user)s"
+msgstr ""
+
+#: templates/mail/remind_expire_body.txt:4
+#, python-format
+msgid "Your account will expire in %(days)s days."
+msgstr ""
+
+#: templates/mail/remind_expire_body.txt:6
+#, python-format
+msgid "You can extend your current plan %(plan_name)s on page:"
+msgstr ""
+
+#: templates/mail/remind_expire_title.txt:1
+#, python-format
+msgid "Your account %(user)s will expire in %(days)s day"
+msgid_plural "Your account %(user)s will expire in %(days)s days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/plans/account_activation.html:6
+msgid "Activation successful"
+msgstr ""
+
+#: templates/plans/account_activation.html:6
+msgid "Activation failed"
+msgstr ""
+
+#: templates/plans/account_activation.html:10
+msgid ""
+"\n"
+"            Your panels will be available again soon.\n"
+"        "
+msgstr ""
+
+#: templates/plans/account_activation.html:14
+msgid ""
+"\n"
+"            Your account cannot by activated because your account exceeds "
+"plan limits. Please adjust usage of limits and then try to activate your "
+"account again.\n"
+"        "
+msgstr ""
+
+#: templates/plans/billing_info_create.html:8
+#: templates/plans/billing_info_update.html:8
+msgid "Provide billing data"
+msgstr "Fornecer dados de faturamento"
+
+#: templates/plans/billing_info_delete.html:9
+msgid "Are you sure to delete billing info?"
+msgstr ""
+
+#: templates/plans/create_order.html:5
+msgid "Confirm order"
+msgstr ""
+
+#: templates/plans/create_order.html:13
+msgid ""
+"If you downgrade your plan please remember that new lower limits are used "
+"immediately after\n"
+"                finishing the order."
+msgstr ""
+
+#: templates/plans/create_order.html:19 templates/plans/create_order.html:64
+msgid "Continue"
+msgstr ""
+
+#: templates/plans/create_order.html:33
+msgid ""
+"\n"
+"                        Invoice for this order will be issued for:\n"
+"                    "
+msgstr ""
+
+#: templates/plans/create_order.html:48
+#, python-format
+msgid ""
+"\n"
+"                        If this data is not correct please <a href="
+"\"%(billing_info_url)s\">edit billing data</a> before\n"
+"                        making an order.\n"
+"                    "
+msgstr ""
+
+#: templates/plans/create_order.html:55
+#, python-format
+msgid ""
+"\n"
+"                        Invoice will <b>not</b> be issued. If you need an "
+"invoice please provide\n"
+"                        <a href=\"%(billing_info_url)s\">billing data</a> "
+"before making an order.\n"
+"                    "
+msgstr ""
+
+#: templates/plans/current.html:6
+msgid "Your account"
+msgstr "Sua conta"
+
+#: templates/plans/current.html:9
+msgid "Account"
+msgstr "Conta"
+
+#: templates/plans/current.html:11
+msgid "State"
+msgstr "Estado"
+
+#: templates/plans/current.html:13
+msgid "expired"
+msgstr ""
+
+#: templates/plans/current.html:14
+msgid "Expire"
+msgstr "Expirado"
+
+#: templates/plans/current.html:17
+msgid "upgrade"
+msgstr "atualizar"
+
+#: templates/plans/current.html:20
+msgid "Plan details"
+msgstr "Detalhes do plano"
+
+#: templates/plans/current.html:29
+msgid "Need more?"
+msgstr ""
+
+#: templates/plans/current.html:32
+#, python-format
+msgid ""
+"\n"
+"        Please see other <a href=\"%(upgrade_url)s\">currently available "
+"plans</a>.\n"
+"    "
+msgstr ""
+
+#: templates/plans/expiration_messages.html:6
+#, python-format
+msgid ""
+"Your account has expired.\n"
+"            Please <a href=\"%(url)s\">extend your account</a>."
+msgstr ""
+
+#: templates/plans/expiration_messages.html:13
+#, python-format
+msgid ""
+"\n"
+"                Your account is not active. Possibly you are over some "
+"limits.\n"
+"                Try to <a href=\"%(url)s\">activate your account</a>.\n"
+"            "
+msgstr ""
+
+#: templates/plans/expiration_messages.html:22
+#, python-format
+msgid ""
+"\n"
+"                Your account will expire soon (in %(days_to_expire)s days).\n"
+"                We recommend to <a href=\"%(extend_url)s\">extend your "
+"account now.</a>\n"
+"            "
+msgstr ""
+
+#: templates/plans/extend.html:32
+msgid "yes"
+msgstr ""
+
+#: templates/plans/extend.html:32
+msgid "no"
+msgstr ""
+
+#: templates/plans/extend.html:54
+#, python-format
+msgid ""
+"\n"
+"                Unfortunately your current plan is not available any more. "
+"You need to <a href=\"%(upgrade_url)s\">upgrade your plan</a>.\n"
+"        "
+msgstr ""
+
+#: templates/plans/order_detail.html:18
+#, python-format
+msgid ""
+"Order #%(order_id)s\n"
+"        (status: %(order_status)s)"
+msgstr ""
+
+#: templates/plans/order_detail.html:28
+msgid "Printable documents"
+msgstr ""
+
+#: templates/plans/order_detail.html:40
+msgid "Payment"
+msgstr ""
+
+#: templates/plans/order_detail.html:44
+#, python-format
+msgid ""
+"\n"
+"                Payment completed on: %(completed)s\n"
+"            "
+msgstr ""
+
+#: templates/plans/order_detail.html:76
+msgid ""
+"\n"
+"                    This order is expired. It will accept an incoming "
+"payment made earlier, but new payment cannot be\n"
+"                    initialized. Please make a new order if necessary.\n"
+"                "
+msgstr ""
+
+#: templates/plans/order_detail.html:88
+msgid ""
+"\n"
+"                This order could not be processed as it is not valid. Please "
+"contact with customer service.\n"
+"            "
+msgstr ""
+
+#: templates/plans/order_detail_table.html:5
+msgid "Net price"
+msgstr ""
+
+#: templates/plans/order_detail_table.html:6
+msgid "VAT"
+msgstr ""
+
+#: templates/plans/order_detail_table.html:7
+msgid "VAT total"
+msgstr ""
+
+#: templates/plans/order_detail_table.html:8
+msgid "Total"
+msgstr ""
+
+#: templates/plans/order_detail_table.html:20
+msgid "EU VAT"
+msgstr ""
+
+#: templates/plans/order_detail_table.html:22
+msgid ""
+"\n"
+"            VAT is not applied to order.\n"
+"        "
+msgstr ""
+
+#: templates/plans/order_list.html:6
+msgid "List of orders"
+msgstr ""
+
+#: templates/plans/order_list.html:16
+msgctxt "order created"
+msgid "Created"
+msgstr ""
+
+#: templates/plans/order_list.html:17
+msgctxt "order status"
+msgid "Status"
+msgstr ""
+
+#: templates/plans/order_list.html:18
+msgctxt "order completed"
+msgid "Completed"
+msgstr ""
+
+#: templates/plans/order_list.html:19
+msgctxt "total amount, value"
+msgid "Total"
+msgstr ""
+
+#: templates/plans/order_list.html:39
+msgid "You do not have any orders so far."
+msgstr ""
+
+#: templates/plans/plan_table.html:13
+msgid "your current plan"
+msgstr ""
+
+#: templates/plans/plan_table.html:39
+msgid "no limit"
+msgstr ""
+
+#: templates/plans/plan_table.html:61
+msgid "Change"
+msgstr ""
+
+#: templates/plans/plan_table.html:84
+msgid "Buy"
+msgstr ""
+
+#: templates/plans/plan_table.html:92
+#, python-format
+msgid ""
+"\n"
+"                        This plan is not available anymore and cannot be "
+"extended.<p>\n"
+"                        You need to upgrade your account to any of <a href="
+"\"%(upgrade_url)s\">currently available plans</a>.\n"
+"                    "
+msgstr ""
+
+#: templates/plans/plan_table.html:107
+msgid "Net prices"
+msgstr ""
+
+#: templates/plans/pricing.html:5
+msgid "See our great value plans"
+msgstr ""
+
+#: templates/plans/upgrade.html:5
+msgid "Choose plan"
+msgstr ""
+
+#: validators.py:63
+#, python-format
+msgid "Limit of %(model_name_plural)s exceeded. The limit is %(quota)s items."
+msgstr ""
+
+#: validators.py:93
+#, python-format
+msgid "Following %(model_name_plural)s are not in limits: %(objects)s"
+msgstr ""
+
+#: views.py:40
+msgid "Your account is now active"
+msgstr ""
+
+#: views.py:169
+msgid "Your plan has been successfully changed"
+msgstr ""
+
+#: views.py:215
+#, python-format
+msgid ""
+"The selected plan is insufficient for your account. Your account will not be "
+"activated or will not work fully after completing this order."
+"<br><br>Following limits will be exceeded: <ul><li>%(reasons)s</ul>"
+msgstr ""
+
+#: views.py:361
+msgid ""
+"Thank you for placing a payment. It will be processed as soon as possible."
+msgstr ""
+
+#: views.py:363
+msgid "Payment was not completed correctly. Please repeat payment process."
+msgstr ""
+
+#: views.py:400 views.py:419
+msgid "Billing info has been updated successfuly."
+msgstr ""
+
+#: views.py:436
+msgid "Billing info has been deleted."
+msgstr ""

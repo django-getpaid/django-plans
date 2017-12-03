@@ -1,36 +1,43 @@
 from __future__ import unicode_literals
 
-from decimal import Decimal
 import re
-from datetime import date, timedelta, datetime
 import logging
-
-from django.contrib.sites.models import Site
-from django.db.models import Max
-from django.utils import translation
-from django.utils.encoding import python_2_unicode_compatible
-from django.utils.timezone import now
-from django_countries.fields import CountryField
-from django.core.urlresolvers import reverse
-from django.template.base import Template
-from django.utils.translation import ugettext_lazy as _, pgettext_lazy
-from django.db import models
-from ordered_model.models import OrderedModel
 import vatnumber
-from django.template import Context
+
+from decimal import Decimal
+from datetime import date, timedelta, datetime
+
+from django.db import models
+from django.db.models import Max
+
 from django.conf import settings
+from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
+
+from django.template import Context
+from django.template.base import Template
+from django.utils import translation
+from django.utils.timezone import now
+from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext_lazy as _, pgettext_lazy
+
+from django_countries.fields import CountryField
+from ordered_model.models import OrderedModel
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 
-from plans.contrib import send_template_email, get_user_language
 from plans.enum import Enumeration
-from plans.signals import order_completed, account_activated, account_expired, account_change_plan, account_deactivated
-from .validators import plan_validation
+from plans.validators import plan_validation
 from plans.taxation.eu import EUTaxationPolicy
+from plans.contrib import send_template_email, get_user_language
+from plans.signals import (order_completed, account_activated,
+                           account_expired, account_change_plan,
+                           account_deactivated)
 
 
 accounts_logger = logging.getLogger('accounts')
 
 # Create your models here.
+
 
 @python_2_unicode_compatible
 class Plan(OrderedModel):
@@ -47,13 +54,21 @@ class Plan(OrderedModel):
     name = models.CharField(_('name'), max_length=100)
     description = models.TextField(_('description'), blank=True)
     default = models.BooleanField(default=False, db_index=True)
-    available = models.BooleanField(_('available'), default=False, db_index=True,
-                                    help_text=_('Is still available for purchase'))
-    visible = models.BooleanField(_('visible'), default=True, db_index=True, help_text=_('Is visible in current offer'))
+    available = models.BooleanField(
+        _('available'), default=False, db_index=True,
+        help_text=_('Is still available for purchase')
+    )
+    visible = models.BooleanField(
+        _('visible'), default=True, db_index=True,
+        help_text=_('Is visible in current offer')
+    )
     created = models.DateTimeField(_('created'), db_index=True)
-    customized = models.ForeignKey('auth.User', null=True, blank=True, verbose_name=_('customized'))
-    quotas = models.ManyToManyField('Quota', through='PlanQuota', verbose_name=_('quotas'))
-    url = models.CharField(max_length=200, blank=True, help_text=_(
+    customized = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        verbose_name=_('customized')
+    )
+    quotas = models.ManyToManyField('Quota', through='PlanQuota')
+    url = models.URLField(max_length=200, blank=True, help_text=_(
         'Optional link to page with more information (for clickable pricing table headers)'))
 
     class Meta:
@@ -88,18 +103,25 @@ class BillingInfo(models.Model):
     """
     Stores customer billing data needed to issue an invoice
     """
-    user = models.OneToOneField('auth.User', verbose_name=_('user'))
-    tax_number = models.CharField(_('VAT ID'), max_length=200, blank=True, db_index=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, verbose_name=_('user')
+    )
+    tax_number = models.CharField(
+        _('VAT ID'), max_length=200, blank=True, db_index=True
+    )
     name = models.CharField(_('name'), max_length=200, db_index=True)
     street = models.CharField(_('street'), max_length=200)
     zipcode = models.CharField(_('zip code'), max_length=200)
     city = models.CharField(_('city'), max_length=200)
     country = CountryField(_("country"))
-
-    shipping_name = models.CharField(_('name (shipping)'), max_length=200, blank=True, help_text=_('optional'))
-    shipping_street = models.CharField(_('street (shipping)'), max_length=200, blank=True, help_text=_('optional'))
-    shipping_zipcode = models.CharField(_('zip code (shipping)'), max_length=200, blank=True, help_text=_('optional'))
-    shipping_city = models.CharField(_('city (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+    shipping_name = models.CharField(
+        _('name (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+    shipping_street = models.CharField(
+        _('street (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+    shipping_zipcode = models.CharField(
+        _('zip code (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+    shipping_city = models.CharField(
+        _('city (shipping)'), max_length=200, blank=True, help_text=_('optional'))
 
     class Meta:
         verbose_name = _("Billing info")
@@ -138,9 +160,11 @@ class UserPlan(models.Model):
     """
     Currently selected plan for user account.
     """
-    user = models.OneToOneField('auth.User', verbose_name=_('user'))
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, verbose_name=_('user'))
     plan = models.ForeignKey('Plan', verbose_name=_('plan'))
-    expire = models.DateField(_('expire'), default=None, blank=True, null=True, db_index=True)
+    expire = models.DateField(
+        _('expire'), default=None, blank=True, null=True, db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
 
     class Meta:
@@ -211,7 +235,7 @@ class UserPlan(models.Model):
             self.plan = plan
             self.save()
             account_change_plan.send(sender=self, user=self.user)
-            mail_context = Context({'user': self.user, 'userplan': self, 'plan': plan})
+            mail_context = {'user': self.user, 'userplan': self, 'plan': plan}
             send_template_email([self.user.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
                                 mail_context, get_user_language(self.user))
             accounts_logger.info(
@@ -247,7 +271,10 @@ class UserPlan(models.Model):
                 self.save()
                 accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
                     self.user, self.user.pk, pricing.period, plan, plan.pk))
-                mail_context = Context({'user': self.user, 'userplan': self, 'plan': plan, 'pricing': pricing})
+                mail_context = {'user': self.user,
+                                'userplan': self,
+                                'plan': plan,
+                                'pricing': pricing}
                 send_template_email([self.user.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
                                     mail_context, get_user_language(self.user))
 
@@ -261,9 +288,10 @@ class UserPlan(models.Model):
 
         self.deactivate()
 
-        accounts_logger.info("Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
+        accounts_logger.info(
+            "Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
 
-        mail_context = Context({'user': self.user, 'userplan': self})
+        mail_context = {'user': self.user, 'userplan': self}
         send_template_email([self.user.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
                             mail_context, get_user_language(self.user))
 
@@ -272,7 +300,11 @@ class UserPlan(models.Model):
     def remind_expire_soon(self):
         """reminds about soon account expiration"""
 
-        mail_context = Context({'user': self.user, 'userplan': self, 'days': self.days_left()})
+        mail_context = {
+            'user': self.user,
+            'userplan': self,
+            'days': self.days_left()
+        }
         send_template_email([self.user.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
                             mail_context, get_user_language(self.user))
 
@@ -283,8 +315,9 @@ class Pricing(models.Model):
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
     """
     name = models.CharField(_('name'), max_length=100)
-    period = models.PositiveIntegerField(_('period'), default=30, null=True, blank=True, db_index=True)
-    url = models.CharField(max_length=200, blank=True, help_text=_(
+    period = models.PositiveIntegerField(
+        _('period'), default=30, null=True, blank=True, db_index=True)
+    url = models.URLField(max_length=200, blank=True, help_text=_(
         'Optional link to page with more information (for clickable pricing table headers)'))
 
     class Meta:
@@ -301,7 +334,8 @@ class Quota(OrderedModel):
     """
     Single countable or boolean property of system (limitation).
     """
-    codename = models.CharField(_('codename'), max_length=50, unique=True, db_index=True)
+    codename = models.CharField(
+        _('codename'), max_length=50, unique=True, db_index=True)
     name = models.CharField(_('name'), max_length=100)
     unit = models.CharField(_('unit'), max_length=100, blank=True)
     description = models.TextField(_('description'), blank=True)
@@ -376,18 +410,22 @@ class Order(models.Model):
 
     ])
 
-    user = models.ForeignKey('auth.User', verbose_name=_('user'))
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
     flat_name = models.CharField(max_length=200, blank=True, null=True)
-    plan = models.ForeignKey('Plan', verbose_name=_('plan'), related_name="plan_order")
+    plan = models.ForeignKey('Plan', verbose_name=_(
+        'plan'), related_name="plan_order")
     pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_(
         'pricing'))  # if pricing is None the order is upgrade plan, not buy new pricing
     created = models.DateTimeField(_('created'), db_index=True)
-    completed = models.DateTimeField(_('completed'), null=True, blank=True, db_index=True)
-    amount = models.DecimalField(_('amount'), max_digits=7, decimal_places=2, db_index=True)
+    completed = models.DateTimeField(
+        _('completed'), null=True, blank=True, db_index=True)
+    amount = models.DecimalField(
+        _('amount'), max_digits=7, decimal_places=2, db_index=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
                               blank=True)  # Tax=None is when tax is not applicable
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
-    status = models.IntegerField(_('status'), choices=STATUS, default=STATUS.NEW)
+    status = models.IntegerField(
+        _('status'), choices=STATUS, default=STATUS.NEW)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.created is None:
@@ -413,7 +451,6 @@ class Order(models.Model):
             return "%s %s %s " % (
                 _('Plan'), self.plan.name, "(upgrade)" if self.pricing is None else '- %s' % self.pricing)
 
-
     def is_ready_for_payment(self):
         return self.status == self.STATUS.NEW and (now() - self.created).days < getattr(
             settings, 'PLANS_ORDER_EXPIRATION', 14)
@@ -431,7 +468,6 @@ class Order(models.Model):
             return True
         else:
             return False
-
 
     def get_invoices_proforma(self):
         return Invoice.proforma.filter(order=self)
@@ -503,11 +539,12 @@ class Invoice(models.Model):
         MONTHLY = 2
         ANNUALLY = 3
 
-    user = models.ForeignKey('auth.User')
-    order = models.ForeignKey('Order')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
+    order = models.ForeignKey('Order', verbose_name=_('order'))
     number = models.IntegerField(db_index=True)
     full_number = models.CharField(max_length=200)
-    type = models.IntegerField(choices=INVOICE_TYPES, default=INVOICE_TYPES.INVOICE, db_index=True)
+    type = models.IntegerField(
+        choices=INVOICE_TYPES, default=INVOICE_TYPES.INVOICE, db_index=True)
     issued = models.DateField(db_index=True)
     issued_duplicate = models.DateField(db_index=True, null=True, blank=True)
     selling_date = models.DateField(db_index=True, null=True, blank=True)
@@ -519,27 +556,34 @@ class Invoice(models.Model):
     tax_total = models.DecimalField(max_digits=7, decimal_places=2)
     tax = models.DecimalField(max_digits=4, decimal_places=2, db_index=True, null=True,
                               blank=True)  # Tax=None is whet tax is not applicable
-    rebate = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal(0))
+    rebate = models.DecimalField(
+        max_digits=4, decimal_places=2, default=Decimal(0))
     currency = models.CharField(max_length=3, default='EUR')
     item_description = models.CharField(max_length=200)
     buyer_name = models.CharField(max_length=200, verbose_name=_("Name"))
     buyer_street = models.CharField(max_length=200, verbose_name=_("Street"))
-    buyer_zipcode = models.CharField(max_length=200, verbose_name=_("Zip code"))
+    buyer_zipcode = models.CharField(
+        max_length=200, verbose_name=_("Zip code"))
     buyer_city = models.CharField(max_length=200, verbose_name=_("City"))
     buyer_country = CountryField(verbose_name=_("Country"), default='PL')
-    buyer_tax_number = models.CharField(max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
+    buyer_tax_number = models.CharField(
+        max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
     shipping_name = models.CharField(max_length=200, verbose_name=_("Name"))
-    shipping_street = models.CharField(max_length=200, verbose_name=_("Street"))
-    shipping_zipcode = models.CharField(max_length=200, verbose_name=_("Zip code"))
+    shipping_street = models.CharField(
+        max_length=200, verbose_name=_("Street"))
+    shipping_zipcode = models.CharField(
+        max_length=200, verbose_name=_("Zip code"))
     shipping_city = models.CharField(max_length=200, verbose_name=_("City"))
     shipping_country = CountryField(verbose_name=_("Country"), default='PL')
     require_shipment = models.BooleanField(default=False, db_index=True)
     issuer_name = models.CharField(max_length=200, verbose_name=_("Name"))
     issuer_street = models.CharField(max_length=200, verbose_name=_("Street"))
-    issuer_zipcode = models.CharField(max_length=200, verbose_name=_("Zip code"))
+    issuer_zipcode = models.CharField(
+        max_length=200, verbose_name=_("Zip code"))
     issuer_city = models.CharField(max_length=200, verbose_name=_("City"))
     issuer_country = CountryField(verbose_name=_("Country"), default='PL')
-    issuer_tax_number = models.CharField(max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
+    issuer_tax_number = models.CharField(
+        max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
 
     class Meta:
         verbose_name = _("Invoice")
@@ -553,11 +597,12 @@ class Invoice(models.Model):
 
     def clean(self):
         if self.number is None:
-            invoice_counter_reset = getattr(settings, 'PLANS_INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
+            invoice_counter_reset = getattr(
+                settings, 'PLANS_INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
 
             if invoice_counter_reset == Invoice.NUMBERING.DAILY:
                 last_number = Invoice.objects.filter(issued=self.issued, type=self.type).aggregate(Max('number'))[
-                                  'number__max'] or 0
+                    'number__max'] or 0
             elif invoice_counter_reset == Invoice.NUMBERING.MONTHLY:
                 last_number = Invoice.objects.filter(issued__year=self.issued.year, issued__month=self.issued.month,
                                                      type=self.type).aggregate(Max('number'))['number__max'] or 0
@@ -582,7 +627,6 @@ class Invoice(models.Model):
     #        if self.type in (Invoice.INVOICE_TYPES.INVOICE, Invoice.INVOICE_TYPES.PROFORMA):
     #            pass
 
-
     def get_full_number(self):
         """
         Generates on the fly invoice full number from template provided by ``settings.PLANS_INVOICE_NUMBER_FORMAT``.
@@ -600,7 +644,6 @@ class Invoice(models.Model):
                          "{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'m/Y' }}")
         return Template(format).render(Context({'invoice': self}))
 
-
     def set_issuer_invoice_data(self):
         """
         Fills models object with issuer data copied from ``settings.PLANS_INVOICE_ISSUER``
@@ -610,7 +653,8 @@ class Invoice(models.Model):
         try:
             issuer = getattr(settings, 'PLANS_INVOICE_ISSUER')
         except:
-            raise ImproperlyConfigured("Please set PLANS_INVOICE_ISSUER in order to make an invoice.")
+            raise ImproperlyConfigured(
+                "Please set PLANS_INVOICE_ISSUER in order to make an invoice.")
         self.issuer_name = issuer['issuer_name']
         self.issuer_street = issuer['issuer_street']
         self.issuer_zipcode = issuer['issuer_zipcode']
@@ -636,7 +680,7 @@ class Invoice(models.Model):
         self.shipping_street = billing_info.shipping_street or billing_info.street
         self.shipping_zipcode = billing_info.shipping_zipcode or billing_info.zipcode
         self.shipping_city = billing_info.shipping_city or billing_info.city
-        #TODO: Should allow shipping to other country? Not think so
+        # TODO: Should allow shipping to other country? Not think so
         self.shipping_country = billing_info.country
 
     def copy_from_order(self, order):
@@ -654,7 +698,8 @@ class Invoice(models.Model):
         self.tax_total = order.total() - order.amount
         self.tax = order.tax
         self.currency = order.currency
-        self.item_description = "%s - %s" % (Site.objects.get_current().name, order.name)
+        self.item_description = "%s - %s" % (
+            Site.objects.get_current().name, order.name)
 
     @classmethod
     def create(cls, order, invoice_type):
@@ -689,12 +734,11 @@ class Invoice(models.Model):
 
         if language_code is not None:
             translation.activate(language_code)
-        mail_context = Context({'user': self.user,
-                                'invoice_type': self.get_type_display(),
-                                'invoice_number': self.get_full_number(),
-                                'order': self.order.id,
-                                'url': self.get_absolute_url(),
-        })
+        mail_context = {'user': self.user,
+                        'invoice_type': self.get_type_display(),
+                        'invoice_number': self.get_full_number(),
+                        'order': self.order.id,
+                        'url': self.get_absolute_url(), }
         if language_code is not None:
             translation.deactivate()
         send_template_email([self.user.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt',
@@ -703,7 +747,6 @@ class Invoice(models.Model):
     def is_UE_customer(self):
         return EUTaxationPolicy.is_in_EU(self.buyer_country.code)
 
-#noinspection PyUnresolvedReferences
+
+# noinspection PyUnresolvedReferences
 import plans.listeners
-
-

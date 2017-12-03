@@ -1,4 +1,4 @@
-django==1.6.2
+django==1.11.7
 django-bootstrap3
 Sphinx
 django-debug-toolbar
