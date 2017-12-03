@@ -1,8 +1,8 @@
 Welcome to django-plans
 =======================
 
-.. image:: https://travis-ci.org/arianerocha/django-plans.svg?branch=django1.10   
-   :target: https://travis-ci.org/arianerocha/django-plans
+.. image:: https://travis-ci.org/cypreess/django-plans.svg?branch=django1.10   
+   :target: https://travis-ci.org/cypreess/django-plans
    
 Django-plans is a pluggable app for managing pricing plans with quotas and accounts expiration. 
 Features currently supported:
