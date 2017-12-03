@@ -1,6 +1,11 @@
 django-plans changelog
 ======================
 
+0.8
+---
+* Supporting Django 1.10.8, 1.11.8.
+* Tests for latest versions of Python (3.5, 3.6).
+
 0.7
 ---
 * Changes in plans.taxation.eu.EUTaxationPolicy to implement new EU VAT regulations (MOSS)
