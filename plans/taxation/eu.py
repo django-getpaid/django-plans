@@ -24,7 +24,7 @@ class EUTaxationPolicy(TaxationPolicy):
     """
 
     # Standard VAT rates according to http://ec.europa.eu/taxation_customs/resources/documents/taxation/vat/how_vat_works/rates/vat_rates_en.pdf
-    # Situation at 1 Jan 2015
+    # Situation at 1 Jan 2017
 
     EU_COUNTRIES_VAT = {
         'BE': Decimal('21'),  # Belgium
@@ -33,7 +33,7 @@ class EUTaxationPolicy(TaxationPolicy):
         'DK': Decimal('25'),  # Denmark
         'DE': Decimal('19'),  # Germany
         'EE': Decimal('20'),  # Estonia
-        'EL': Decimal('23'),  # Greece
+        'EL': Decimal('24'),  # Greece
         'ES': Decimal('21'),  # Spain
         'FR': Decimal('20'),  # France
         'HR': Decimal('25'),  # Croatia
@@ -42,14 +42,14 @@ class EUTaxationPolicy(TaxationPolicy):
         'CY': Decimal('19'),  # Cyprus
         'LV': Decimal('21'),  # Latvia
         'LT': Decimal('21'),  # Lithuania
-        'LU': Decimal('15'),  # Luxembourg
+        'LU': Decimal('17'),  # Luxembourg
         'HU': Decimal('27'),  # Hungary
         'MT': Decimal('18'),  # Malta
         'NL': Decimal('21'),  # Netherlands
         'AT': Decimal('20'),  # Austria
         'PL': Decimal('23'),  # Poland
         'PT': Decimal('23'),  # Portugal
-        'RO': Decimal('24'),  # Romania
+        'RO': Decimal('19'),  # Romania
         'SI': Decimal('22'),  # Slovenia
         'SK': Decimal('20'),  # Slovakia
         'FI': Decimal('24'),  # Finland
