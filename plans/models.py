@@ -11,7 +11,10 @@ from django.db import models
 from django.db.models import Max
 
 from django.conf import settings
-from django.contrib.sites.models import Site
+try:
+    from django.contrib.sites.models import Site
+except RuntimeError:
+    Site = None
 from django.core.urlresolvers import reverse
 
 from django.template import Context
@@ -698,8 +701,11 @@ class Invoice(models.Model):
         self.tax_total = order.total() - order.amount
         self.tax = order.tax
         self.currency = order.currency
-        self.item_description = "%s - %s" % (
-            Site.objects.get_current().name, order.name)
+        if Site is not None:
+            self.item_description = "%s - %s" % (
+                Site.objects.get_current().name, order.name)
+        else:
+            self.item_description = order.name
 
     @classmethod
     def create(cls, order, invoice_type):

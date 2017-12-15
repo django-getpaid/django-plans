@@ -21,12 +21,15 @@ def send_template_email(recipients, title_template, body_template, context, lang
     domain = getattr(settings, 'SITE_URL', None)
 
     if domain is None:
-        Site = apps.get_model('sites', 'Site')
-        current_site = Site.objects.get_current()
-        site_name = current_site.name
-        domain = current_site.domain
+        try:
+            Site = apps.get_model('sites', 'Site')
+            current_site = Site.objects.get_current()
+            site_name = current_site.name
+            domain = current_site.domain
+        except LookupError:
+            pass
 
-    context.update({'site_name' : site_name, 'site_domain': domain})
+    context.update({'site_name': site_name, 'site_domain': domain})
 
     if language is not None:
         translation.activate(language)
