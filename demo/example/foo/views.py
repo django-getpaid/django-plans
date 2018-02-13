@@ -1,6 +1,6 @@
 # Create your views here.
 from django.contrib import messages
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.shortcuts import redirect
 from django.views.generic import ListView, CreateView, DeleteView
 from .forms import FooForm
