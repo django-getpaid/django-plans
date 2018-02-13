@@ -1,4 +1,4 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from plans.models import UserPlan
 
@@ -16,7 +16,7 @@ def account_status(request):
 
     """
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         try:
             return {
                 'ACCOUNT_EXPIRED': request.user.userplan.is_expired(),

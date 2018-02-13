@@ -15,7 +15,7 @@ try:
     from django.contrib.sites.models import Site
 except RuntimeError:
     Site = None
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from django.template import Context
 from django.template.base import Template
@@ -68,7 +68,8 @@ class Plan(OrderedModel):
     created = models.DateTimeField(_('created'), db_index=True)
     customized = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,
-        verbose_name=_('customized')
+        verbose_name=_('customized'),
+        on_delete=models.CASCADE
     )
     quotas = models.ManyToManyField('Quota', through='PlanQuota')
     url = models.URLField(max_length=200, blank=True, help_text=_(
@@ -107,7 +108,8 @@ class BillingInfo(models.Model):
     Stores customer billing data needed to issue an invoice
     """
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_('user')
+        settings.AUTH_USER_MODEL, verbose_name=_('user'),
+        on_delete=models.CASCADE
     )
     tax_number = models.CharField(
         _('VAT ID'), max_length=200, blank=True, db_index=True
@@ -164,8 +166,10 @@ class UserPlan(models.Model):
     Currently selected plan for user account.
     """
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_('user'))
-    plan = models.ForeignKey('Plan', verbose_name=_('plan'))
+        settings.AUTH_USER_MODEL, verbose_name=_('user'),
+        on_delete=models.CASCADE
+    )
+    plan = models.ForeignKey('Plan', verbose_name=_('plan'), on_delete=models.CASCADE)
     expire = models.DateField(
         _('expire'), default=None, blank=True, null=True, db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
@@ -362,8 +366,8 @@ class PlanPricingManager(models.Manager):
 
 @python_2_unicode_compatible
 class PlanPricing(models.Model):
-    plan = models.ForeignKey('Plan')
-    pricing = models.ForeignKey('Pricing')
+    plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
+    pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
 
     objects = PlanPricingManager()
@@ -383,8 +387,8 @@ class PlanQuotaManager(models.Manager):
 
 
 class PlanQuota(models.Model):
-    plan = models.ForeignKey('Plan')
-    quota = models.ForeignKey('Quota')
+    plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
+    quota = models.ForeignKey('Quota', on_delete=models.CASCADE)
     value = models.IntegerField(default=1, null=True, blank=True)
 
     objects = PlanQuotaManager()
@@ -413,12 +417,12 @@ class Order(models.Model):
 
     ])
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
     flat_name = models.CharField(max_length=200, blank=True, null=True)
     plan = models.ForeignKey('Plan', verbose_name=_(
-        'plan'), related_name="plan_order")
+        'plan'), related_name="plan_order", on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_(
-        'pricing'))  # if pricing is None the order is upgrade plan, not buy new pricing
+        'pricing'), on_delete=models.CASCADE)  # if pricing is None the order is upgrade plan, not buy new pricing
     created = models.DateTimeField(_('created'), db_index=True)
     completed = models.DateTimeField(
         _('completed'), null=True, blank=True, db_index=True)
@@ -542,8 +546,8 @@ class Invoice(models.Model):
         MONTHLY = 2
         ANNUALLY = 3
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
-    order = models.ForeignKey('Order', verbose_name=_('order'))
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
+    order = models.ForeignKey('Order', verbose_name=_('order'), on_delete=models.CASCADE)
     number = models.IntegerField(db_index=True)
     full_number = models.CharField(max_length=200)
     type = models.IntegerField(
