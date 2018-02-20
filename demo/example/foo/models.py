@@ -34,11 +34,8 @@ class Profile(models.Model):
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        profile = Profile.objects.create(user=instance)
-        profile.save()
-
         company = Company.objects.create(name=instance.username+'_COMPANY', email=instance.username+'@email.com')
-        profile.company = company
+        profile = Profile.objects.create(user=instance, company=company)
         profile.save()
 
 
