@@ -10,5 +10,5 @@ http://{{ site_domain }}{% url 'order' pk=order %}
 
 {% trans "Thank you" %}
 --
-{% blocktrans %}The Team at {{ site_name }}{% endblocktrans %}
+{% blocktrans %}The Team at {{ site_domain }}{% endblocktrans %}
 {% endautoescape %}
