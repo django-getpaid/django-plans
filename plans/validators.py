@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 import six
 
 from plans.importer import import_name
-from plans.quota import get_user_quota
+from plans.quota import get_buyer_quota
 
 
 class QuotaValidator(object):
@@ -19,29 +19,29 @@ class QuotaValidator(object):
     def code(self):
         raise ImproperlyConfigured('Quota code name is not provided for validator')
 
-    def get_quota_value(self, user, quota_dict=None):
+    def get_quota_value(self, buyer, quota_dict=None):
         """
-        Returns quota value for a given user
+        Returns quota value for a given buyer
         """
         if quota_dict is None:
-            quota_dict = get_user_quota(user)
+            quota_dict = get_buyer_quota(buyer)
 
         return quota_dict.get(self.code, self.default_quota_value)
 
     def get_error_message(self, quota_value, **kwargs):
         return u'Plan validation error'
 
-    def __call__(self, user, quota_dict=None, **kwargs):
+    def __call__(self, buyer, quota_dict=None, **kwargs):
         """
-        Performs validation of quota limit for a user account
+        Performs validation of quota limit for a buyer
         """
         raise NotImplementedError('Please implement specific QuotaValidator')
 
-    def on_activation(self, user, quota_dict=None, **kwargs):
+    def on_activation(self, buyer, quota_dict=None, **kwargs):
         """
         Hook for any action that validator needs to do while successful activation of the plan
-        Most useful for validators not required to activate, e.g. some "option" is turned ON for user
-        but when user downgrade plan this option should be turned OFF automatically rather than
+        Most useful for validators not required to activate, e.g. some "option" is turned ON for buyer
+        but when buyer downgrades plan this option should be turned OFF automatically rather than
         stops account activation
         """
         pass
@@ -56,7 +56,7 @@ class ModelCountValidator(QuotaValidator):
     def model(self):
         raise ImproperlyConfigured('ModelCountValidator requires model name')
 
-    def get_queryset(self, user):
+    def get_queryset(self, buyer):
         return self.model.objects.all()
 
     def get_error_message(self, quota_value, **kwargs):
@@ -65,10 +65,10 @@ class ModelCountValidator(QuotaValidator):
             'quota': quota_value,
         }
 
-    def __call__(self, user, quota_dict=None, **kwargs):
-        quota = self.get_quota_value(user, quota_dict)
-        total_count = self.get_queryset(user).count() + kwargs.get('add', 0)
-        if not quota is None and total_count > quota:
+    def __call__(self, buyer, quota_dict=None, **kwargs):
+        quota = self.get_quota_value(buyer, quota_dict)
+        total_count = self.get_queryset(buyer).count() + kwargs.get('add', 0)
+        if quota is not None and total_count > quota:
             raise ValidationError(self.get_error_message(quota))
 
 
@@ -85,7 +85,8 @@ class ModelAttributeValidator(ModelCountValidator):
     def attribute(self):
         raise ImproperlyConfigured('ModelAttributeValidator requires defining attribute name')
 
-    def check_attribute_value(self, attribute_value, quota_value):
+    @staticmethod
+    def check_attribute_value(attribute_value, quota_value):
         # default is to value is <= limit
         return attribute_value <= quota_value
 
@@ -96,11 +97,11 @@ class ModelAttributeValidator(ModelCountValidator):
                                       kwargs['not_valid_objects'])),
         }
 
-    def __call__(self, user, quota_dict=None, **kwargs):
-        quota_value = self.get_quota_value(user, quota_dict)
+    def __call__(self, buyer, quota_dict=None, **kwargs):
+        quota_value = self.get_quota_value(buyer, quota_dict)
         not_valid_objects = []
-        if not quota_value is None:
-            for obj in self.get_queryset(user):
+        if quota_value is not None:
+            for obj in self.get_queryset(buyer):
                 if not self.check_attribute_value(getattr(obj, self.attribute), quota_value):
                     not_valid_objects.append(obj)
         if not_valid_objects:
@@ -109,16 +110,17 @@ class ModelAttributeValidator(ModelCountValidator):
             )
 
 
-def plan_validation(user, plan=None, on_activation=False):
+def plan_validation(buyer, plan=None, on_activation=False):
     """
     Validates validator that represents quotas in a given system
-    :param user:
+    :param buyer:
     :param plan:
+    :param on_activation:
     :return:
     """
     if plan is None:
-        # if plan is not given, the default is to use current plan of the user
-        plan = user.userplan.plan
+        # if plan is not given, the default is to use current plan of the buyer
+        plan = buyer.buyerplan.plan
     quota_dict = plan.get_quota_dict()
     validators = getattr(settings, 'PLANS_VALIDATORS', {})
     errors = {
@@ -130,10 +132,10 @@ def plan_validation(user, plan=None, on_activation=False):
         validator = import_name(validators[quota])
 
         if on_activation:
-            validator.on_activation(user, quota_dict)
+            validator.on_activation(buyer, quota_dict)
         else:
             try:
-                validator(user, quota_dict)
+                validator(buyer, quota_dict)
             except ValidationError as e:
                 if validator.required_to_activate:
                     errors['required_to_activate'].extend(e.messages)

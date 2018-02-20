@@ -21,49 +21,48 @@ from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
 from plans.validators import ModelCountValidator
+from plans.contrib import get_buyer_for_user
 
 
 class PlansTestCase(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
     def setUp(self):
+        self.user = User.objects.get(username='test1')
+        self.buyer = get_buyer_for_user(self.user)
+        self.buyer_plan = self.buyer.buyerplan
         mail.outbox = []
 
     def test_get_user_quota(self):
-        u = User.objects.get(username='test1')
-        self.assertEqual(get_user_quota(u),
+        self.assertEqual(get_user_quota(self.user),
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
     def test_get_plan_quota(self):
-        u = User.objects.get(username='test1')
-        p = u.userplan.plan
+        p = self.buyer_plan.plan
         self.assertEqual(p.get_quota_dict(),
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
-
     def test_extend_account_same_plan_future(self):
-        u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=50)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
-        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire,
+        self.buyer_plan.expire = date.today() + timedelta(days=50)
+        self.buyer_plan.active = False
+        self.buyer_plan.save()
+        plan_pricing = PlanPricing.objects.get(plan=self.buyer_plan.plan, pricing__period=30)
+        self.buyer_plan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(self.buyer_plan.expire,
                          date.today() + timedelta(days=50) + timedelta(days=plan_pricing.pricing.period))
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.active, True)
+        self.assertEqual(self.buyer_plan.plan, plan_pricing.plan)
+        self.assertEqual(self.buyer_plan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_extend_account_same_plan_before(self):
-        u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() - timedelta(days=50)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
-        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.active, True)
+        self.buyer_plan.expire = date.today() - timedelta(days=50)
+        self.buyer_plan.active = False
+        self.buyer_plan.save()
+        plan_pricing = PlanPricing.objects.get(plan=self.buyer_plan.plan, pricing__period=30)
+        self.buyer_plan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(self.buyer_plan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
+        self.assertEqual(self.buyer_plan.plan, plan_pricing.plan)
+        self.assertEqual(self.buyer_plan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_extend_account_other(self):
@@ -73,49 +72,49 @@ class PlansTestCase(TestCase):
         Tests if mail has been send
         Tests if account has been activated
         """
-        u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() - timedelta(days=50)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
-        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.active, True)
+        self.buyer_plan.expire = date.today() - timedelta(days=50)
+        self.buyer_plan.active = False
+        self.buyer_plan.save()
+        plan_pricing = PlanPricing.objects.filter(~Q(plan=self.buyer_plan.plan) & Q(pricing__period=30))[0]
+        self.buyer_plan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(self.buyer_plan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
+        self.assertEqual(self.buyer_plan.plan, plan_pricing.plan)
+        self.assertEqual(self.buyer_plan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_expire_account(self):
-        u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=50)
-        u.userplan.active = True
-        u.userplan.save()
-        u.userplan.expire_account()
-        self.assertEqual(u.userplan.active, False)
+        self.buyer_plan.expire = date.today() + timedelta(days=50)
+        self.buyer_plan.active = True
+        self.buyer_plan.save()
+        self.buyer_plan.expire_account()
+        self.assertEqual(self.buyer_plan.active, False)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_remind_expire(self):
-        u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=14)
-        u.userplan.active = True
-        u.userplan.save()
-        u.userplan.remind_expire_soon()
-        self.assertEqual(u.userplan.active, True)
+        self.buyer_plan.expire = date.today() + timedelta(days=14)
+        self.buyer_plan.active = True
+        self.buyer_plan.save()
+        self.buyer_plan.remind_expire_soon()
+        self.assertEqual(self.buyer_plan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_disable_emails(self):
         with self.settings(SEND_PLANS_EMAILS=False):
             # Re-run the remind_expire test, but look for 0 emails sent
-            u = User.objects.get(username='test1')
-            u.userplan.expire = date.today() + timedelta(days=14)
-            u.userplan.active = True
-            u.userplan.save()
-            u.userplan.remind_expire_soon()
-            self.assertEqual(u.userplan.active, True)
+            self.buyer_plan.expire = date.today() + timedelta(days=14)
+            self.buyer_plan.active = True
+            self.buyer_plan.save()
+            self.buyer_plan.remind_expire_soon()
+            self.assertEqual(self.buyer_plan.active, True)
             self.assertEqual(len(mail.outbox), 0)
 
 
 class TestInvoice(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
+
+    def setUp(self):
+        self.user = User.objects.get(username='test1')
+        self.buyer = get_buyer_for_user(self.user)
 
     def test_get_full_number(self):
         i = Invoice()
@@ -194,7 +193,7 @@ class TestInvoice(TestCase):
         i = Invoice(issued=day, selling_date=day, payment_date=day)
         i.copy_from_order(o)
         i.set_issuer_invoice_data()
-        i.set_buyer_invoice_data(o.user.billinginfo)
+        i.set_buyer_invoice_data(o.buyer.billinginfo)
         i.clean()
         i.save()
 
@@ -207,21 +206,20 @@ class TestInvoice(TestCase):
                                          "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
 
-        user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan,
+        o1 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan,
+        o2 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan,
+        o3 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o3.save()
@@ -230,14 +228,14 @@ class TestInvoice(TestCase):
         i1 = Invoice(issued=day, selling_date=day, payment_date=day)
         i1.copy_from_order(o1)
         i1.set_issuer_invoice_data()
-        i1.set_buyer_invoice_data(o1.user.billinginfo)
+        i1.set_buyer_invoice_data(o1.buyer.billinginfo)
         i1.clean()
         i1.save()
 
         i2 = Invoice(issued=day, selling_date=day, payment_date=day)
         i2.copy_from_order(o2)
         i2.set_issuer_invoice_data()
-        i2.set_buyer_invoice_data(o2.user.billinginfo)
+        i2.set_buyer_invoice_data(o2.buyer.billinginfo)
         i2.clean()
         i2.save()
 
@@ -245,7 +243,7 @@ class TestInvoice(TestCase):
         i3 = Invoice(issued=day, selling_date=day, payment_date=day)
         i3.copy_from_order(o1)
         i3.set_issuer_invoice_data()
-        i3.set_buyer_invoice_data(o1.user.billinginfo)
+        i3.set_buyer_invoice_data(o1.buyer.billinginfo)
         i3.clean()
         i3.save()
 
@@ -259,21 +257,20 @@ class TestInvoice(TestCase):
                                          "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
-        user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan,
+        o1 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan,
+        o2 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan,
+        o3 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o3.save()
@@ -282,7 +279,7 @@ class TestInvoice(TestCase):
         i1 = Invoice(issued=day, selling_date=day, payment_date=day)
         i1.copy_from_order(o1)
         i1.set_issuer_invoice_data()
-        i1.set_buyer_invoice_data(o1.user.billinginfo)
+        i1.set_buyer_invoice_data(o1.buyer.billinginfo)
         i1.clean()
         i1.save()
 
@@ -290,7 +287,7 @@ class TestInvoice(TestCase):
         i2 = Invoice(issued=day, selling_date=day, payment_date=day)
         i2.copy_from_order(o2)
         i2.set_issuer_invoice_data()
-        i2.set_buyer_invoice_data(o2.user.billinginfo)
+        i2.set_buyer_invoice_data(o2.buyer.billinginfo)
         i2.clean()
         i2.save()
 
@@ -298,7 +295,7 @@ class TestInvoice(TestCase):
         i3 = Invoice(issued=day, selling_date=day, payment_date=day)
         i3.copy_from_order(o1)
         i3.set_issuer_invoice_data()
-        i3.set_buyer_invoice_data(o1.user.billinginfo)
+        i3.set_buyer_invoice_data(o1.buyer.billinginfo)
         i3.clean()
         i3.save()
 
@@ -312,21 +309,20 @@ class TestInvoice(TestCase):
                                          "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
 
-        user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan,
+        o1 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan,
+        o2 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan,
+        o3 = Order(buyer=self.buyer, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o3.save()
@@ -335,7 +331,7 @@ class TestInvoice(TestCase):
         i1 = Invoice(issued=day, selling_date=day, payment_date=day)
         i1.copy_from_order(o1)
         i1.set_issuer_invoice_data()
-        i1.set_buyer_invoice_data(o1.user.billinginfo)
+        i1.set_buyer_invoice_data(o1.buyer.billinginfo)
         i1.clean()
         i1.save()
 
@@ -343,7 +339,7 @@ class TestInvoice(TestCase):
         i2 = Invoice(issued=day, selling_date=day, payment_date=day)
         i2.copy_from_order(o2)
         i2.set_issuer_invoice_data()
-        i2.set_buyer_invoice_data(o2.user.billinginfo)
+        i2.set_buyer_invoice_data(o2.buyer.billinginfo)
         i2.clean()
         i2.save()
 
@@ -351,7 +347,7 @@ class TestInvoice(TestCase):
         i3 = Invoice(issued=day, selling_date=day, payment_date=day)
         i3.copy_from_order(o1)
         i3.set_issuer_invoice_data()
-        i3.set_buyer_invoice_data(o1.user.billinginfo)
+        i3.set_buyer_invoice_data(o1.buyer.billinginfo)
         i3.clean()
         i3.save()
 
@@ -366,7 +362,7 @@ class TestInvoice(TestCase):
         i.copy_from_order(o)
 
         self.assertEqual(i.order, o)
-        self.assertEqual(i.user, o.user)
+        self.assertEqual(i.buyer, o.buyer)
         self.assertEqual(i.total_net, o.amount)
         self.assertEqual(i.unit_price_net, o.amount)
         self.assertEqual(i.total, o.total())
@@ -490,9 +486,9 @@ class ValidatorsTestCase(TestCase):
             model = User
 
         validator_object = TestValidator()
-        self.assertRaises(ValidationError, validator_object, user=None, quota_dict={'QUOTA_NAME': 1})
-        self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 2}), None)
-        self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 3}), None)
+        self.assertRaises(ValidationError, validator_object, buyer=None, quota_dict={'QUOTA_NAME': 1})
+        self.assertEqual(validator_object(buyer=None, quota_dict={'QUOTA_NAME': 2}), None)
+        self.assertEqual(validator_object(buyer=None, quota_dict={'QUOTA_NAME': 3}), None)
 
 
         #   TODO: FIX this test not to use Pricing for testing  ModelAttributeValidator

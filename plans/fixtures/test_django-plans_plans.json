@@ -46,9 +46,7 @@
       "available": true,
       "visible": true,
       "created": "2012-07-12T17:33:30.112Z",
-      "customized": [
-        "test1"
-      ],
+      "customized": 1,
       "description": "Custom for test1",
       "name": "Custom",
       "order": 4
@@ -61,9 +59,7 @@
       "available": true,
       "visible": true,
       "created": "2012-07-24T12:51:57.438Z",
-      "customized": [
-        "test2"
-      ],
+      "customized": 2,
       "description": "Custom test 2",
       "name": "Custom 2",
       "order": 5
@@ -78,9 +74,7 @@
       "country": "PL",
       "zipcode": "12-234",
       "street": "Sloneczna 15",
-      "user": [
-        "test1"
-      ],
+      "buyer": 1,
       "tax_number": "PL5521465632"
     }
   },
@@ -512,9 +506,7 @@
       "amount": "10.00",
       "pricing": 1,
       "plan": 3,
-      "user": [
-        "test1"
-      ]
+      "buyer": 1
     }
   },
   {
@@ -528,9 +520,7 @@
       "amount": "200.00",
       "pricing": 1,
       "plan": 5,
-      "user": [
-        "test1"
-      ]
+      "buyer": 1
     }
   },
   {
@@ -544,9 +534,7 @@
       "amount": "200.00",
       "pricing": 1,
       "plan": 5,
-      "user": [
-        "test1"
-      ]
+      "buyer": 1
     }
   }
 ]

@@ -1,14 +1,34 @@
 import logging
+import operator
 
 from django.core import mail
 from django.conf import settings
 from django.apps import apps
 from django.template import loader
 from django.utils import translation
-from plans.signals import user_language
+from django.db.models import FieldDoesNotExist
+from plans.signals import buyer_language
 from django.core.exceptions import ImproperlyConfigured
 
 email_logger = logging.getLogger('emails')
+
+BUYER_MODEL_SETTING = 'PLANS_BUYER_MODEL'
+try:
+    BUYER_MODEL = getattr(settings, BUYER_MODEL_SETTING)
+except AttributeError:
+    raise ImproperlyConfigured(
+        f"Please set {BUYER_MODEL_SETTING} in order to create relation between django-plans models and buyer."
+    )
+
+
+RELATION_SETTING = 'PLANS_USER_BUYER_RELATION'
+try:
+    USER_BUYER_RELATION = getattr(settings, RELATION_SETTING)
+except AttributeError:
+    raise ImproperlyConfigured(
+        f"Please set {RELATION_SETTING} in order to create relation between user and buyer."
+    )
+
 
 def send_template_email(recipients, title_template, body_template, context, language):
     """Sends e-mail using templating system"""
@@ -52,11 +72,36 @@ def send_template_email(recipients, title_template, body_template, context, lang
     email_logger.info(u"Email (%s) sent to %s\nTitle: %s\n%s\n\n" % (language, recipients, title, body))
 
 
-def get_user_language(user):
+def get_buyer_language(buyer):
     """ Simple helper that will fire django signal in order to get User language possibly given by other part of application.
     :param user:
     :return: string or None
     """
     return_value = {}
-    user_language.send(sender=user, user=user, return_value=return_value)
+    buyer_language.send(sender=buyer, buyer=buyer, return_value=return_value)
     return return_value.get('language')
+
+
+def get_buyer_model():
+    """
+    Returns buyer model defined in settings as PLANS_BUYER_MODEL.
+    """
+    try:
+        return apps.get_model(BUYER_MODEL, require_ready=False)
+    except KeyError:
+        raise FieldDoesNotExist(
+            f'{BUYER_MODEL} pointed by {BUYER_MODEL_SETTING} should be defined.'
+        )
+
+
+def get_buyer_for_user(user):
+    """
+    Returns buyer associated with user using relation defined in settings as PLANS_USER_BUYER_RELATION.
+    """
+    try:
+        return operator.attrgetter(USER_BUYER_RELATION)(user)
+    except AttributeError:
+        raise FieldDoesNotExist(
+            f'User model should have defined a ForeignKey named {USER_BUYER_RELATION} '
+            f'to the model set in {RELATION_SETTING}'
+        )

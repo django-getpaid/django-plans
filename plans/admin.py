@@ -5,17 +5,8 @@ from django.urls import reverse
 from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import ugettext_lazy as _
 
-from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
+from .models import BuyerPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
 from plans.models import Invoice
-
-
-class UserLinkMixin(object):
-    def user_link(self, obj):
-        change_url = reverse('admin:auth_user_change', args=(obj.user.id,))
-        return '<a href="%s">%s</a>' % (change_url, obj.user.username)
-
-    user_link.short_description = 'User'
-    user_link.allow_tags = True
 
 
 class PlanQuotaInline(admin.TabularInline):
@@ -62,7 +53,7 @@ copy_plan.short_description = _('Make a plan copy')
 
 
 class PlanAdmin(OrderedModelAdmin):
-    search_fields = ('name', 'customized__username', 'customized__email', )
+    search_fields = ('name', 'customized__name', 'customized__email', )
     list_filter = ('available', 'visible')
     list_display = [
         'name', 'description', 'customized', 'default', 'available',
@@ -80,13 +71,12 @@ class PlanAdmin(OrderedModelAdmin):
         )
 
 
-class BillingInfoAdmin(UserLinkMixin, admin.ModelAdmin):
-    search_fields = ('user__username', 'user__email', 'tax_number', 'name')
-    list_display = ('user', 'tax_number', 'name', 'street', 'zipcode', 'city', 'country')
+class BillingInfoAdmin(admin.ModelAdmin):
+    search_fields = ('buyer__name', 'buyer__email', 'tax_number', 'name')
+    list_display = ('buyer', 'tax_number', 'name', 'street', 'zipcode', 'city', 'country')
     list_display_links = list_display
     list_select_related = True
-    readonly_fields = ('user_link',)
-    exclude = ('user',)
+    exclude = ('buyer',)
 
 
 def make_order_completed(modeladmin, request, queryset):
@@ -113,12 +103,12 @@ class InvoiceInline(admin.TabularInline):
 
 class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created', 'completed', 'plan__name', 'pricing')
-    raw_id_fields = ('user',)
+    raw_id_fields = ('buyer',)
     search_fields = (
-        'id', 'user__username', 'user__email', 'invoice__full_number'
+        'id', 'buyer__name', 'buyer__email', 'invoice__full_number'
     )
     list_display = (
-        'id', 'name', 'created', 'user', 'status', 'completed',
+        'id', 'name', 'created', 'buyer', 'status', 'completed',
         'tax', 'amount', 'currency', 'plan', 'pricing'
     )
     list_display_links = list_display
@@ -126,38 +116,37 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = (InvoiceInline, )
 
     def queryset(self, request):
-        return super(OrderAdmin, self).queryset(request).select_related('plan', 'pricing', 'user')
+        return super(OrderAdmin, self).queryset(request).select_related('plan', 'pricing', 'buyer')
 
 
 class InvoiceAdmin(admin.ModelAdmin):
     search_fields = (
         'full_number', 'buyer_tax_number',
-        'user__username', 'user__email'
+        'buyer__name', 'buyer__email'
     )
     list_filter = ('type', 'issued')
     list_display = (
-        'full_number', 'issued', 'total_net', 'currency', 'user',
+        'full_number', 'issued', 'total_net', 'currency', 'buyer',
         'tax', 'buyer_name', 'buyer_city', 'buyer_tax_number'
     )
     list_display_links = list_display
     list_select_related = True
-    raw_id_fields = ('user', 'order')
+    raw_id_fields = ('buyer', 'order')
 
 
-class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
+class BuyerPlanAdmin(admin.ModelAdmin):
     list_filter = ('active', 'expire', 'plan__name', 'plan__available', 'plan__visible',)
-    search_fields = ('user__username', 'user__email', 'plan__name',)
-    list_display = ('user', 'plan', 'expire', 'active')
+    search_fields = ('buyer__name', 'buyer__email', 'plan__name',)
+    list_display = ('buyer', 'plan', 'expire', 'active')
     list_display_links = list_display
     list_select_related = True
-    readonly_fields = ['user_link', ]
-    fields = ('user_link', 'plan', 'expire', 'active' )
-    raw_id_fields = ['plan', ]
+    fields = ('buyer', 'plan', 'expire', 'active',)
+    raw_id_fields = ['plan']
 
 
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)
-admin.site.register(UserPlan, UserPlanAdmin)
+admin.site.register(BuyerPlan, BuyerPlanAdmin)
 admin.site.register(Pricing)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(BillingInfo, BillingInfoAdmin)

@@ -16,7 +16,7 @@ from django.views.generic.list import ListView
 from itertools import chain
 from plans.importer import import_name
 from plans.mixins import LoginRequired
-from plans.models import UserPlan, PlanPricing, Plan, Order, BillingInfo
+from plans.models import BuyerPlan, PlanPricing, Plan, Order, BillingInfo
 from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm
 from plans.models import Quota, Invoice
 from plans.signals import order_started
@@ -27,7 +27,7 @@ class AccountActivationView(LoginRequired, TemplateView):
     template_name = 'plans/account_activation.html'
 
     def get_context_data(self, **kwargs):
-        if self.request.user.userplan.active == True or self.request.user.userplan.is_expired():
+        if self.request.user.userplan.active is True or self.request.user.userplan.is_expired():
             raise Http404()
 
         context = super(AccountActivationView, self).get_context_data(**kwargs)
