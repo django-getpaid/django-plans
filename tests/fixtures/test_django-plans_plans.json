@@ -1,5 +1,47 @@
 [
   {
+    "pk": 1,
+    "model": "plans.buyer",
+    "fields": {}
+  },
+  {
+    "pk": 2,
+    "model": "plans.buyer",
+    "fields": {}
+  },
+  {
+    "pk": 1,
+    "model": "tests.team",
+    "fields": {
+      "buyer": 1,
+      "email": "test1@test1.com"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "tests.team",
+    "fields": {
+      "buyer": 2,
+      "email": "test2@test1.com"
+    }
+  },
+  {
+      "pk": 1,
+      "model": "tests.profile",
+      "fields": {
+          "user": 1,
+          "team": 1
+      }
+  },
+  {
+      "pk": 2,
+      "model": "tests.profile",
+      "fields": {
+          "user": 2,
+          "team": 2
+      }
+  },
+  {
     "pk": 3,
     "model": "plans.plan",
     "fields": {
