@@ -4,9 +4,9 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-# Create your models here.
 from django.utils.encoding import python_2_unicode_compatible
+
+from plans.models import Buyer
 
 
 @python_2_unicode_compatible
@@ -21,6 +21,7 @@ class Foo(models.Model):
 class Company(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
+    buyer = models.OneToOneField(Buyer, null=True, on_delete=models.SET_NULL, related_name='company')
 
     def __str__(self):
         return self.name

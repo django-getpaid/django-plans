@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import re
+import operator
 import logging
 import vatnumber
 
@@ -27,7 +28,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from plans.enum import Enumeration
 from plans.validators import plan_validation
 from plans.taxation.eu import EUTaxationPolicy
-from plans.contrib import send_template_email, get_buyer_language, get_buyer_model
+from plans.contrib import send_template_email, get_buyer_language
 from plans.signals import (order_completed, account_activated,
                            account_expired, account_change_plan,
                            account_deactivated)
@@ -35,9 +36,28 @@ from plans.signals import (order_completed, account_activated,
 
 accounts_logger = logging.getLogger('accounts')
 
-BUYER_MODEL = get_buyer_model()
 
-# Create your models here.
+class Buyer(models.Model):
+    _BUYER_EMAIL_RELATION_SETTING = 'PLANS_BUYER_EMAIL_RELATION'
+
+    def __init__(self, *args, **kwargs):
+        super(Buyer, self).__init__(*args, **kwargs)
+        try:
+            self.BUYER_EMAIL_RELATION = getattr(settings, self._BUYER_EMAIL_RELATION_SETTING)
+        except AttributeError:
+            raise ImproperlyConfigured(
+                f"Please set {self._BUYER_EMAIL_RELATION_SETTING} in order to create relation between buyer and email."
+            )
+
+    @property
+    def email(self):
+        try:
+            return operator.attrgetter(self.BUYER_EMAIL_RELATION)(self)
+        except AttributeError:
+            raise models.FieldDoesNotExist(
+                f'Buyer model should be linked to an email using relation {self.BUYER_EMAIL_RELATION} '
+                f'set in {self._BUYER_EMAIL_RELATION_SETTING}'
+            )
 
 
 @python_2_unicode_compatible
@@ -65,7 +85,7 @@ class Plan(OrderedModel):
     )
     created = models.DateTimeField(_('created'), db_index=True)
     customized = models.ForeignKey(
-        BUYER_MODEL, null=True, blank=True,
+        Buyer, null=True, blank=True,
         verbose_name=_('customized'),
         on_delete=models.CASCADE
     )
@@ -107,7 +127,7 @@ class BillingInfo(models.Model):
     """
 
     buyer = models.OneToOneField(
-        BUYER_MODEL, verbose_name=_('buyer'),
+        Buyer, verbose_name=_('buyer'),
         on_delete=models.CASCADE
     )
     tax_number = models.CharField(
@@ -165,7 +185,7 @@ class BuyerPlan(models.Model):
     Currently selected plan for buyer account.
     """
     buyer = models.OneToOneField(
-        BUYER_MODEL, verbose_name=_('buyer'),
+        Buyer, verbose_name=_('buyer'),
         on_delete=models.CASCADE
     )
     plan = models.ForeignKey('Plan', verbose_name=_('plan'), on_delete=models.CASCADE)
@@ -416,7 +436,7 @@ class Order(models.Model):
 
     ])
 
-    buyer = models.ForeignKey(BUYER_MODEL, verbose_name=_('buyer'), on_delete=models.CASCADE)
+    buyer = models.ForeignKey(Buyer, verbose_name=_('buyer'), on_delete=models.CASCADE)
     flat_name = models.CharField(max_length=200, blank=True, null=True)
     plan = models.ForeignKey('Plan', verbose_name=_(
         'plan'), related_name="plan_order", on_delete=models.CASCADE)
@@ -463,7 +483,7 @@ class Order(models.Model):
 
     def complete_order(self):
         if self.completed is None:
-            status = self.buyer.buyer_plan.extend_account(self.plan, self.pricing)
+            status = self.buyer.buyerplan.extend_account(self.plan, self.pricing)
             self.completed = now()
             if status:
                 self.status = Order.STATUS.COMPLETED
@@ -545,7 +565,7 @@ class Invoice(models.Model):
         MONTHLY = 2
         ANNUALLY = 3
 
-    buyer = models.ForeignKey(BUYER_MODEL, verbose_name=_('buyer'), on_delete=models.CASCADE)
+    buyer = models.ForeignKey(Buyer, verbose_name=_('buyer'), on_delete=models.CASCADE)
     order = models.ForeignKey('Order', verbose_name=_('order'), on_delete=models.CASCADE)
     number = models.IntegerField(db_index=True)
     full_number = models.CharField(max_length=200)

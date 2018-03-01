@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
 from plans.models import Order, Invoice, BuyerPlan, Plan
 from plans.signals import order_completed, activate_buyer_plan
-from plans.contrib import get_buyer_model
+from plans.models import Buyer
 
 
 @receiver(post_save, sender=Order)
@@ -26,7 +26,7 @@ def send_invoice_by_email(sender, instance, created, **kwargs):
         instance.send_invoice_by_email()
 
 
-@receiver(post_save, sender=get_buyer_model())
+@receiver(post_save, sender=Buyer)
 def set_default_buyer_plan(sender, instance, created, **kwargs):
     """
     Creates default plan for the new buyer but also extending an account for default grace period.

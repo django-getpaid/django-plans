@@ -169,8 +169,8 @@ PLANS_VALIDATORS = {
 
 PLANS_CURRENCY = 'EUR'
 
-PLANS_BUYER_MODEL = 'foo.Company'
 PLANS_USER_BUYER_RELATION = 'profile.company'
+PLANS_BUYER_EMAIL_RELATION = 'company.email'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

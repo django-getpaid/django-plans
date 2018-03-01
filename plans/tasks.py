@@ -3,7 +3,8 @@ import logging
 from celery.schedules import crontab
 from celery.task.base import periodic_task
 from django.conf import settings
-from plans.contrib import get_buyer_model
+from plans.models import Buyer
+
 
 logger = logging.getLogger('plans.tasks')
 
@@ -13,8 +14,7 @@ def expire_account():
 
     logger.info('Started')
 
-    buyer_model = get_buyer_model()
-    buyers_with_plans = buyer_model.objects.select_related('buyerplan')
+    buyers_with_plans = Buyer.objects.select_related('buyerplan')
     for buyer in buyers_with_plans.filter(
         buyerplan__active=True,
         buyerplan__expire__lt=datetime.date.today()

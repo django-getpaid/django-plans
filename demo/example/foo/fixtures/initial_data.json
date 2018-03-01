@@ -40,7 +40,8 @@
     "model": "foo.company",
     "fields": {
       "name": "test1_COMPANY",
-      "email": "test1@email.com"
+      "email": "test1@email.com",
+      "buyer": 1
     }
   },
   {
@@ -50,7 +51,7 @@
       "user": 1,
       "company": 1
     }
-  }
+  },
   {
     "pk": 6,
     "model": "plans.billinginfo",

@@ -12,21 +12,13 @@ from django.core.exceptions import ImproperlyConfigured
 
 email_logger = logging.getLogger('emails')
 
-BUYER_MODEL_SETTING = 'PLANS_BUYER_MODEL'
+
+USER_BUYER_RELATION_SETTING = 'PLANS_USER_BUYER_RELATION'
 try:
-    BUYER_MODEL = getattr(settings, BUYER_MODEL_SETTING)
+    USER_BUYER_RELATION = getattr(settings, USER_BUYER_RELATION_SETTING)
 except AttributeError:
     raise ImproperlyConfigured(
-        f"Please set {BUYER_MODEL_SETTING} in order to create relation between django-plans models and buyer."
-    )
-
-
-RELATION_SETTING = 'PLANS_USER_BUYER_RELATION'
-try:
-    USER_BUYER_RELATION = getattr(settings, RELATION_SETTING)
-except AttributeError:
-    raise ImproperlyConfigured(
-        f"Please set {RELATION_SETTING} in order to create relation between user and buyer."
+        f"Please set {USER_BUYER_RELATION_SETTING} in order to create relation between user and buyer."
     )
 
 
@@ -63,7 +55,7 @@ def send_template_email(recipients, title_template, body_template, context, lang
 
 def get_buyer_language(buyer):
     """ Simple helper that will fire django signal in order to get User language possibly given by other part of application.
-    :param user:
+    :param buyer:
     :return: string or None
     """
     return_value = {}
@@ -71,26 +63,16 @@ def get_buyer_language(buyer):
     return return_value.get('language')
 
 
-def get_buyer_model():
-    """
-    Returns buyer model defined in settings as PLANS_BUYER_MODEL.
-    """
-    try:
-        return apps.get_model(BUYER_MODEL, require_ready=False)
-    except KeyError:
-        raise FieldDoesNotExist(
-            f'{BUYER_MODEL} pointed by {BUYER_MODEL_SETTING} should be defined.'
-        )
-
-
 def get_buyer_for_user(user):
     """
     Returns buyer associated with user using relation defined in settings as PLANS_USER_BUYER_RELATION.
+    :param user:
+    :return: plans.models.Buyer
     """
     try:
         return operator.attrgetter(USER_BUYER_RELATION)(user)
     except AttributeError:
         raise FieldDoesNotExist(
             f'User model should have defined a ForeignKey named {USER_BUYER_RELATION} '
-            f'to the model set in {RELATION_SETTING}'
+            f'to the model set in {USER_BUYER_RELATION_SETTING}'
         )
