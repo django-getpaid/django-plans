@@ -85,6 +85,12 @@ class Buyer(UUIDPrimaryKeyModel):
                 f'set in {self._BUYER_EMAIL_RELATION_SETTING}'
             )
 
+    def __str__(self):
+        try:
+            return self.email
+        except models.FieldDoesNotExist:
+            return "Buyer without linked custom buyer model"
+
 
 @python_2_unicode_compatible
 class Plan(OrderedModel, UUIDPrimaryKeyModel):

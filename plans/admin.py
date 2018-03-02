@@ -5,7 +5,7 @@ from django.urls import reverse
 from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import ugettext_lazy as _
 
-from .models import BuyerPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
+from .models import Buyer, BuyerPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
 from plans.models import Invoice
 
 
@@ -144,6 +144,7 @@ class BuyerPlanAdmin(admin.ModelAdmin):
     raw_id_fields = ['plan']
 
 
+admin.site.register(Buyer)
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)
 admin.site.register(BuyerPlan, BuyerPlanAdmin)
