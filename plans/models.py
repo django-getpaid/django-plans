@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import uuid
 import re
 import operator
 import logging
@@ -37,7 +38,30 @@ from plans.signals import (order_completed, account_activated,
 accounts_logger = logging.getLogger('accounts')
 
 
-class Buyer(models.Model):
+class UUIDPrimaryKeyModel(models.Model):
+    """
+    Base model class that uses UUID4 as a primary key.
+    """
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
+
+    class Meta:
+        abstract = True
+
+
+class Buyer(UUIDPrimaryKeyModel):
+    """
+    Somehow abstract model that allows for linking custom buyer model with `django-plans` models.
+    The relation to from custom buyer model to the :class:`plans.Buyer` model should be defined using `OneToOneField`:
+
+    .. code-block::
+
+        class Team(models.Model):
+            buyer = models.OneToOneField(Buyer, on_delete=models.CASCADE)
+
+
+    Relation between authenticated user and :class:`plans.Buyer` is resolved using
+    ``settings.PLANS_USER_BUYER_RELATION``.
+    """
     _BUYER_EMAIL_RELATION_SETTING = 'PLANS_BUYER_EMAIL_RELATION'
 
     def __init__(self, *args, **kwargs):
@@ -49,6 +73,8 @@ class Buyer(models.Model):
                 f"Please set {self._BUYER_EMAIL_RELATION_SETTING} in order to create relation between buyer and email."
             )
 
+    #: The sole property in :class:`plans.Buyer` model.
+    #: It uses ``settings.PLANS_BUYER_EMAIL_RELATION`` to resolve email associated with :class:`plans.Buyer`.
     @property
     def email(self):
         try:
@@ -61,7 +87,7 @@ class Buyer(models.Model):
 
 
 @python_2_unicode_compatible
-class Plan(OrderedModel):
+class Plan(OrderedModel, UUIDPrimaryKeyModel):
     """
     Single plan defined in the system. A plan can customized (referred to buyer) which means
     that only this buyer can purchase this plan and have it selected.
@@ -121,7 +147,7 @@ class Plan(OrderedModel):
         return quota_dic
 
 
-class BillingInfo(models.Model):
+class BillingInfo(UUIDPrimaryKeyModel):
     """
     Stores buyer billing data needed to issue an invoice
     """
@@ -180,7 +206,7 @@ class BillingInfo(models.Model):
 #        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
 
 @python_2_unicode_compatible
-class BuyerPlan(models.Model):
+class BuyerPlan(UUIDPrimaryKeyModel):
     """
     Currently selected plan for buyer account.
     """
@@ -336,7 +362,7 @@ class BuyerPlan(models.Model):
 
 
 @python_2_unicode_compatible
-class Pricing(models.Model):
+class Pricing(UUIDPrimaryKeyModel):
     """
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
     """
@@ -356,7 +382,7 @@ class Pricing(models.Model):
 
 
 @python_2_unicode_compatible
-class Quota(OrderedModel):
+class Quota(OrderedModel, UUIDPrimaryKeyModel):
     """
     Single countable or boolean property of system (limitation).
     """
@@ -384,7 +410,7 @@ class PlanPricingManager(models.Manager):
 
 
 @python_2_unicode_compatible
-class PlanPricing(models.Model):
+class PlanPricing(UUIDPrimaryKeyModel):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
@@ -405,7 +431,7 @@ class PlanQuotaManager(models.Manager):
         return super(PlanQuotaManager, self).get_query_set().select_related('plan', 'quota')
 
 
-class PlanQuota(models.Model):
+class PlanQuota(UUIDPrimaryKeyModel):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     quota = models.ForeignKey('Quota', on_delete=models.CASCADE)
     value = models.IntegerField(default=1, null=True, blank=True)
@@ -418,7 +444,7 @@ class PlanQuota(models.Model):
 
 
 @python_2_unicode_compatible
-class Order(models.Model):
+class Order(UUIDPrimaryKeyModel):
     """
     Order in this app supports only one item per order. This item is defined by
     plan and pricing attributes. If both are defined the order represents buying
@@ -541,7 +567,7 @@ class InvoiceDuplicateManager(models.Manager):
 
 
 @python_2_unicode_compatible
-class Invoice(models.Model):
+class Invoice(UUIDPrimaryKeyModel):
     """
     Single invoice document.
     """
