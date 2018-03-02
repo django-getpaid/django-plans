@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
+import uuid
 import re
+import operator
 import logging
 import vatnumber
 
@@ -11,11 +13,7 @@ from django.db import models
 from django.db.models import Max
 
 from django.conf import settings
-try:
-    from django.contrib.sites.models import Site
-except RuntimeError:
-    Site = None
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from django.template import Context
 from django.template.base import Template
@@ -31,7 +29,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from plans.enum import Enumeration
 from plans.validators import plan_validation
 from plans.taxation.eu import EUTaxationPolicy
-from plans.contrib import send_template_email, get_user_language
+from plans.contrib import send_template_email, get_buyer_language
 from plans.signals import (order_completed, account_activated,
                            account_expired, account_change_plan,
                            account_deactivated)
@@ -39,18 +37,70 @@ from plans.signals import (order_completed, account_activated,
 
 accounts_logger = logging.getLogger('accounts')
 
-# Create your models here.
+
+class UUIDPrimaryKeyModel(models.Model):
+    """
+    Base model class that uses UUID4 as a primary key.
+    """
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
+
+    class Meta:
+        abstract = True
+
+
+class Buyer(UUIDPrimaryKeyModel):
+    """
+    Somehow abstract model that allows for linking custom buyer model with `django-plans` models.
+    The relation to from custom buyer model to the :class:`plans.Buyer` model should be defined using `OneToOneField`:
+
+    .. code-block::
+
+        class Team(models.Model):
+            buyer = models.OneToOneField(Buyer, on_delete=models.CASCADE)
+
+
+    Relation between authenticated user and :class:`plans.Buyer` is resolved using
+    ``settings.PLANS_USER_BUYER_RELATION``.
+    """
+    _BUYER_EMAIL_RELATION_SETTING = 'PLANS_BUYER_EMAIL_RELATION'
+
+    def __init__(self, *args, **kwargs):
+        super(Buyer, self).__init__(*args, **kwargs)
+        try:
+            self.BUYER_EMAIL_RELATION = getattr(settings, self._BUYER_EMAIL_RELATION_SETTING)
+        except AttributeError:
+            raise ImproperlyConfigured(
+                f"Please set {self._BUYER_EMAIL_RELATION_SETTING} in order to create relation between buyer and email."
+            )
+
+    #: The sole property in :class:`plans.Buyer` model.
+    #: It uses ``settings.PLANS_BUYER_EMAIL_RELATION`` to resolve email associated with :class:`plans.Buyer`.
+    @property
+    def email(self):
+        try:
+            return operator.attrgetter(self.BUYER_EMAIL_RELATION)(self)
+        except AttributeError:
+            raise models.FieldDoesNotExist(
+                f'Buyer model should be linked to an email using relation {self.BUYER_EMAIL_RELATION} '
+                f'set in {self._BUYER_EMAIL_RELATION_SETTING}'
+            )
+
+    def __str__(self):
+        try:
+            return self.email
+        except models.FieldDoesNotExist:
+            return "Buyer without linked custom buyer model"
 
 
 @python_2_unicode_compatible
-class Plan(OrderedModel):
+class Plan(OrderedModel, UUIDPrimaryKeyModel):
     """
-    Single plan defined in the system. A plan can customized (referred to user) which means
-    that only this user can purchase this plan and have it selected.
+    Single plan defined in the system. A plan can customized (referred to buyer) which means
+    that only this buyer can purchase this plan and have it selected.
 
     Plan also can be visible and available. Plan is displayed on the list of currently available plans
-    for user if it is visible. User cannot change plan to a plan that is not visible. Available means
-    that user can buy a plan. If plan is not visible but still available it means that user which
+    for buyer if it is visible. Buyer cannot change plan to a plan that is not visible. Available means
+    that buyer can buy a plan. If plan is not visible but still available it means that buyer which
     is using this plan already will be able to extend this plan again. If plan is not visible and not
     available, he will be forced then to change plan next time he extends an account.
     """
@@ -67,8 +117,9 @@ class Plan(OrderedModel):
     )
     created = models.DateTimeField(_('created'), db_index=True)
     customized = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True,
-        verbose_name=_('customized')
+        Buyer, null=True, blank=True,
+        verbose_name=_('customized'),
+        on_delete=models.CASCADE
     )
     quotas = models.ManyToManyField('Quota', through='PlanQuota')
     url = models.URLField(max_length=200, blank=True, help_text=_(
@@ -102,12 +153,14 @@ class Plan(OrderedModel):
         return quota_dic
 
 
-class BillingInfo(models.Model):
+class BillingInfo(UUIDPrimaryKeyModel):
     """
-    Stores customer billing data needed to issue an invoice
+    Stores buyer billing data needed to issue an invoice
     """
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_('user')
+
+    buyer = models.OneToOneField(
+        Buyer, verbose_name=_('buyer'),
+        on_delete=models.CASCADE
     )
     tax_number = models.CharField(
         _('VAT ID'), max_length=200, blank=True, db_index=True
@@ -159,23 +212,25 @@ class BillingInfo(models.Model):
 #        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
 
 @python_2_unicode_compatible
-class UserPlan(models.Model):
+class BuyerPlan(UUIDPrimaryKeyModel):
     """
-    Currently selected plan for user account.
+    Currently selected plan for buyer account.
     """
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_('user'))
-    plan = models.ForeignKey('Plan', verbose_name=_('plan'))
+    buyer = models.OneToOneField(
+        Buyer, verbose_name=_('buyer'),
+        on_delete=models.CASCADE
+    )
+    plan = models.ForeignKey('Plan', verbose_name=_('plan'), on_delete=models.CASCADE)
     expire = models.DateField(
         _('expire'), default=None, blank=True, null=True, db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
 
     class Meta:
-        verbose_name = _("User plan")
-        verbose_name_plural = _("Users plans")
+        verbose_name = _("Buyer plan")
+        verbose_name_plural = _("Buyers plans")
 
     def __str__(self):
-        return "%s [%s]" % (self.user, self.plan)
+        return "%s [%s]" % (self.buyer, self.plan)
 
     def is_active(self):
         return self.active
@@ -193,9 +248,9 @@ class UserPlan(models.Model):
             return (self.expire - date.today()).days
 
     def clean_activation(self):
-        errors = plan_validation(self.user)
+        errors = plan_validation(self.buyer)
         if not errors['required_to_activate']:
-            plan_validation(self.user, on_activation=True)
+            plan_validation(self.buyer, on_activation=True)
             self.activate()
         else:
             self.deactivate()
@@ -205,17 +260,17 @@ class UserPlan(models.Model):
         if not self.active:
             self.active = True
             self.save()
-            account_activated.send(sender=self, user=self.user)
+            account_activated.send(sender=self, buyer=self.buyer)
 
     def deactivate(self):
         if self.active:
             self.active = False
             self.save()
-            account_deactivated.send(sender=self, user=self.user)
+            account_deactivated.send(sender=self, buyer=self.buyer)
 
     def initialize(self):
         """
-        Set up user plan for first use
+        Set up buyer plan for first use
         """
         if not self.is_active():
             if self.expire is None:
@@ -237,12 +292,12 @@ class UserPlan(models.Model):
             # No account activation or extending at this point
             self.plan = plan
             self.save()
-            account_change_plan.send(sender=self, user=self.user)
-            mail_context = {'user': self.user, 'userplan': self, 'plan': plan}
-            send_template_email([self.user.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
-                                mail_context, get_user_language(self.user))
+            account_change_plan.send(sender=self, buyer=self.buyer)
+            mail_context = {'buyer': self.buyer, 'buyer_plan': self, 'plan': plan}
+            send_template_email([self.buyer.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
+                                mail_context, get_buyer_language(self.buyer))
             accounts_logger.info(
-                "Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.user, self.user.pk, plan, plan.pk))
+                "Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.buyer, self.buyer.pk, plan, plan.pk))
             status = True
         else:
             # Processing standard account extending procedure
@@ -257,29 +312,29 @@ class UserPlan(models.Model):
 
             else:
                 # This should not ever happen (as this case should be managed by plan change request)
-                # but just in case we consider a case when user has a different plan
+                # but just in case we consider a case when buyer has a different plan
                 if self.expire is None:
                     status = True
                 elif self.expire > date.today():
                     status = False
                     accounts_logger.warning("Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
-                        self.user, self.user.pk, plan, plan.pk))
+                        self.buyer, self.buyer.pk, plan, plan.pk))
                 else:
                     status = True
-                    account_change_plan.send(sender=self, user=self.user)
+                    account_change_plan.send(sender=self, buyer=self.buyer)
                     self.plan = plan
                     self.expire = date.today() + timedelta(days=pricing.period)
 
             if status:
                 self.save()
                 accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
-                    self.user, self.user.pk, pricing.period, plan, plan.pk))
-                mail_context = {'user': self.user,
-                                'userplan': self,
+                    self.buyer, self.buyer.pk, pricing.period, plan, plan.pk))
+                mail_context = {'buyer': self.buyer,
+                                'buyer_plan': self,
                                 'plan': plan,
                                 'pricing': pricing}
-                send_template_email([self.user.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
-                                    mail_context, get_user_language(self.user))
+                send_template_email([self.buyer.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
+                                    mail_context, get_buyer_language(self.buyer))
 
         if status:
             self.clean_activation()
@@ -292,28 +347,28 @@ class UserPlan(models.Model):
         self.deactivate()
 
         accounts_logger.info(
-            "Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
+            "Account '%s' [id=%d] has expired" % (self.buyer, self.buyer.pk))
 
-        mail_context = {'user': self.user, 'userplan': self}
-        send_template_email([self.user.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
-                            mail_context, get_user_language(self.user))
+        mail_context = {'buyer': self.buyer, 'buyer_plan': self}
+        send_template_email([self.buyer.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
+                            mail_context, get_buyer_language(self.buyer))
 
-        account_expired.send(sender=self, user=self.user)
+        account_expired.send(sender=self, buyer=self.buyer)
 
     def remind_expire_soon(self):
         """reminds about soon account expiration"""
 
         mail_context = {
-            'user': self.user,
-            'userplan': self,
+            'buyer': self.buyer,
+            'buyer_plan': self,
             'days': self.days_left()
         }
-        send_template_email([self.user.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
-                            mail_context, get_user_language(self.user))
+        send_template_email([self.buyer.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
+                            mail_context, get_buyer_language(self.buyer))
 
 
 @python_2_unicode_compatible
-class Pricing(models.Model):
+class Pricing(UUIDPrimaryKeyModel):
     """
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
     """
@@ -333,7 +388,7 @@ class Pricing(models.Model):
 
 
 @python_2_unicode_compatible
-class Quota(OrderedModel):
+class Quota(OrderedModel, UUIDPrimaryKeyModel):
     """
     Single countable or boolean property of system (limitation).
     """
@@ -361,9 +416,9 @@ class PlanPricingManager(models.Manager):
 
 
 @python_2_unicode_compatible
-class PlanPricing(models.Model):
-    plan = models.ForeignKey('Plan')
-    pricing = models.ForeignKey('Pricing')
+class PlanPricing(UUIDPrimaryKeyModel):
+    plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
+    pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
 
     objects = PlanPricingManager()
@@ -382,9 +437,9 @@ class PlanQuotaManager(models.Manager):
         return super(PlanQuotaManager, self).get_query_set().select_related('plan', 'quota')
 
 
-class PlanQuota(models.Model):
-    plan = models.ForeignKey('Plan')
-    quota = models.ForeignKey('Quota')
+class PlanQuota(UUIDPrimaryKeyModel):
+    plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
+    quota = models.ForeignKey('Quota', on_delete=models.CASCADE)
     value = models.IntegerField(default=1, null=True, blank=True)
 
     objects = PlanQuotaManager()
@@ -395,13 +450,13 @@ class PlanQuota(models.Model):
 
 
 @python_2_unicode_compatible
-class Order(models.Model):
+class Order(UUIDPrimaryKeyModel):
     """
     Order in this app supports only one item per order. This item is defined by
     plan and pricing attributes. If both are defined the order represents buying
     an account extension.
 
-    If only plan is provided (with pricing set to None) this means that user purchased
+    If only plan is provided (with pricing set to None) this means that buyer purchased
     a plan upgrade.
     """
     STATUS = Enumeration([
@@ -413,12 +468,12 @@ class Order(models.Model):
 
     ])
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
+    buyer = models.ForeignKey(Buyer, verbose_name=_('buyer'), on_delete=models.CASCADE)
     flat_name = models.CharField(max_length=200, blank=True, null=True)
     plan = models.ForeignKey('Plan', verbose_name=_(
-        'plan'), related_name="plan_order")
+        'plan'), related_name="plan_order", on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_(
-        'pricing'))  # if pricing is None the order is upgrade plan, not buy new pricing
+        'pricing'), on_delete=models.CASCADE)  # if pricing is None the order is upgrade plan, not buy new pricing
     created = models.DateTimeField(_('created'), db_index=True)
     completed = models.DateTimeField(
         _('completed'), null=True, blank=True, db_index=True)
@@ -460,7 +515,7 @@ class Order(models.Model):
 
     def complete_order(self):
         if self.completed is None:
-            status = self.user.userplan.extend_account(self.plan, self.pricing)
+            status = self.buyer.buyerplan.extend_account(self.plan, self.pricing)
             self.completed = now()
             if status:
                 self.status = Order.STATUS.COMPLETED
@@ -518,7 +573,7 @@ class InvoiceDuplicateManager(models.Manager):
 
 
 @python_2_unicode_compatible
-class Invoice(models.Model):
+class Invoice(UUIDPrimaryKeyModel):
     """
     Single invoice document.
     """
@@ -542,8 +597,8 @@ class Invoice(models.Model):
         MONTHLY = 2
         ANNUALLY = 3
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
-    order = models.ForeignKey('Order', verbose_name=_('order'))
+    buyer = models.ForeignKey(Buyer, verbose_name=_('buyer'), on_delete=models.CASCADE)
+    order = models.ForeignKey('Order', verbose_name=_('order'), on_delete=models.CASCADE)
     number = models.IntegerField(db_index=True)
     full_number = models.CharField(max_length=200)
     type = models.IntegerField(
@@ -667,7 +722,7 @@ class Invoice(models.Model):
 
     def set_buyer_invoice_data(self, billing_info):
         """
-        Fill buyer invoice billing and shipping data by copy them from provided user's ``BillingInfo`` object.
+        Fill buyer invoice billing and shipping data by copy them from provided buyer's ``BillingInfo`` object.
 
         :param billing_info: BillingInfo object
         :type billing_info: BillingInfo
@@ -694,28 +749,24 @@ class Invoice(models.Model):
         :type order: Order
         """
         self.order = order
-        self.user = order.user
+        self.buyer = order.buyer
         self.unit_price_net = order.amount
         self.total_net = order.amount
         self.total = order.total()
         self.tax_total = order.total() - order.amount
         self.tax = order.tax
         self.currency = order.currency
-        if Site is not None:
-            self.item_description = "%s - %s" % (
-                Site.objects.get_current().name, order.name)
-        else:
-            self.item_description = order.name
+        self.item_description = order.name
 
     @classmethod
     def create(cls, order, invoice_type):
-        language_code = get_user_language(order.user)
+        language_code = get_buyer_language(order.buyer)
 
         if language_code is not None:
             translation.activate(language_code)
 
         try:
-            billing_info = BillingInfo.objects.get(user=order.user)
+            billing_info = BillingInfo.objects.get(buyer=order.buyer)
         except BillingInfo.DoesNotExist:
             return
 
@@ -736,18 +787,18 @@ class Invoice(models.Model):
             translation.deactivate()
 
     def send_invoice_by_email(self):
-        language_code = get_user_language(self.user)
+        language_code = get_buyer_language(self.buyer)
 
         if language_code is not None:
             translation.activate(language_code)
-        mail_context = {'user': self.user,
+        mail_context = {'buyer': self.buyer,
                         'invoice_type': self.get_type_display(),
                         'invoice_number': self.get_full_number(),
                         'order': self.order.id,
                         'url': self.get_absolute_url(), }
         if language_code is not None:
             translation.deactivate()
-        send_template_email([self.user.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt',
+        send_template_email([self.buyer.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt',
                             mail_context, language_code)
 
     def is_UE_customer(self):

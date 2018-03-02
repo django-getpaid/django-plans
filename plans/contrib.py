@@ -1,14 +1,26 @@
 import logging
+import operator
 
 from django.core import mail
 from django.conf import settings
 from django.apps import apps
 from django.template import loader
 from django.utils import translation
-from plans.signals import user_language
+from django.db.models import FieldDoesNotExist
+from plans.signals import buyer_language
 from django.core.exceptions import ImproperlyConfigured
 
 email_logger = logging.getLogger('emails')
+
+
+USER_BUYER_RELATION_SETTING = 'PLANS_USER_BUYER_RELATION'
+try:
+    USER_BUYER_RELATION = getattr(settings, USER_BUYER_RELATION_SETTING)
+except AttributeError:
+    raise ImproperlyConfigured(
+        f"Please set {USER_BUYER_RELATION_SETTING} in order to create relation between user and buyer."
+    )
+
 
 def send_template_email(recipients, title_template, body_template, context, language):
     """Sends e-mail using templating system"""
@@ -17,19 +29,8 @@ def send_template_email(recipients, title_template, body_template, context, lang
     if not send_emails:
         return
 
-    site_name = getattr(settings, 'SITE_NAME', 'Please define settings.SITE_NAME')
     domain = getattr(settings, 'SITE_URL', None)
-
-    if domain is None:
-        try:
-            Site = apps.get_model('sites', 'Site')
-            current_site = Site.objects.get_current()
-            site_name = current_site.name
-            domain = current_site.domain
-        except LookupError:
-            pass
-
-    context.update({'site_name': site_name, 'site_domain': domain})
+    context.update({'site_domain': domain})
 
     if language is not None:
         translation.activate(language)
@@ -52,11 +53,26 @@ def send_template_email(recipients, title_template, body_template, context, lang
     email_logger.info(u"Email (%s) sent to %s\nTitle: %s\n%s\n\n" % (language, recipients, title, body))
 
 
-def get_user_language(user):
+def get_buyer_language(buyer):
     """ Simple helper that will fire django signal in order to get User language possibly given by other part of application.
-    :param user:
+    :param buyer:
     :return: string or None
     """
     return_value = {}
-    user_language.send(sender=user, user=user, return_value=return_value)
+    buyer_language.send(sender=buyer, buyer=buyer, return_value=return_value)
     return return_value.get('language')
+
+
+def get_buyer_for_user(user):
+    """
+    Returns buyer associated with user using relation defined in settings as PLANS_USER_BUYER_RELATION.
+    :param user:
+    :return: plans.models.Buyer
+    """
+    try:
+        return operator.attrgetter(USER_BUYER_RELATION)(user)
+    except AttributeError:
+        raise FieldDoesNotExist(
+            f'User model should have defined a ForeignKey named {USER_BUYER_RELATION} '
+            f'to the model set in {USER_BUYER_RELATION_SETTING}'
+        )

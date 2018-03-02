@@ -1,6 +1,10 @@
-from django.core.urlresolvers import reverse
+from django.core.exceptions import ImproperlyConfigured, FieldDoesNotExist
+from django.urls import reverse
+from django.conf import settings
+import operator
 
-from plans.models import UserPlan
+from plans.contrib import get_buyer_for_user
+from plans.models import BuyerPlan
 
 
 def account_status(request):
@@ -16,16 +20,19 @@ def account_status(request):
 
     """
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
+        buyer = get_buyer_for_user(request.user)
+
         try:
             return {
-                'ACCOUNT_EXPIRED': request.user.userplan.is_expired(),
+                'ACCOUNT_EXPIRED': buyer.buyerplan.is_expired(),
                 'ACCOUNT_NOT_ACTIVE': (
-                not request.user.userplan.is_active() and not request.user.userplan.is_expired()),
-                'EXPIRE_IN_DAYS': request.user.userplan.days_left(),
+                    not buyer.buyerplan.is_active() and not buyer.buyerplan.is_expired()
+                ),
+                'EXPIRE_IN_DAYS': buyer.buyerplan.days_left(),
                 'EXTEND_URL': reverse('current_plan'),
                 'ACTIVATE_URL': reverse('account_activation'),
             }
-        except UserPlan.DoesNotExist:
+        except BuyerPlan.DoesNotExist:
             pass
     return {}

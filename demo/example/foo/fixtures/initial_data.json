@@ -36,6 +36,23 @@
     }
   },
   {
+    "pk": 1,
+    "model": "foo.company",
+    "fields": {
+      "name": "test1_COMPANY",
+      "email": "test1@email.com",
+      "buyer": 1
+    }
+  },
+  {
+    "pk": 1,
+    "model": "foo.profile",
+    "fields": {
+      "user": 1,
+      "company": 1
+    }
+  },
+  {
     "pk": 6,
     "model": "plans.billinginfo",
     "fields": {
@@ -47,7 +64,7 @@
       "zipcode": "12-234",
       "shipping_zipcode": "",
       "street": "Sloneczna 15",
-      "user": 1,
+      "buyer": 1,
       "tax_number": "PL5521465632",
       "shipping_city": ""
     }
@@ -409,21 +426,21 @@
   },
   {
     "pk": 1,
-    "model": "plans.userplan",
+    "model": "plans.buyerplan",
     "fields": {
       "active": false,
       "expire": "2012-07-12",
-      "user": 1,
+      "buyer": 1,
       "plan": 3
     }
   },
   {
     "pk": 2,
-    "model": "plans.userplan",
+    "model": "plans.buyerplan",
     "fields": {
       "active": false,
       "expire": "2012-07-12",
-      "user": 2,
+      "buyer": 2,
       "plan": 5
     }
   }

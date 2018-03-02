@@ -5,5 +5,5 @@
 
 {% trans "Thank you" %}
 --
-{% blocktrans %}The Team at {{ site_name }}{% endblocktrans %}
+{% blocktrans %}The Team at {{ site_domain }}{% endblocktrans %}
 {% endautoescape %}

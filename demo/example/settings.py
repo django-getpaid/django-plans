@@ -169,6 +169,9 @@ PLANS_VALIDATORS = {
 
 PLANS_CURRENCY = 'EUR'
 
+PLANS_USER_BUYER_RELATION = 'profile.company'
+PLANS_BUYER_EMAIL_RELATION = 'company.email'
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 LOGIN_REDIRECT_URL = '/foo/list/'
