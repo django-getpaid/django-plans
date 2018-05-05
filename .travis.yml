@@ -12,3 +12,6 @@ install:
 
 # command to run tests
 script: "cd demo && python manage.py makemigrations && coverage run manage.py test plans"
+
+after_success:
+  - codecov
