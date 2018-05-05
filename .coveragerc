@@ -1,6 +1,5 @@
 [run]
 cover_pylib=False
-source=./server
 omit=
     *site-packages*
     *distutils*
