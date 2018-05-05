@@ -17,7 +17,7 @@ Features currently supported:
 
 Documentation: https://django-plans.readthedocs.org/
 
-Master branch: experimental support for django 1.6, experimental support for py2.7 & py3.3
+Master branch: Support for django 2.0, support for py3.6
 
 .. image:: docs/source/_static/images/django-plans-1.png
 

@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, RedirectView, CreateView, UpdateView, View
@@ -91,7 +91,7 @@ class PlanTableViewBase(PlanTableMixin, ListView):
     def get_queryset(self):
         queryset = super(PlanTableViewBase, self).get_queryset().prefetch_related('planpricing_set__pricing',
                                                                                   'planquota_set__quota')
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             queryset = queryset.filter(
                 Q(available=True, visible=True) & (
                     Q(customized=self.request.user) | Q(customized__isnull=True)
@@ -104,7 +104,7 @@ class PlanTableViewBase(PlanTableMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super(PlanTableViewBase, self).get_context_data(**kwargs)
 
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             try:
                 self.userplan = UserPlan.objects.select_related('plan').get(user=self.request.user)
             except UserPlan.DoesNotExist:
