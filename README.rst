@@ -1,6 +1,8 @@
 Welcome to django-plans
 =======================
 
+.. image:: https://codecov.io/gh/cypreess/django-plans/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/cypreess/django-plans
 .. image:: https://travis-ci.org/cypreess/django-plans.svg?branch=master   
    :target: https://travis-ci.org/cypreess/django-plans
    
