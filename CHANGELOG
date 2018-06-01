@@ -9,6 +9,8 @@ django-plans changelog
 * Remove dependency on `django.contrib.sites`.
 * Feature #53: Cleaner and more explicit exception handling on `Plan.get_default_plan `.
 * Feature #59: Adding code coverage to code base.
+* Support customised user models by using `django.contrib.auth.get_user_model()`.
+
 
 0.7
 ---
