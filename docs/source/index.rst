@@ -50,12 +50,12 @@ https://github.com/cypreess/django-plans
 You are very welcome to join the development team of django-plans.
 Contribution via github fork and pull requests. Here are some ideas what is needed:
 
-* more tests,
-* more precise documentation,
-* documentation proofreading and copyediting,
-* taxation backends for you country/area,
-* translations,
-* other then default change plan policies.
+* More tests.
+* More precise documentation.
+* Documentation proofreading and copyediting.
+* Taxation backends for you country/area.
+* Translations & Localizations.
+* Other then default change plan policies.
 
 
 
