@@ -3,8 +3,10 @@ import logging
 from celery.schedules import crontab
 from celery.task.base import periodic_task
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
+
+User = get_user_model()
 logger = logging.getLogger('plans.tasks')
 
 @periodic_task(run_every=crontab(hour=0, minute=5))
