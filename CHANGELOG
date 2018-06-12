@@ -1,9 +1,8 @@
 django-plans changelog
 ======================
 
-0.8 (UNRELEASED)
------------------
-* Supporting Django 2.0.2.
+0.8.13
+------
 * Supporting Django 2.0.6.
 * Tests for latest versions of Python (3.6).
 * New VAT standard rates 2017
