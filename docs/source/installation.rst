@@ -8,7 +8,7 @@ You can install app using package manager directly from github:
 
 .. code-block:: bash
 
-    $ pip install -e git://github.com/cypreess/django-plans.git#egg=django-plans
+    $ pip install django-plans
 
 
 For integration instruction please see section  :doc:`integration`.
