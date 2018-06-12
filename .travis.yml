@@ -2,7 +2,7 @@ language: python
 python:
   - "3.6"
 env:
-  - DJANGO_VERSION=2.0.2
+  - DJANGO_VERSION=2.0.6
 # command to install dependencies
 install:
   - "pip install -q -e ."
