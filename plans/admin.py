@@ -1,9 +1,11 @@
 from copy import deepcopy
 
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import format_html
 
 from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
 from plans.models import Invoice
@@ -11,8 +13,11 @@ from plans.models import Invoice
 
 class UserLinkMixin(object):
     def user_link(self, obj):
-        change_url = reverse('admin:auth_user_change', args=(obj.user.id,))
-        return '<a href="%s">%s</a>' % (change_url, obj.user.username)
+        user_model = get_user_model()
+        app_label = user_model._meta.app_label
+        model_name = user_model._meta.model_name
+        change_url = reverse('admin:%s_%s_change' % (app_label, model_name), args=(obj.user.id,))
+        return format_html('<a href="{}">{}</a>', change_url, obj.user.username)
 
     user_link.short_description = 'User'
     user_link.allow_tags = True
