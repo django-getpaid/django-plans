@@ -119,7 +119,8 @@ class OrderAdmin(admin.ModelAdmin):
     )
     list_display = (
         'id', 'name', 'created', 'user', 'status', 'completed',
-        'tax', 'amount', 'currency', 'plan', 'pricing'
+        'tax', 'amount', 'currency', 'plan', 'pricing',
+        'plan_extended_from', 'plan_extended_until',
     )
     list_display_links = list_display
     actions = [make_order_completed, make_order_invoice]
