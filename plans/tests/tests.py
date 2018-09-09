@@ -1,12 +1,14 @@
 from decimal import Decimal
 from datetime import date
 from datetime import timedelta
+from io import StringIO
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core import mail
+from django.core.management import call_command
 from django.db.models import Q
 from django.utils import six
 
@@ -16,7 +18,7 @@ if six.PY2:
 elif six.PY3:
     from unittest import mock
 
-from plans.models import PlanPricing, Invoice, Order, Plan, PlanQuota
+from plans.models import PlanPricing, Invoice, Order, Plan, PlanQuota, UserPlan
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
@@ -31,6 +33,31 @@ class PlansTestCase(TestCase):
 
     def setUp(self):
         mail.outbox = []
+
+    def test_create_userplans_command(self):
+        """ Test that create_userplans command creates userplan for users that doesn't have it """
+        u = User.objects.get(username='test1')
+        UserPlan.objects.all().delete()
+        with self.assertRaises(UserPlan.DoesNotExist):
+            u.userplan
+        u.refresh_from_db()
+        out = StringIO()
+        call_command('create_userplans', stdout=out)
+        self.assertIn('2 user plans was created', out.getvalue())
+        default_plan = Plan.objects.get(pk=1)
+        self.assertEqual(u.userplan.plan, default_plan)
+
+    def test_create_userplans(self):
+        """ Test that create_for_users_without_plan method """
+        u = User.objects.get(username='test1')
+        UserPlan.objects.all().delete()
+        with self.assertRaises(UserPlan.DoesNotExist):
+            u.userplan
+        u.refresh_from_db()
+        created_plans = UserPlan.create_for_users_without_plan()
+        self.assertEqual(created_plans.count(), 2)
+        default_plan = Plan.objects.get(pk=1)
+        self.assertEqual(u.userplan.plan, default_plan)
 
     def test_get_user_quota(self):
         u = User.objects.get(username='test1')

@@ -9,6 +9,7 @@ django-plans changelog
 * Added possibility to define `PLANS_VALIDATORS` as lazy imported string.
 * Supporting Django 2.1
 * The range when the plan was extended is now stored in `Order.plan_extended_from` and `Order.plan_extended_until`.
+* UserPlans are now automatically created with initial migration or with `create_userplans` adminaction.
 
 0.8.13
 ------

@@ -11,6 +11,7 @@ from django.db import models
 from django.db.models import Max
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 try:
     from django.contrib.sites.models import Site
 except RuntimeError:
@@ -320,6 +321,24 @@ class UserPlan(models.Model):
         }
         send_template_email([self.user.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
                             mail_context, get_user_language(self.user))
+
+    @classmethod
+    def create_for_user(cls, user):
+        default_plan = Plan.get_default_plan()
+        if default_plan is not None:
+            return UserPlan.objects.create(
+                user=user,
+                plan=default_plan,
+                active=False,
+                expire=None,
+            )
+
+    @classmethod
+    def create_for_users_without_plan(cls):
+        userplans = get_user_model().objects.filter(userplan=None)
+        for user in userplans:
+            UserPlan.create_for_user(user)
+        return userplans
 
 
 @python_2_unicode_compatible

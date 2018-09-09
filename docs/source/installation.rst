@@ -47,6 +47,16 @@ Initialize example project database:
 Initial example data will be loaded automatically.
 
 
+Create `UserPlan` objects for all `User` objects:
+This is done automatically during migrations, but any UserPlan is missing for whatever reason,
+you can create it by management command.
+
+.. code-block:: bash
+
+    $ cd ..
+    $ python manage.py create_userplans
+
+
 Start development web server:
 
 .. code-block:: bash

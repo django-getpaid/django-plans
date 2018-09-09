@@ -157,8 +157,8 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     list_display_links = list_display
     list_select_related = True
     readonly_fields = ['user_link', ]
-    fields = ('user_link', 'plan', 'expire', 'active' )
-    raw_id_fields = ['plan', ]
+    fields = ('user', 'user_link', 'plan', 'expire', 'active' )
+    raw_id_fields = ['user', 'plan', ]
 
 
 admin.site.register(Quota, QuotaAdmin)
