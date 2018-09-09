@@ -16,7 +16,7 @@
         "pk": 2,
         "model": "plans.plan",
         "fields": {
-            "default" : true,
+            "default" : null,
             "available": false,
             "name": "Default Plan",
             "created": "2012-07-12T17:33:30.112Z",
