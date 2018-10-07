@@ -121,6 +121,7 @@ def plan_validation(user, plan=None, on_activation=False):
         plan = user.userplan.plan
     quota_dict = plan.get_quota_dict()
     validators = getattr(settings, 'PLANS_VALIDATORS', {})
+    validators = import_name(validators)
     errors = {
         'required_to_activate': [],
         'other': [],
