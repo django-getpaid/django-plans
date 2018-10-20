@@ -2,7 +2,8 @@ django-plans changelog
 ======================
 
 0.9.0
-------
+-----
+* Added possibility to define PLANS_VALIDATORS as lazy imported stri
 * Supporting Django 2.1
 
 0.8.13
