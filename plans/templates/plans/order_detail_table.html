@@ -1,4 +1,6 @@
 {% load i18n %}
+
+{% block 'table' %}
 <table class="table">
     <thead>
     <th>{% trans "Name" %}</th>
@@ -21,6 +23,7 @@
     <td class="date">{{ order.plan_extended_until|date|default:"-" }}</td>
     </tbody>
 </table>
+{% endblock %}
 
 {% ifequal order.tax None %}
     <h2>{% trans "EU VAT" %}</h2>
