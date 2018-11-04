@@ -3,8 +3,12 @@ django-plans changelog
 
 0.9.0
 ------
-* It is now ensured, that we have only one default migration
+
+* It is now ensured, that we have only one default migration.
+* Fix problem with changed `AUTH_USER_MODEL` and user link in `PlanAdmin`.
+* Added possibility to define PLANS_VALIDATORS as lazy imported string.
 * Supporting Django 2.1
+* The range when the plan was extended is now stored in `Order.plan_extended_from` and `Order.plan_extended_until`.
 
 0.8.13
 ------

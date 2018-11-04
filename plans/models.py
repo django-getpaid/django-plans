@@ -432,6 +432,18 @@ class Order(models.Model):
     created = models.DateTimeField(_('created'), db_index=True)
     completed = models.DateTimeField(
         _('completed'), null=True, blank=True, db_index=True)
+    plan_extended_from = models.DateField(
+        _('plan extended from'),
+        help_text=_('The plan was extended from this date'),
+        null=True,
+        blank=True,
+    )
+    plan_extended_until = models.DateField(
+        _('plan extended until'),
+        help_text=('The plan was extended until this date'),
+        null=True,
+        blank=True,
+    )
     amount = models.DecimalField(
         _('amount'), max_digits=7, decimal_places=2, db_index=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
@@ -470,7 +482,12 @@ class Order(models.Model):
 
     def complete_order(self):
         if self.completed is None:
+            if self.user.userplan.expire and self.user.userplan.expire > date.today():
+                self.plan_extended_from = self.user.userplan.expire
+            else:
+                self.plan_extended_from = date.today()
             status = self.user.userplan.extend_account(self.plan, self.pricing)
+            self.plan_extended_until = self.user.userplan.expire
             self.completed = now()
             if status:
                 self.status = Order.STATUS.COMPLETED
