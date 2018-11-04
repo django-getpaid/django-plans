@@ -17,6 +17,8 @@
                 <th>{% trans 'Status' context 'order status' %}</th>
                 <th>{% trans 'Completed' context 'order completed' %}</th>
                 <th>{% trans 'Total' context 'total amount, value' %}</th>
+                <th>{% trans 'Plan valid from' %}</th>
+                <th>{% trans 'Plan valid until' %}</th>
             </tr>
         </thead>
         <tbody>
@@ -28,6 +30,8 @@
                 <td class="status">{{ order.get_status_display }}</td>
                 <td class="date">{{ order.completed|date|default:"-" }}</td>
                 <td class="number">{{ order.total }}&nbsp;{{ CURRENCY }}</td>
+                <td class="date">{{ order.plan_extended_from|date|default:"-" }}</td>
+                <td class="date">{{ order.plan_extended_until|date|default:"-" }}</td>
             </tr>
             {% endfor %}
         </tbody>
