@@ -3,7 +3,7 @@
     "pk": 3,
     "model": "plans.plan",
     "fields": {
-      "default": true,
+      "default": null,
       "available": true,
       "visible": true,
       "created": "2012-05-05T15:24:44.966Z",
