@@ -114,6 +114,9 @@ make_order_invoice.short_description = _('Make invoices for orders')
 class InvoiceInline(admin.TabularInline):
     model = Invoice
     extra = 0
+    raw_id_fields = (
+        'user',
+    )
 
 
 class OrderAdmin(admin.ModelAdmin):
