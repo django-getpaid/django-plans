@@ -51,12 +51,14 @@
                     {% endblocktrans %}
                 </p>
             {% else %}
+                {% block invoice-alert %}
                 <p class="alert alert-info">
                     {% blocktrans %}
                         Invoice will <b>not</b> be issued. If you need an invoice please provide
                         <a href="{{ billing_info_url }}">billing data</a> before making an order.
                     {% endblocktrans %}
                 </p>
+                {% endblock %}
             {% endif %}
 
             <p>

@@ -1,5 +1,6 @@
 {% load i18n %}
 
+{% block expiration_messages %}
 {% if ACCOUNT_EXPIRED %}
 
     <div class="alert alert-danger">
@@ -27,3 +28,4 @@
     {% endif %}
 
 {% endif %}
+{% endblock %}
