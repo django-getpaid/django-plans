@@ -279,7 +279,14 @@ Example::
 
     PLANS_TAX_COUNTRY = 'PL'
 
+``PLANS_APP_VERBOSE_NAME``
+--------------------------
 
+**Optional**
+
+Default: ``plans``
+
+The ``verbose_name`` of django-plans' ``AppConfig``.
 
 .. note::
 
