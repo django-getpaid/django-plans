@@ -10,6 +10,7 @@ django-plans changelog
 * Supporting Django 2.1
 * The range when the plan was extended is now stored in `Order.plan_extended_from` and `Order.plan_extended_until`.
 * UserPlans are now automatically created with initial migration or with `create_userplans` adminaction.
+* Added possibility to define `PLANS_APP_VERBOSE_NAME` to personalize plans' `verbose_name`
 
 0.8.13
 ------
