@@ -379,11 +379,25 @@ class BillingInfoRedirectView(LoginRequired, RedirectView):
         try:
             BillingInfo.objects.get(user=self.request.user)
         except BillingInfo.DoesNotExist:
-            return reverse('billing_info_create')
+            redirect_url = reverse('billing_info_create')
+        else:
+            redirect_url = reverse('billing_info_update')
+
+        next_url = self.request.GET.get('next', None)
+        if next_url:
+            return redirect_url + "?next=" + next_url
+
+
+class SuccessUrlMixin():
+    def get_success_url(self):
+        messages.success(self.request, _('Billing info has been updated successfuly.'))
+        next_url = self.request.GET.get('next', None)
+        if next_url:
+            return next_url
         return reverse('billing_info_update')
 
 
-class BillingInfoCreateView(LoginRequired, CreateView):
+class BillingInfoCreateView(SuccessUrlMixin, LoginRequired, CreateView):
     """
     Creates billing data for user
     """
@@ -396,12 +410,8 @@ class BillingInfoCreateView(LoginRequired, CreateView):
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
-    def get_success_url(self):
-        messages.success(self.request, _('Billing info has been updated successfuly.'))
-        return reverse('billing_info_update')
 
-
-class BillingInfoUpdateView(LoginRequired, UpdateView):
+class BillingInfoUpdateView(SuccessUrlMixin, LoginRequired, UpdateView):
     """
     Updates billing data for user
     """
@@ -414,10 +424,6 @@ class BillingInfoUpdateView(LoginRequired, UpdateView):
             return self.request.user.billinginfo
         except BillingInfo.DoesNotExist:
             raise Http404
-
-    def get_success_url(self):
-        messages.success(self.request, _('Billing info has been updated successfuly.'))
-        return reverse('billing_info_update')
 
 
 class BillingInfoDeleteView(LoginRequired, DeleteView):
