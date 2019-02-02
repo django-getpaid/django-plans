@@ -70,7 +70,7 @@ class PlanAdmin(OrderedModelAdmin):
     search_fields = ('name', 'customized__username', 'customized__email', )
     list_filter = ('available', 'visible')
     list_display = [
-        'name', 'description', 'customized', 'default', 'available',
+        'name', 'description', 'customized', 'default', 'available', 'is_free',
         'created', 'move_up_down_links'
     ]
     list_display_links = list_display

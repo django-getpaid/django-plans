@@ -111,6 +111,7 @@ class Plan(OrderedModel):
 
     def is_free(self):
         return self.planpricing_set.count() == 0
+    is_free.boolean = True
 
 class BillingInfo(models.Model):
     """
