@@ -100,6 +100,16 @@ class Plan(OrderedModel):
             return_value = None
         return return_value
 
+    @classmethod
+    def get_current_plan(cls, user):
+        """ Get current plan for user. If userplan is expired, get default plan """
+        if not user or user.is_anonymous or not hasattr(user, 'userplan') or user.userplan.is_expired():
+            default_plan = Plan.get_default_plan()
+            if default_plan is None or not default_plan.is_free():
+                raise ValidationError(_('User plan has expired'))
+            return default_plan
+        return user.userplan.plan
+
     def __str__(self):
         return self.name
 

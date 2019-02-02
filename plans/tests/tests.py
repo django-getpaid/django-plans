@@ -64,6 +64,19 @@ class PlansTestCase(TestCase):
         self.assertEqual(get_user_quota(u),
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
+    def test_get_user_quota_expired_no_default(self):
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() - timedelta(days=5)
+        Plan.get_default_plan().delete()
+        with self.assertRaises(ValidationError):
+            get_user_quota(u)
+
+    def test_get_user_quota_expired_free_plan(self):
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() - timedelta(days=5)
+        with self.assertRaises(ValidationError):
+            get_user_quota(u)
+
     def test_get_plan_quota(self):
         u = User.objects.get(username='test1')
         p = u.userplan.plan
