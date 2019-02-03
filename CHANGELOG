@@ -9,6 +9,7 @@ django-plans changelog
 * It is now ensured, that we have only one default migration.
 * Use parameters to compose error messages in validators.
 * Fix problem with changed `AUTH_USER_MODEL` and user link in `PlanAdmin`.
+* Determine country by IP address in billing info, if geolite2 is installed
 * Added possibility to define `PLANS_VALIDATORS` as lazy imported string.
 * Supporting Django 2.1
 * The range when the plan was extended is now stored in `Order.plan_extended_from` and `Order.plan_extended_until`.
