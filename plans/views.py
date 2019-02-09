@@ -395,6 +395,7 @@ class BillingInfoRedirectView(LoginRequired, RedirectView):
         next_url = self.request.GET.get('next', None)
         if next_url:
             return redirect_url + "?next=" + next_url
+        return redirect_url
 
 
 class SuccessUrlMixin():
