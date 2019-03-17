@@ -16,7 +16,7 @@ def account_status(request):
 
     """
 
-    if request.user.is_authenticated:
+    if hasattr(request, 'user') and request.user.is_authenticated:
         try:
             return {
                 'ACCOUNT_EXPIRED': request.user.userplan.is_expired(),
