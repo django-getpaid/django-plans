@@ -64,11 +64,11 @@ class Plan(OrderedModel):
         unique=True,
     )
     available = models.BooleanField(
-        _('available'), default=False, db_index=True,
+        _('Plan Available'), default=False, db_index=True,
         help_text=_('Is still available for purchase')
     )
     visible = models.BooleanField(
-        _('visible'), default=True, db_index=True,
+        _('Plan Visible'), default=True, db_index=True,
         help_text=_('Is visible in current offer')
     )
     created = models.DateTimeField(_('created'), db_index=True)
