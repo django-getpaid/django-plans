@@ -55,7 +55,7 @@ class Plan(OrderedModel):
     is using this plan already will be able to extend this plan again. If plan is not visible and not
     available, he will be forced then to change plan next time he extends an account.
     """
-    name = models.CharField(_('name'), max_length=100)
+    name = models.CharField(_('Plan Name'), max_length=100)
     description = models.TextField(_('description'), blank=True)
     default = models.NullBooleanField(
         help_text=_('Both "Unknown" and "No" means that the plan is not default'),
