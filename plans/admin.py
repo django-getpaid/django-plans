@@ -25,10 +25,12 @@ class UserLinkMixin(object):
 
 class PlanQuotaInline(admin.TabularInline):
     model = PlanQuota
+    autocomplete_fields = ['quota']
 
 
 class PlanPricingInline(admin.TabularInline):
     model = PlanPricing
+    autocomplete_fields = ['pricing']
 
 
 class QuotaAdmin(OrderedModelAdmin):
@@ -38,6 +40,7 @@ class QuotaAdmin(OrderedModelAdmin):
     ]
 
     list_display_links = list_display
+    search_fields = ['codename', 'name']
 
 
 def copy_plan(modeladmin, request, queryset):
@@ -78,6 +81,8 @@ class PlanAdmin(OrderedModelAdmin):
     list_select_related = True
     raw_id_fields = ('customized',)
     actions = [copy_plan, ]
+    
+    autocomplete_fields = ['customized']
 
     def queryset(self, request):
         return super(PlanAdmin, self).queryset(request).select_related(
@@ -92,6 +97,7 @@ class BillingInfoAdmin(UserLinkMixin, admin.ModelAdmin):
     list_select_related = True
     readonly_fields = ('user_link',)
     exclude = ('user',)
+    autocomplete_fields = ['user']
 
 
 def make_order_completed(modeladmin, request, queryset):
@@ -117,6 +123,7 @@ class InvoiceInline(admin.TabularInline):
     raw_id_fields = (
         'user',
     )
+    autocomplete_fields = ['user']
 
 
 class OrderAdmin(admin.ModelAdmin):
@@ -133,7 +140,11 @@ class OrderAdmin(admin.ModelAdmin):
     list_display_links = list_display
     actions = [make_order_completed, make_order_invoice]
     inlines = (InvoiceInline, )
-
+    autocomplete_fields = [
+        'user',
+        'plan',
+        'pricing'
+    ]
     def queryset(self, request):
         return super(OrderAdmin, self).queryset(request).select_related('plan', 'pricing', 'user')
 
@@ -151,6 +162,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_display_links = list_display
     list_select_related = True
     raw_id_fields = ('user', 'order')
+    autocomplete_fields = ['user', 'order']
 
 
 class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
@@ -162,6 +174,10 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     readonly_fields = ['user_link', ]
     fields = ('user', 'user_link', 'plan', 'expire', 'active' )
     raw_id_fields = ['user', 'plan', ]
+    autocomplete_fields = [
+        'user',
+        'plan'
+    ]
 
 
 admin.site.register(Quota, QuotaAdmin)
