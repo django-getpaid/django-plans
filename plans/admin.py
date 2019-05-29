@@ -38,6 +38,10 @@ class QuotaAdmin(OrderedModelAdmin):
         'codename', 'name', 'description', 'unit',
         'is_boolean', 'move_up_down_links',
     ]
+    list_filter = [
+        'unit',
+        'is_boolean'
+    ]
 
     list_display_links = list_display
     search_fields = ['codename', 'name']
@@ -71,7 +75,7 @@ copy_plan.short_description = _('Make a plan copy')
 
 class PlanAdmin(OrderedModelAdmin):
     search_fields = ('name', 'customized__username', 'customized__email', )
-    list_filter = ('available', 'visible')
+    list_filter = ('available', 'visible', 'default', 'created')
     list_display = [
         'name', 'description', 'customized', 'default', 'available',
         'created', 'move_up_down_links'
@@ -127,7 +131,10 @@ class InvoiceInline(admin.TabularInline):
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_filter = ('status', 'created', 'completed', 'plan__name', 'pricing')
+    list_filter = (
+        'status', 'created', 'completed', 'plan__name', 'pricing', 'plan_extended_from',
+        'plan_extended_until', 'currency'
+    )
     raw_id_fields = ('user',)
     search_fields = (
         'id', 'user__username', 'user__email', 'invoice__full_number'
@@ -179,6 +186,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         'plan'
     ]
 
+
 class PricingAdmin(admin.ModelAdmin):
     list_display = [
         'name', 'period', 'visible'
@@ -190,8 +198,8 @@ class PricingAdmin(admin.ModelAdmin):
     search_fields = [
         'name'
     ]
-    
-    
+
+
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)
 admin.site.register(UserPlan, UserPlanAdmin)
