@@ -474,6 +474,7 @@ class Order(models.Model):
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
     status = models.IntegerField(
         _('status'), choices=STATUS, default=STATUS.NEW)
+    is_recurring = models.BooleanField(default=False, blank=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.created is None:
