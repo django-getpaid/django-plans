@@ -351,7 +351,11 @@ class Pricing(models.Model):
         _('period'), default=30, null=True, blank=True, db_index=True)
     url = models.URLField(max_length=200, blank=True, help_text=_(
         'Optional link to page with more information (for clickable pricing table headers)'))
-
+    visible = models.BooleanField(
+        _('visible'), default=True, db_index=True,
+        help_text=_('Is visible in current offer')
+    )
+    
     class Meta:
         ordering = ('period',)
         verbose_name = _("Pricing")
