@@ -179,11 +179,23 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         'plan'
     ]
 
-
+class PricingAdmin(admin.ModelAdmin):
+    list_display = [
+        'name', 'period', 'visible'
+    ]
+    list_filter = [
+        'visible',
+        'period',
+    ]
+    search_fields = [
+        'name'
+    ]
+    
+    
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)
 admin.site.register(UserPlan, UserPlanAdmin)
-admin.site.register(Pricing)
+admin.site.register(Pricing, PricingAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(BillingInfo, BillingInfoAdmin)
 admin.site.register(Invoice, InvoiceAdmin)
