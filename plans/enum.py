@@ -57,3 +57,6 @@ class Enumeration(object):
 
     def get_display_code(self, v):
         return self.enum_code[v]
+    
+    def get_display_id(self, v):
+        return self.enum_dict[v]
