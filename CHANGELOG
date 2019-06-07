@@ -5,6 +5,7 @@ django-plans changelog
 ------
 
 * It is now ensured, that we have only one default migration.
+* Use parameters to compose error messages in validators.
 * Fix problem with changed `AUTH_USER_MODEL` and user link in `PlanAdmin`.
 * Added possibility to define `PLANS_VALIDATORS` as lazy imported string.
 * Supporting Django 2.1

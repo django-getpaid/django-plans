@@ -31,6 +31,12 @@ class QuotaValidator(object):
     def get_error_message(self, quota_value, **kwargs):
         return u'Plan validation error'
 
+    def get_error_params(self, quota_value, **kwargs):
+        return {
+            'quota': quota_value,
+            'validator_codename': self.code,
+        }
+
     def __call__(self, user, quota_dict=None, **kwargs):
         """
         Performs validation of quota limit for a user account
@@ -60,16 +66,21 @@ class ModelCountValidator(QuotaValidator):
         return self.model.objects.all()
 
     def get_error_message(self, quota_value, **kwargs):
-        return _('Limit of %(model_name_plural)s exceeded. The limit is %(quota)s items.') % {
-            'model_name_plural': self.model._meta.verbose_name_plural.title().lower(),
+        return _('Limit of %(model_name_plural)s exceeded. The limit is %(quota)s items.')
+
+    def get_error_params(self, quota_value, total_count, **kwargs):
+        return {
             'quota': quota_value,
+            'model_name_plural': self.model._meta.verbose_name_plural.title().lower(),
+            'validator_codename': self.code,
+            'total_count': total_count,
         }
 
     def __call__(self, user, quota_dict=None, **kwargs):
         quota = self.get_quota_value(user, quota_dict)
         total_count = self.get_queryset(user).count() + kwargs.get('add', 0)
         if not quota is None and total_count > quota:
-            raise ValidationError(self.get_error_message(quota))
+            raise ValidationError(message=self.get_error_message(quota), params=self.get_error_params(quota, total_count))
 
 
 class ModelAttributeValidator(ModelCountValidator):
@@ -90,7 +101,12 @@ class ModelAttributeValidator(ModelCountValidator):
         return attribute_value <= quota_value
 
     def get_error_message(self, quota_value, **kwargs):
-        return _('Following %(model_name_plural)s are not in limits: %(objects)s') % {
+        return _('Following %(model_name_plural)s are not in limits: %(objects)s')
+
+    def get_error_params(self, quota_value, total_count, **kwargs):
+        return {
+            'quota': quota_value,
+            'validator_codename': self.code,
             'model_name_plural': self.model._meta.verbose_name_plural.title().lower(),
             'objects': u', '.join(map(lambda o: u'<a href="%s">%s</a>' % (o.get_absolute_url(), six.u(o)),
                                       kwargs['not_valid_objects'])),
@@ -105,7 +121,8 @@ class ModelAttributeValidator(ModelCountValidator):
                     not_valid_objects.append(obj)
         if not_valid_objects:
             raise ValidationError(
-                self.get_error_message(quota_value, not_valid_objects=not_valid_objects)
+                self.get_error_message(quota_value, not_valid_objects=not_valid_objects),
+                self.get_error_params(quota_value, not_valid_objects=not_valid_objects),
             )
 
 
