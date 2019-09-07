@@ -1,6 +1,23 @@
 Configuration via `settings`
 ============================
 
+Swappable models
+----------------
+
+It's possible to supply alternative models which extend the base models of
+django-plans by defining the following settings:
+
+.. code-block:: python
+
+    PLANS_PLAN_MODEL = 'custom_plans.Plan'
+    PLANS_BILLINGINFO_MODEL = 'custom_plans.BillingInfo'
+    PLANS_USERPLAN_MODEL = 'custom_plans.UserPlan'
+    PLANS_PRICING_MODEL = 'custom_plans.Pricing'
+    PLANS_PLANPRICING_MODEL = 'custom_plans.PlanPricing'
+    PLANS_QUOTA_MODEL = 'custom_plans.Quota'
+    PLANS_PLANQUOTA_MODEL = 'custom_plans.PlanQuota'
+    PLANS_ORDER_MODEL = 'custom_plans.Order'
+    PLANS_INVOICE_MODEL = 'custom_plans.Invoice'
 
 ``PLANS_CURRENCY``
 ------------
