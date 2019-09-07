@@ -98,7 +98,7 @@ class PlansTestCase(TestCase):
 
     def test_extend_account_other(self):
         """
-        Tests extending account with other Plan that user had before:
+        Tests extending expired account with other Plan that user had before:
         Tests if expire date is set correctly
         Tests if mail has been send
         Tests if account has been activated
@@ -113,6 +113,44 @@ class PlansTestCase(TestCase):
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
         self.assertEqual(u.userplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_extend_account_other_expire_none(self):
+        """
+        Tests extending expired=None account with other Plan that user had before and is expired:
+        Tests if expire stays None
+        Tests if mail has been send
+        Tests if account stays activated
+        """
+        u = User.objects.get(username='test1')
+        u.userplan.expire = None
+        u.userplan.active = False
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
+        default_plan = Plan.objects.get(pk=1)
+        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(u.userplan.expire, None)
+        self.assertEqual(u.userplan.plan, default_plan)
+        self.assertEqual(u.userplan.active, True)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_extend_account_other_expire_future(self):
+        """
+        Tests extending active account with other Plan that user had before:
+        Tests if expire date stays the same
+        Tests if mail has not been send
+        Tests if account has not been activated
+        """
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() + timedelta(days=5)
+        u.userplan.active = False
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
+        default_plan = Plan.objects.get(pk=1)
+        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=5))
+        self.assertEqual(u.userplan.plan, default_plan)
+        self.assertEqual(u.userplan.active, False)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_expire_account(self):
         u = User.objects.get(username='test1')
@@ -406,6 +444,65 @@ class TestInvoice(TestCase):
 
 
 class OrderTestCase(TestCase):
+    fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
+
+    def test_order_complete_order(self):
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.active = False
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+        )
+        self.assertTrue(order.complete_order())
+        self.assertEqual(u.userplan.expire,
+                         date.today() + timedelta(days=50) + timedelta(days=plan_pricing.pricing.period))
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.active, True)
+        self.assertEqual(order.status, 2)  # completed
+        self.assertEqual(order.plan_extended_from, date.today() + timedelta(days=50))
+        self.assertEqual(order.plan_extended_until, date.today() + timedelta(days=50) + timedelta(days=plan_pricing.pricing.period))
+        self.assertEqual(len(mail.outbox), 3)
+
+    def test_order_complete_order_invalid(self):
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() + timedelta(days=5)
+        u.userplan.active = False
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=PlanPricing.objects.all()[0].plan,
+        )
+        self.assertTrue(order.complete_order())
+        self.assertEqual(u.userplan.expire,
+                         date.today() + timedelta(days=5))
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.active, False)
+        self.assertEqual(order.status, 3)  # not valid
+
+    def test_order_complete_order_completed(self):
+        """ Completed order doesn't get completed any more """
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.active = False
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            completed=date(2010, 10, 10),
+        )
+        self.assertFalse(order.complete_order())
+
     def test_amount_taxed_none(self):
         o = Order()
         o.amount = Decimal(123)

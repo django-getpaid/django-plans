@@ -21,10 +21,8 @@
     <td>{% ifequal order.tax_total None %}n/a{% else %}{{ order.tax_total }} {{ order.currency }}{% endifequal %}</td>
     <td class="number total">{{ order.total }} {{ order.currency }}</td>
     <td class="date">{{ order.completed|date|default:"-" }}</td>
-    {% if order.user %}
-    <td class="date">{{ order.plan_extended_from|date|default:"-" }}</td>
-    <td class="date">{{ order.plan_extended_until|date|default:"-" }}</td>
-    {% endif %}
+    <td class="date">{{ order.get_plan_extended_from|date|default:"-" }}</td>
+    <td class="date">{{ order.get_plan_extended_until|date|default:"-" }}</td>
     </tbody>
 </table>
 {% endblock %}

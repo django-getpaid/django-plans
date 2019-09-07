@@ -5,7 +5,7 @@ import logging
 import vatnumber
 
 from decimal import Decimal
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 
 from django.db import models
 from django.db.models import Max
@@ -234,6 +234,21 @@ class UserPlan(models.Model):
                     days=getattr(settings, 'PLANS_DEFAULT_GRACE_PERIOD', 30))
             self.activate()  # this will call self.save()
 
+    def get_plan_extended_from(self, plan):
+        if self.plan == plan:
+            if self.expire > date.today():
+                return self.expire
+            else:
+                return date.today()
+        else:
+            return date.today()
+
+    def get_plan_extended_until(self, plan, pricing):
+        if pricing is None or self.expire is None:
+            return self.expire
+        return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
+
+
     def extend_account(self, plan, pricing):
         """
         Manages extending account after plan or pricing order
@@ -259,13 +274,6 @@ class UserPlan(models.Model):
             # Processing standard account extending procedure
             if self.plan == plan:
                 status = True
-                if self.expire is None:
-                    pass
-                elif self.expire > date.today():
-                    self.expire += timedelta(days=pricing.period)
-                else:
-                    self.expire = date.today() + timedelta(days=pricing.period)
-
             else:
                 # This should not ever happen (as this case should be managed by plan change request)
                 # but just in case we consider a case when user has a different plan
@@ -279,9 +287,9 @@ class UserPlan(models.Model):
                     status = True
                     account_change_plan.send(sender=self, user=self.user)
                     self.plan = plan
-                    self.expire = date.today() + timedelta(days=pricing.period)
 
             if status:
+                self.expire = self.get_plan_extended_until(plan, pricing)
                 self.save()
                 accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
                     self.user, self.user.pk, pricing.period, plan, plan.pk))
@@ -499,12 +507,16 @@ class Order(models.Model):
         return self.status == self.STATUS.NEW and (now() - self.created).days < getattr(
             settings, 'PLANS_ORDER_EXPIRATION', 14)
 
+
+    def get_plan_extended_from(self):
+        return self.user.userplan.get_plan_extended_from(self.plan)
+
+    def get_plan_extended_until(self):
+        return self.user.userplan.get_plan_extended_until(self.plan, self.pricing)
+
     def complete_order(self):
         if self.completed is None:
-            if self.user.userplan.expire and self.user.userplan.expire > date.today():
-                self.plan_extended_from = self.user.userplan.expire
-            else:
-                self.plan_extended_from = date.today()
+            self.plan_extended_from = self.get_plan_extended_from()
             status = self.user.userplan.extend_account(self.plan, self.pricing)
             self.plan_extended_until = self.user.userplan.expire
             self.completed = now()
