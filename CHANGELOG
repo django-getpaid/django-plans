@@ -12,6 +12,7 @@ django-plans changelog
 * The fron/until extension range is shown to the user during order confirmation
 * UserPlans are now automatically created with initial migration or with `create_userplans` adminaction.
 * Added possibility to define `PLANS_APP_VERBOSE_NAME` to personalize plans' `verbose_name`
+* Return back to order after setting up billing info
 
 0.8.13
 ------
