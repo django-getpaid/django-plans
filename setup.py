@@ -34,6 +34,7 @@ setup(
         'vatnumber>=1.2',
         'celery',
         'suds-jurko',
+        'swapper',
         'six',
     ],
     extras_require={

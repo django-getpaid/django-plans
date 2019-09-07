@@ -8,7 +8,10 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 
 from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
-from plans.models import Invoice
+from plans.base.models import AbstractInvoice
+
+
+Invoice = AbstractInvoice.get_concrete_model()
 
 
 class UserLinkMixin(object):

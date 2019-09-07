@@ -4,7 +4,10 @@ from django.forms.widgets import HiddenInput
 from django.utils.translation import ugettext
 
 from .models import PlanPricing, BillingInfo
-from plans.models import Order
+from plans.base.models import AbstractOrder
+
+
+Order = AbstractOrder.get_concrete_model()
 
 
 class OrderForm(forms.Form):
