@@ -1,6 +1,9 @@
 from django.urls import reverse
 
-from plans.models import UserPlan
+from plans.base.models import AbstractUserPlan
+
+
+UserPlan = AbstractUserPlan.get_concrete_model()
 
 
 def account_status(request):

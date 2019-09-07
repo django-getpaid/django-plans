@@ -9,7 +9,10 @@ from django.utils.html import format_html
 
 from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, RecurringUserPlan, Order, BillingInfo
 from .signals import account_automatic_renewal
-from plans.models import Invoice
+from plans.base.models import AbstractInvoice
+
+
+Invoice = AbstractInvoice.get_concrete_model()
 
 
 class UserLinkMixin(object):

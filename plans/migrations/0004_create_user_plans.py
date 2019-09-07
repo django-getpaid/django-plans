@@ -4,8 +4,9 @@ from django.db import migrations
 
 
 def create_userplans(apps, schema_editor):
-    from plans.models import UserPlan
-    UserPlan.create_for_users_without_plan()
+    from plans.base.models import AbstractUserPlan
+    AbstractUserPlan.get_concrete_model() \
+                    .create_for_users_without_plan()
 
 
 class Migration(migrations.Migration):
