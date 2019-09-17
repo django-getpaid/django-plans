@@ -265,7 +265,7 @@ class CreateOrderView(LoginRequired, CreateView):
         self.get_all_context()
         context['billing_info'] = self.get_billing_info()
 
-        order = self.recalculate(self.plan_pricing.price, context['billing_info'])
+        order = self.recalculate(self.get_price() or Decimal('0.0'), context['billing_info'])
         order.plan = self.plan_pricing.plan
         order.pricing = self.plan_pricing.pricing
         order.currency = self.get_currency()
