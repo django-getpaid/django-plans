@@ -10,6 +10,7 @@ Engine allows for the following customisation:
 * Many plans can be defined, plan can be considered as a named group of account features for a specific price in specific period.
 * Many pricing periods can be defined (e.g. monthly, annually, quarterly or any other), pricing is basically named amount of days.
 * Many types of account feature (called quotas) can be defined (eg. maximum number of some items, account transfer limit, does the account is allowed to customize something).
+* Plan without any pricing is considerd to be free plan. Without pricing it has no expiration.
 * After defining quotas, each plan can define its own set of quotas with given values.
 * I18n is supported in every aspect (in database text name fields also)
 

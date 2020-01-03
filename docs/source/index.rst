@@ -18,6 +18,7 @@ Contents:
    plans
    quota_validators
    plans_change
+   plans_expiration
    taxation
    invoicing
    templating

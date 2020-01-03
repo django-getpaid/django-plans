@@ -11,7 +11,7 @@ Taxation policy can be defined as a simple class that should inherit from ``plan
     :members:
     :undoc-members:
 
-Django-plans application is shipped with some default taxation policies. You can choose them via :ref:`settings-PLANS_TAXATION_POLICY` variable.
+Django-plans application is shipped with some default taxation policies. You can choose them via :ref:`settings-TAXATION_POLICY` variable.
 
 ``EUTaxationPolicy``
 --------------------
