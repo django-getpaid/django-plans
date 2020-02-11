@@ -1,4 +1,4 @@
-django==2.0.12
+django==2.2.10
 django-bootstrap3
 Sphinx
 django-debug-toolbar
