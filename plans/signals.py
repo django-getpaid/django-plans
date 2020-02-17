@@ -14,7 +14,11 @@ Sent after order was completed (payment accepted, account extended)
 user_language = Signal(providing_args=['user', 'language'])
 user_language.__doc__ = """Sent to receive information about language for user account"""
 
-
+account_automatic_renewal = Signal(providing_args=['user'])
+account_automatic_renewal.__doc__ = """
+Try to renew the account automatically.
+Should renew the user's UserPlan by recurring payments. If this succeeds, the plan should be extended.
+"""
 
 account_expired = Signal(providing_args=['user'])
 account_expired.__doc__ = """

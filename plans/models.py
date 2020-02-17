@@ -368,6 +368,20 @@ class UserPlan(models.Model):
         return userplans
 
 
+class RecurringUserPlan(models.Model):
+    userplan = models.OneToOneField('UserPlan', on_delete=models.CASCADE, related_name='recurring')
+    token = models.CharField(_('Recurring token'), max_length=255, default=None, null=True, blank=True)
+    pricing = models.ForeignKey('Pricing', help_text=_('Recurring pricing'), default=None, null=True, blank=True, on_delete=models.CASCADE)
+    amount = models.DecimalField(
+        _('amount'), max_digits=7, decimal_places=2, db_index=True, null=True, blank=True)
+    tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
+                              blank=True)  # Tax=None is when tax is not applicable
+    currency = models.CharField(_('currency'), max_length=3, default='EUR')
+    automatic_renewal = models.BooleanField(_('Automatic plan renewal'), default=False)
+    card_expire_year = models.IntegerField(null=True, blank=True)
+    card_expire_month = models.IntegerField(null=True, blank=True)
+
+
 class Pricing(models.Model):
     """
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
@@ -418,6 +432,7 @@ class PlanPricing(models.Model):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
+    automatic_renewal_enabled = models.BooleanField(_('Use automatic renewal if possible?'), default=False)
 
     objects = PlanPricingManager()
 
