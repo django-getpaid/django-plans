@@ -64,6 +64,19 @@ class PlansTestCase(TestCase):
         self.assertEqual(get_user_quota(u),
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
+    def test_get_user_quota_expired_no_default(self):
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() - timedelta(days=5)
+        Plan.get_default_plan().delete()
+        with self.assertRaises(ValidationError):
+            get_user_quota(u)
+
+    def test_get_user_quota_expired_free_plan(self):
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() - timedelta(days=5)
+        with self.assertRaises(ValidationError):
+            get_user_quota(u)
+
     def test_get_plan_quota(self):
         u = User.objects.get(username='test1')
         p = u.userplan.plan
@@ -181,6 +194,51 @@ class PlansTestCase(TestCase):
             self.assertEqual(u.userplan.active, True)
             self.assertEqual(len(mail.outbox), 0)
 
+    def test_switch_to_free_no_expiry(self):
+        """
+        Tests switching to a free Plan and checks that their expiry is cleared
+        Tests if expire date is set correctly
+        Tests if mail has been send
+        Tests if account has been activated
+        """
+        u = User.objects.get(username='test1')
+        u.userplan.expire = date.today() + timedelta(days=14)
+        self.assertIsNotNone(u.userplan.expire)
+
+        plan = Plan.objects.get(name="Free")
+        self.assertTrue(plan.is_free())
+        self.assertNotEqual(u.userplan.plan, plan)
+
+        # Switch to Free Plan
+        u.userplan.extend_account(plan, None)
+        self.assertEquals(u.userplan.plan, plan)
+        self.assertIsNone(u.userplan.expire)
+        self.assertEqual(u.userplan.active, True)
+
+    def test_switch_from_free_set_expiry(self):
+        """
+        Tests switching from a free Plan and should set the expiry date
+        Tests if expire date is set correctly
+        Tests if mail has been send
+        Tests if account has been activated
+        """
+        u = User.objects.get(username='test1')
+        u.userplan.expire = None
+        u.userplan.plan = Plan.objects.get(name="Free")
+        u.userplan.save()
+        self.assertIsNone(u.userplan.expire)
+        self.assertTrue(u.userplan.plan.is_free())
+
+        plan = Plan.objects.get(name="Standard")
+        self.assertFalse(plan.is_free())
+        self.assertNotEqual(u.userplan.plan, plan)
+        plan_pricing = PlanPricing.objects.filter(Q(plan=plan) & Q(pricing__period=30))[0]
+
+        # Switch to Standard Plan
+        u.userplan.extend_account(plan, plan_pricing.pricing)
+        self.assertEquals(u.userplan.plan, plan)
+        self.assertIsNotNone(u.userplan.expire)
+        self.assertEqual(u.userplan.active, True)
 
 class TestInvoice(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']

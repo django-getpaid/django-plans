@@ -146,12 +146,15 @@ Example::
     PLANS_ORDER_EXPIRATION = 14
 
 
+.. _settings-EXPIRATION_REMIND:
+
 ``PLANS_EXPIRATION_REMIND``
 ---------------------------
 
 **Optional**
 
-Application is responsible for expiring user accounts. Before account became expired it is able to send expiration warnings to the users.
+Application is responsible for expiring user accounts.
+Before account became expired it is able to send expiration warnings to the users by `expire_account` task (:doc:`plans_expiration`).
 This setting should contain a list of numbers, that corresponds to days before expiration period. User will
 receive expiration warning at each moment from that list.
 

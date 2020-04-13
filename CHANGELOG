@@ -4,6 +4,8 @@ django-plans changelog
 0.9.0
 ------
 
+* Added `expire_accounts` management command as an alternative to Celery task
+* Added free plan support, fix expired quotas.
 * It is now ensured, that we have only one default migration.
 * Use parameters to compose error messages in validators.
 * Fix problem with changed `AUTH_USER_MODEL` and user link in `PlanAdmin`.

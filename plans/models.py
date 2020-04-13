@@ -100,6 +100,16 @@ class Plan(OrderedModel):
             return_value = None
         return return_value
 
+    @classmethod
+    def get_current_plan(cls, user):
+        """ Get current plan for user. If userplan is expired, get default plan """
+        if not user or user.is_anonymous or not hasattr(user, 'userplan') or user.userplan.is_expired():
+            default_plan = Plan.get_default_plan()
+            if default_plan is None or not default_plan.is_free():
+                raise ValidationError(_('User plan has expired'))
+            return default_plan
+        return user.userplan.plan
+
     def __str__(self):
         return self.name
 
@@ -109,6 +119,9 @@ class Plan(OrderedModel):
             quota_dic[plan_quota.quota.codename] = plan_quota.value
         return quota_dic
 
+    def is_free(self):
+        return self.planpricing_set.count() == 0
+    is_free.boolean = True
 
 class BillingInfo(models.Model):
     """
@@ -229,22 +242,25 @@ class UserPlan(models.Model):
         Set up user plan for first use
         """
         if not self.is_active():
-            if self.expire is None:
+            # Plans without pricings don't need to expire
+            if self.expire is None and self.plan.planpricing_set.count():
                 self.expire = now() + timedelta(
                     days=getattr(settings, 'PLANS_DEFAULT_GRACE_PERIOD', 30))
             self.activate()  # this will call self.save()
 
     def get_plan_extended_from(self, plan):
-        if self.plan == plan:
-            if self.expire > date.today():
-                return self.expire
-            else:
-                return date.today()
-        else:
-            return date.today()
+        if plan.is_free():
+            return None
+        if not self.is_expired() and self.expire is not None and self.plan == plan:
+            return self.expire
+        return date.today()
 
     def get_plan_extended_until(self, plan, pricing):
-        if pricing is None or self.expire is None:
+        if plan.is_free():
+            return None
+        if not self.plan.is_free() and self.expire is None:
+            return None
+        if pricing is None:
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
 
@@ -258,10 +274,16 @@ class UserPlan(models.Model):
         """
 
         status = False  # flag; if extending account was successful?
+        expire = self.get_plan_extended_until(plan, pricing)
         if pricing is None:
             # Process a plan change request (downgrade or upgrade)
             # No account activation or extending at this point
             self.plan = plan
+
+            if self.expire is not None and not plan.planpricing_set.count():
+                # Assume no expiry date for plans without pricing.
+                self.expire = None
+
             self.save()
             account_change_plan.send(sender=self, user=self.user)
             mail_context = {'user': self.user, 'userplan': self, 'plan': plan}
@@ -277,9 +299,9 @@ class UserPlan(models.Model):
             else:
                 # This should not ever happen (as this case should be managed by plan change request)
                 # but just in case we consider a case when user has a different plan
-                if self.expire is None:
+                if not self.plan.is_free() and self.expire is None:
                     status = True
-                elif self.expire > date.today():
+                elif not self.plan.is_free() and self.expire > date.today():
                     status = False
                     accounts_logger.warning("Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
                         self.user, self.user.pk, plan, plan.pk))
@@ -289,7 +311,7 @@ class UserPlan(models.Model):
                     self.plan = plan
 
             if status:
-                self.expire = self.get_plan_extended_until(plan, pricing)
+                self.expire = expire
                 self.save()
                 accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
                     self.user, self.user.pk, pricing.period, plan, plan.pk))
