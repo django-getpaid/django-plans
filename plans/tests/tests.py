@@ -10,19 +10,14 @@ from django.conf import settings
 from django.core import mail
 from django.core.management import call_command
 from django.db.models import Q
-from django.utils import six
 
-
-if six.PY2:
-    import mock
-elif six.PY3:
-    from unittest import mock
-
-from plans.models import PlanPricing, Invoice, Order, Plan, PlanQuota, UserPlan
+from plans.models import PlanPricing, Invoice, Order, Plan, UserPlan
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
 from plans.validators import ModelCountValidator
+
+from unittest import mock
 
 
 User = get_user_model()
