@@ -155,6 +155,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 
 class RecurringPlanInline(admin.StackedInline):
     model = RecurringUserPlan
+    extra = 0
 
 
 class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
@@ -169,8 +170,8 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     raw_id_fields = ['user', 'plan', ]
 
     def recurring__automatic_renewal(self, obj):
-        return obj.recurring.automatic_renewal
-    recurring__automatic_renewal.admin_order_field = 'recurring__automatic_renewal'
+        return obj.recurring.has_automatic_renewal
+    recurring__automatic_renewal.admin_order_field = 'recurring__has_automatic_renewal'
     recurring__automatic_renewal.boolean = True
 
     def recurring__pricing(self, obj):

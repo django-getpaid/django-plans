@@ -261,6 +261,22 @@ class UserPlan(models.Model):
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
 
+    def set_plan_renewal(self, order, has_automatic_renewal=True, **kwargs):
+        """
+        Creates or updates plan renewal information for this userplan with given order
+        """
+        recurring, _ = RecurringUserPlan.objects.update_or_create(
+            user_plan=self,
+            defaults={
+                'pricing': order.pricing,
+                'amount': order.amount,
+                'tax': order.tax,
+                'currency': order.currency,
+                'has_automatic_renewal': has_automatic_renewal,
+                **kwargs,
+            },
+        )
+        return recurring
 
     def extend_account(self, plan, pricing):
         """
@@ -369,17 +385,55 @@ class UserPlan(models.Model):
 
 
 class RecurringUserPlan(models.Model):
-    userplan = models.OneToOneField('UserPlan', on_delete=models.CASCADE, related_name='recurring')
-    token = models.CharField(_('Recurring token'), max_length=255, default=None, null=True, blank=True)
+    """
+    OneToOne model associated with UserPlan that stores information about the plan recurrence.
+
+    More about recurring payments in docs.
+    """
+    user_plan = models.OneToOneField('UserPlan', on_delete=models.CASCADE, related_name='recurring')
+    token = models.CharField(
+        _('recurring token'),
+        help_text=_('Token, that will be used for payment renewal. Depends on used payment provider'),
+        max_length=255,
+        default=None,
+        null=True,
+        blank=True,
+    )
+    payment_provider = models.CharField(
+        _('payment provider'),
+        help_text=_('Provider, that will be used for payment renewal'),
+        max_length=255,
+        default=None,
+        null=True,
+        blank=True,
+    )
     pricing = models.ForeignKey('Pricing', help_text=_('Recurring pricing'), default=None, null=True, blank=True, on_delete=models.CASCADE)
     amount = models.DecimalField(
         _('amount'), max_digits=7, decimal_places=2, db_index=True, null=True, blank=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
                               blank=True)  # Tax=None is when tax is not applicable
-    currency = models.CharField(_('currency'), max_length=3, default='EUR')
-    automatic_renewal = models.BooleanField(_('Automatic plan renewal'), default=False)
+    currency = models.CharField(_('currency'), max_length=3)
+    has_automatic_renewal = models.BooleanField(
+        _('has automatic plan renewal'),
+        help_text=_('Automatic renewal is enabled for associated plan. If False, the plan renewal can be still initiated by user.'),
+        default=False,
+    )
     card_expire_year = models.IntegerField(null=True, blank=True)
     card_expire_month = models.IntegerField(null=True, blank=True)
+
+    def create_renew_order(self):
+        """
+        Create order for plan renewal
+        """
+        userplan = self.user_plan
+        return Order.objects.create(
+            user=userplan.user,
+            plan=userplan.plan,
+            pricing=userplan.recurring.pricing,
+            amount=userplan.recurring.amount,
+            tax=userplan.recurring.tax,
+            currency=userplan.recurring.currency,
+        )
 
 
 class Pricing(models.Model):
@@ -432,7 +486,11 @@ class PlanPricing(models.Model):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
-    automatic_renewal_enabled = models.BooleanField(_('Use automatic renewal if possible?'), default=False)
+    has_automatic_renewal = models.BooleanField(
+        _('has automatic renewal'),
+        help_text=_('Use automatic renewal if possible?'),
+        default=False,
+    )
 
     objects = PlanPricingManager()
 
