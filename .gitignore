@@ -35,3 +35,7 @@ pip-log.txt
 
 #Virtualenv
 venv
+
+*.swp
+*.swo
+*.orig
