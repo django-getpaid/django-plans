@@ -485,6 +485,7 @@ class PlanPricing(models.Model):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
+    order = models.IntegerField(default=0, null=False, blank=False)
     has_automatic_renewal = models.BooleanField(
         _('has automatic renewal'),
         help_text=_('Use automatic renewal if possible?'),
@@ -494,7 +495,7 @@ class PlanPricing(models.Model):
     objects = PlanPricingManager()
 
     class Meta:
-        ordering = ('pricing__period', )
+        ordering = ('order', 'pricing__period', )
         verbose_name = _("Plan pricing")
         verbose_name_plural = _("Plans pricings")
 
