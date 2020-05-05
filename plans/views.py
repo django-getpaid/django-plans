@@ -16,7 +16,7 @@ from django.views.generic.list import ListView
 from itertools import chain
 from plans.importer import import_name
 from plans.mixins import LoginRequired
-from plans.models import UserPlan, PlanPricing, Plan, Order, BillingInfo
+from plans.models import CustomerPlan, PlanPricing, Plan, Order, BillingInfo
 from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm
 from plans.models import Quota, Invoice
 from plans.signals import order_started
@@ -106,8 +106,8 @@ class PlanTableViewBase(PlanTableMixin, ListView):
 
         if self.request.user.is_authenticated:
             try:
-                self.userplan = UserPlan.objects.select_related('plan').get(user=self.request.user)
-            except UserPlan.DoesNotExist:
+                self.userplan = CustomerPlan.objects.select_related('plan').get(user=self.request.user)
+            except CustomerPlan.DoesNotExist:
                 self.userplan = None
 
             context['userplan'] = self.userplan

@@ -12,6 +12,7 @@ from django.db.models import Max
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+
 try:
     from django.contrib.sites.models import Site
 except RuntimeError:
@@ -28,6 +29,7 @@ from django_countries.fields import CountryField
 from ordered_model.models import OrderedModel
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 
+from . import conf
 from plans.enum import Enumeration
 from plans.validators import plan_validation
 from plans.taxation.eu import EUTaxationPolicy
@@ -36,8 +38,8 @@ from plans.signals import (order_completed, account_activated,
                            account_expired, account_change_plan,
                            account_deactivated)
 
-
 accounts_logger = logging.getLogger('accounts')
+
 
 # Create your models here.
 
@@ -119,7 +121,9 @@ class Plan(OrderedModel):
 
     def is_free(self):
         return self.planpricing_set.count() == 0
+
     is_free.boolean = True
+
 
 class BillingInfo(models.Model):
     """
@@ -178,15 +182,15 @@ class BillingInfo(models.Model):
 #        super(BillingInfo, self).clean()
 #        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
 
-class UserPlan(models.Model):
+class CustomerPlan(models.Model):
     """
     Currently selected plan for user account.
     """
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_('user'),
+    customer = models.OneToOneField(
+        conf.get_customer_model_string(), verbose_name=_('customer'),
         on_delete=models.CASCADE
     )
-    plan = models.ForeignKey('Plan', verbose_name=_('plan'), on_delete=models.CASCADE)
+    plans = models.ManyToManyField('Plan', verbose_name=_('plan'), on_delete=models.CASCADE)
     expire = models.DateField(
         _('expire'), default=None, blank=True, null=True, db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
@@ -196,7 +200,7 @@ class UserPlan(models.Model):
         verbose_name_plural = _("Users plans")
 
     def __str__(self):
-        return "%s [%s]" % (self.user, self.plan)
+        return "%s [%s]" % (self.customer, self.plan)
 
     def is_active(self):
         return self.active
@@ -214,9 +218,9 @@ class UserPlan(models.Model):
             return (self.expire - date.today()).days
 
     def clean_activation(self):
-        errors = plan_validation(self.user)
+        errors = plan_validation(self.customer)
         if not errors['required_to_activate']:
-            plan_validation(self.user, on_activation=True)
+            plan_validation(self.customer, on_activation=True)
             self.activate()
         else:
             self.deactivate()
@@ -226,13 +230,13 @@ class UserPlan(models.Model):
         if not self.active:
             self.active = True
             self.save()
-            account_activated.send(sender=self, user=self.user)
+            account_activated.send(sender=self, user=self.customer)
 
     def deactivate(self):
         if self.active:
             self.active = False
             self.save()
-            account_deactivated.send(sender=self, user=self.user)
+            account_deactivated.send(sender=self, user=self.customer)
 
     def initialize(self):
         """
@@ -261,7 +265,6 @@ class UserPlan(models.Model):
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
 
-
     def extend_account(self, plan, pricing):
         """
         Manages extending account after plan or pricing order
@@ -282,12 +285,12 @@ class UserPlan(models.Model):
                 self.expire = None
 
             self.save()
-            account_change_plan.send(sender=self, user=self.user)
-            mail_context = {'user': self.user, 'userplan': self, 'plan': plan}
-            send_template_email([self.user.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
-                                mail_context, get_user_language(self.user))
+            account_change_plan.send(sender=self, user=self.customer)
+            mail_context = {'customer': self.customer, 'userplan': self, 'plan': plan}
+            send_template_email([self.customer.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
+                                mail_context, get_user_language(self.customer))
             accounts_logger.info(
-                "Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.user, self.user.pk, plan, plan.pk))
+                "Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.customer, self.customer.pk, plan, plan.pk))
             status = True
         else:
             # Processing standard account extending procedure
@@ -301,23 +304,23 @@ class UserPlan(models.Model):
                 elif not self.plan.is_free() and self.expire > date.today():
                     status = False
                     accounts_logger.warning("Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
-                        self.user, self.user.pk, plan, plan.pk))
+                        self.customer, self.customer.pk, plan, plan.pk))
                 else:
                     status = True
-                    account_change_plan.send(sender=self, user=self.user)
+                    account_change_plan.send(sender=self, user=self.customer)
                     self.plan = plan
 
             if status:
                 self.expire = expire
                 self.save()
                 accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
-                    self.user, self.user.pk, pricing.period, plan, plan.pk))
-                mail_context = {'user': self.user,
+                    self.customer, self.customer.pk, pricing.period, plan, plan.pk))
+                mail_context = {'customer': self.customer,
                                 'userplan': self,
                                 'plan': plan,
                                 'pricing': pricing}
-                send_template_email([self.user.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
-                                    mail_context, get_user_language(self.user))
+                send_template_email([self.customer.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
+                                    mail_context, get_user_language(self.customer))
 
         if status:
             self.clean_activation()
@@ -330,11 +333,11 @@ class UserPlan(models.Model):
         self.deactivate()
 
         accounts_logger.info(
-            "Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
+            "Account '%s' [id=%d] has expired" % (self.customer, self.customer.pk))
 
-        mail_context = {'user': self.user, 'userplan': self}
-        send_template_email([self.user.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
-                            mail_context, get_user_language(self.user))
+        mail_context = {'user': self.customer, 'userplan': self}
+        send_template_email([self.customer.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
+                            mail_context, get_user_language(self.customer))
 
         account_expired.send(sender=self, user=self.user)
 
@@ -342,29 +345,29 @@ class UserPlan(models.Model):
         """reminds about soon account expiration"""
 
         mail_context = {
-            'user': self.user,
-            'userplan': self,
+            'customer': self.customer,
+            'customerplan': self,
             'days': self.days_left()
         }
-        send_template_email([self.user.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
-                            mail_context, get_user_language(self.user))
+        send_template_email([self.customer.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
+                            mail_context, get_user_language(self.customer))
 
     @classmethod
-    def create_for_user(cls, user):
+    def create_for_customer(cls, customer):
         default_plan = Plan.get_default_plan()
         if default_plan is not None:
-            return UserPlan.objects.create(
-                user=user,
+            return CustomerPlan.objects.create(
+                customer=customer,
                 plan=default_plan,
                 active=False,
                 expire=None,
             )
 
     @classmethod
-    def create_for_users_without_plan(cls):
-        userplans = get_user_model().objects.filter(userplan=None)
-        for user in userplans:
-            UserPlan.create_for_user(user)
+    def create_for_customers_without_plan(cls):
+        userplans = conf.get_customer_model().objects.filter(userplan=None)
+        for customer in userplans:
+            CustomerPlan.create_for_customer(customer)
         return userplans
 
 
@@ -406,7 +409,7 @@ class Quota(OrderedModel):
         verbose_name_plural = _("Quotas")
 
     def __str__(self):
-        return "%s" % (self.codename, )
+        return "%s" % (self.codename,)
 
 
 class PlanPricingManager(models.Manager):
@@ -422,7 +425,7 @@ class PlanPricing(models.Model):
     objects = PlanPricingManager()
 
     class Meta:
-        ordering = ('pricing__period', )
+        ordering = ('pricing__period',)
         verbose_name = _("Plan pricing")
         verbose_name_plural = _("Plans pricings")
 
@@ -482,7 +485,7 @@ class Order(models.Model):
     )
     plan_extended_until = models.DateField(
         _('plan extended until'),
-        help_text=('The plan was extended until this date'),
+        help_text=_('The plan was extended until this date'),
         null=True,
         blank=True,
     )
@@ -522,18 +525,17 @@ class Order(models.Model):
         return self.status == self.STATUS.NEW and (now() - self.created).days < getattr(
             settings, 'PLANS_ORDER_EXPIRATION', 14)
 
-
     def get_plan_extended_from(self):
-        return self.user.userplan.get_plan_extended_from(self.plan)
+        return self.customer.userplan.get_plan_extended_from(self.plan)
 
     def get_plan_extended_until(self):
-        return self.user.userplan.get_plan_extended_until(self.plan, self.pricing)
+        return self.customer.userplan.get_plan_extended_until(self.plan, self.pricing)
 
     def complete_order(self):
         if self.completed is None:
             self.plan_extended_from = self.get_plan_extended_from()
-            status = self.user.userplan.extend_account(self.plan, self.pricing)
-            self.plan_extended_until = self.user.userplan.expire
+            status = self.customer.userplan.extend_account(self.plan, self.pricing)
+            self.plan_extended_until = self.customer.userplan.expire
             self.completed = now()
             if status:
                 self.status = Order.STATUS.COMPLETED
@@ -570,7 +572,7 @@ class Order(models.Model):
         return reverse('order', kwargs={'pk': self.pk})
 
     class Meta:
-        ordering = ('-created', )
+        ordering = ('-created',)
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
 
@@ -677,7 +679,7 @@ class Invoice(models.Model):
 
             if invoice_counter_reset == Invoice.NUMBERING.DAILY:
                 last_number = Invoice.objects.filter(issued=self.issued, type=self.type).aggregate(Max('number'))[
-                    'number__max'] or 0
+                                  'number__max'] or 0
             elif invoice_counter_reset == Invoice.NUMBERING.MONTHLY:
                 last_number = Invoice.objects.filter(issued__year=self.issued.year, issued__month=self.issued.month,
                                                      type=self.type).aggregate(Max('number'))['number__max'] or 0

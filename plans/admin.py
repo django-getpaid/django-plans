@@ -7,7 +7,7 @@ from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 
-from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
+from .models import CustomerPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
 from plans.models import Invoice
 
 
@@ -166,7 +166,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
 
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)
-admin.site.register(UserPlan, UserPlanAdmin)
+admin.site.register(CustomerPlan, UserPlanAdmin)
 admin.site.register(Pricing)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(BillingInfo, BillingInfoAdmin)

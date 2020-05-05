@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
-from plans.models import Order, Invoice, UserPlan, Plan
+from plans.models import Order, Invoice, CustomerPlan, Plan
 from plans.signals import order_completed, activate_user_plan
 
 
@@ -36,7 +36,7 @@ def set_default_user_plan(sender, instance, created, **kwargs):
     """
 
     if created:
-        UserPlan.create_for_user(instance)
+        CustomerPlan.create_for_user(instance)
 
 
 # Hook to django-registration to initialize plan automatically after user has confirm account
@@ -45,7 +45,7 @@ def set_default_user_plan(sender, instance, created, **kwargs):
 def initialize_plan_generic(sender, user, **kwargs):
     try:
         user.userplan.initialize()
-    except UserPlan.DoesNotExist:
+    except CustomerPlan.DoesNotExist:
         return
 
 
@@ -55,7 +55,7 @@ try:
     def initialize_plan_django_registration(sender, user, request, **kwargs):
         try:
              user.userplan.initialize()
-        except UserPlan.DoesNotExist:
+        except CustomerPlan.DoesNotExist:
             return
 
 

@@ -1,6 +1,6 @@
 from django.urls import reverse
 
-from plans.models import UserPlan
+from plans.models import CustomerPlan
 
 
 def account_status(request):
@@ -26,6 +26,6 @@ def account_status(request):
                 'EXTEND_URL': reverse('current_plan'),
                 'ACTIVATE_URL': reverse('account_activation'),
             }
-        except UserPlan.DoesNotExist:
+        except CustomerPlan.DoesNotExist:
             pass
     return {}

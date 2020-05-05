@@ -1,6 +1,7 @@
 # coding=utf-8
 from decimal import Decimal
 
+
 class PlanChangePolicy(object):
 
     def _calculate_day_cost(self, plan, period):
@@ -45,7 +46,6 @@ class PlanChangePolicy(object):
             return self._calculate_final_price(period, plan_new_day_cost - plan_old_day_cost)
 
 
-
 class StandardPlanChangePolicy(PlanChangePolicy):
     """
     This plan switch policy follows the rules:
@@ -82,7 +82,8 @@ class StandardPlanChangePolicy(PlanChangePolicy):
     def _calculate_final_price(self, period, day_cost_diff):
         if day_cost_diff is None:
             return self.DOWNGRADE_CHARGE
-        cost = (period * day_cost_diff * (self.UPGRADE_PERCENT_RATE/100 + 1) + self.UPGRADE_CHARGE).quantize(Decimal('1.00'))
+        cost = (period * day_cost_diff * (self.UPGRADE_PERCENT_RATE / 100 + 1) + self.UPGRADE_CHARGE).quantize(
+            Decimal('1.00'))
         if cost is None or cost < self.FREE_UPGRADE:
             return None
         else:

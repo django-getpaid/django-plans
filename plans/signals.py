@@ -10,11 +10,8 @@ order_completed.__doc__ = """
 Sent after order was completed (payment accepted, account extended)
 """
 
-
 user_language = Signal(providing_args=['user', 'language'])
 user_language.__doc__ = """Sent to receive information about language for user account"""
-
-
 
 account_expired = Signal(providing_args=['user'])
 account_expired.__doc__ = """
