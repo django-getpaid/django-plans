@@ -195,9 +195,10 @@ class CustomerPlan(models.Model):
         _('expire'), default=None, blank=True, null=True, db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
 
+
     class Meta:
-        verbose_name = _("User plan")
-        verbose_name_plural = _("Users plans")
+        verbose_name = _("Customer plan")
+        verbose_name_plural = _("Customers plans")
 
     def __str__(self):
         return "%s [%s]" % (self.customer, self.plan)
