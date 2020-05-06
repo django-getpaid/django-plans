@@ -77,7 +77,6 @@ class PlansTestCase(TestCase):
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
     def test_extend_account_same_plan_future(self):
-        #TODO: i should apply this for different plans
         u = User.objects.get(username='test1')
         u.customerplan.expire = date.today() + timedelta(days=50)
         u.customerplan.active = False
