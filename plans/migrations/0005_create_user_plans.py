@@ -5,13 +5,13 @@ from django.db import migrations
 
 def create_userplans(apps, schema_editor):
     from plans.models import CustomerPlan
-    CustomerPlan.create_for_users_without_plan()
+    CustomerPlan.create_for_customers_without_plan()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('plans', '0003_make_plans_unique'),
+        ('plans', '0004_auto_20200505_1819'),
     ]
 
     operations = [

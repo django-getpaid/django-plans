@@ -19,7 +19,6 @@ from plans.validators import ModelCountValidator
 
 from unittest import mock
 
-
 User = get_user_model()
 
 
@@ -29,30 +28,30 @@ class PlansTestCase(TestCase):
     def setUp(self):
         mail.outbox = []
 
-    def test_create_userplans_command(self):
-        """ Test that create_userplans command creates userplan for users that doesn't have it """
+    def test_create_customerplans_command(self):
+        """ Test that create_customerplans command creates customerplan for users that doesn't have it """
         u = User.objects.get(username='test1')
         CustomerPlan.objects.all().delete()
         with self.assertRaises(CustomerPlan.DoesNotExist):
-            u.userplan
+            u.customerplan
         u.refresh_from_db()
         out = StringIO()
-        call_command('create_userplans', stdout=out)
+        call_command('create_customerplans', stdout=out)
         self.assertIn('2 user plans was created', out.getvalue())
         default_plan = Plan.objects.get(pk=1)
-        self.assertEqual(u.userplan.plan, default_plan)
+        self.assertEqual(u.customerplan.plan, default_plan)
 
-    def test_create_userplans(self):
+    def test_create_customerplans(self):
         """ Test that create_for_users_without_plan method """
         u = User.objects.get(username='test1')
         CustomerPlan.objects.all().delete()
         with self.assertRaises(CustomerPlan.DoesNotExist):
-            u.userplan
+            u.customerplan
         u.refresh_from_db()
-        created_plans = CustomerPlan.create_for_users_without_plan()
+        created_plans = CustomerPlan.create_for_customers_without_plan()
         self.assertEqual(created_plans.count(), 2)
         default_plan = Plan.objects.get(pk=1)
-        self.assertEqual(u.userplan.plan, default_plan)
+        self.assertEqual(u.customerplan.plan, default_plan)
 
     def test_get_user_quota(self):
         u = User.objects.get(username='test1')
@@ -61,47 +60,46 @@ class PlansTestCase(TestCase):
 
     def test_get_user_quota_expired_no_default(self):
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() - timedelta(days=5)
+        u.customerplan.expire = date.today() - timedelta(days=5)
         Plan.get_default_plan().delete()
         with self.assertRaises(ValidationError):
             get_user_quota(u)
 
     def test_get_user_quota_expired_free_plan(self):
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() - timedelta(days=5)
+        u.customerplan.expire = date.today() - timedelta(days=5)
         with self.assertRaises(ValidationError):
             get_user_quota(u)
 
     def test_get_plan_quota(self):
         u = User.objects.get(username='test1')
-        p = u.userplan.plan
-        self.assertEqual(p.get_quota_dict(),
+        self.assertEqual(u.customerplan.get_quota_dict(),
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
-
     def test_extend_account_same_plan_future(self):
+        #TODO: i should apply this for different plans
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=50)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
-        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire,
+        u.customerplan.expire = date.today() + timedelta(days=50)
+        u.customerplan.active = False
+        u.customerplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.customerplan.plan, pricing__period=30)
+        u.customerplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(u.customerplan.expire,
                          date.today() + timedelta(days=50) + timedelta(days=plan_pricing.pricing.period))
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.active, True)
+        self.assertEqual(u.customerplan.plan, plan_pricing.plan)
+        self.assertEqual(u.customerplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_extend_account_same_plan_before(self):
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() - timedelta(days=50)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
-        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.active, True)
+        u.customerplan.expire = date.today() - timedelta(days=50)
+        u.customerplan.active = False
+        u.customerplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.customerplan.plan, pricing__period=30)
+        u.customerplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(u.customerplan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
+        self.assertEqual(u.customerplan.plan, plan_pricing.plan)
+        self.assertEqual(u.customerplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_extend_account_other(self):
@@ -112,14 +110,14 @@ class PlansTestCase(TestCase):
         Tests if account has been activated
         """
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() - timedelta(days=50)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
-        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.active, True)
+        u.customerplan.expire = date.today() - timedelta(days=50)
+        u.customerplan.active = False
+        u.customerplan.save()
+        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.customerplan.plan) & Q(pricing__period=30))[0]
+        u.customerplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(u.customerplan.expire, date.today() + timedelta(days=plan_pricing.pricing.period))
+        self.assertEqual(u.customerplan.plan, plan_pricing.plan)
+        self.assertEqual(u.customerplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_extend_account_other_expire_none(self):
@@ -130,15 +128,15 @@ class PlansTestCase(TestCase):
         Tests if account stays activated
         """
         u = User.objects.get(username='test1')
-        u.userplan.expire = None
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
+        u.customerplan.expire = None
+        u.customerplan.active = False
+        u.customerplan.save()
+        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.customerplan.plan) & Q(pricing__period=30))[0]
         default_plan = Plan.objects.get(pk=1)
-        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire, None)
-        self.assertEqual(u.userplan.plan, default_plan)
-        self.assertEqual(u.userplan.active, True)
+        u.customerplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(u.customerplan.expire, None)
+        self.assertEqual(u.customerplan.plan, default_plan)
+        self.assertEqual(u.customerplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_extend_account_other_expire_future(self):
@@ -149,44 +147,44 @@ class PlansTestCase(TestCase):
         Tests if account has not been activated
         """
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=5)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
+        u.customerplan.expire = date.today() + timedelta(days=5)
+        u.customerplan.active = False
+        u.customerplan.save()
+        plan_pricing = PlanPricing.objects.filter(~Q(plan=u.customerplan.plan) & Q(pricing__period=30))[0]
         default_plan = Plan.objects.get(pk=1)
-        u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=5))
-        self.assertEqual(u.userplan.plan, default_plan)
-        self.assertEqual(u.userplan.active, False)
+        u.customerplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
+        self.assertEqual(u.customerplan.expire, date.today() + timedelta(days=5))
+        self.assertEqual(u.customerplan.plan, default_plan)
+        self.assertEqual(u.customerplan.active, False)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_expire_account(self):
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=50)
-        u.userplan.active = True
-        u.userplan.save()
-        u.userplan.expire_account()
-        self.assertEqual(u.userplan.active, False)
+        u.customerplan.expire = date.today() + timedelta(days=50)
+        u.customerplan.active = True
+        u.customerplan.save()
+        u.customerplan.expire_account()
+        self.assertEqual(u.customerplan.active, False)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_remind_expire(self):
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=14)
-        u.userplan.active = True
-        u.userplan.save()
-        u.userplan.remind_expire_soon()
-        self.assertEqual(u.userplan.active, True)
+        u.customerplan.expire = date.today() + timedelta(days=14)
+        u.customerplan.active = True
+        u.customerplan.save()
+        u.customerplan.remind_expire_soon()
+        self.assertEqual(u.customerplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_disable_emails(self):
         with self.settings(SEND_PLANS_EMAILS=False):
             # Re-run the remind_expire test, but look for 0 emails sent
             u = User.objects.get(username='test1')
-            u.userplan.expire = date.today() + timedelta(days=14)
-            u.userplan.active = True
-            u.userplan.save()
-            u.userplan.remind_expire_soon()
-            self.assertEqual(u.userplan.active, True)
+            u.customerplan.expire = date.today() + timedelta(days=14)
+            u.customerplan.active = True
+            u.customerplan.save()
+            u.customerplan.remind_expire_soon()
+            self.assertEqual(u.customerplan.active, True)
             self.assertEqual(len(mail.outbox), 0)
 
     def test_switch_to_free_no_expiry(self):
@@ -197,18 +195,18 @@ class PlansTestCase(TestCase):
         Tests if account has been activated
         """
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=14)
-        self.assertIsNotNone(u.userplan.expire)
+        u.customerplan.expire = date.today() + timedelta(days=14)
+        self.assertIsNotNone(u.customerplan.expire)
 
         plan = Plan.objects.get(name="Free")
         self.assertTrue(plan.is_free())
-        self.assertNotEqual(u.userplan.plan, plan)
+        self.assertNotEqual(u.customerplan.plan, plan)
 
         # Switch to Free Plan
-        u.userplan.extend_account(plan, None)
-        self.assertEquals(u.userplan.plan, plan)
-        self.assertIsNone(u.userplan.expire)
-        self.assertEqual(u.userplan.active, True)
+        u.customerplan.extend_account(plan, None)
+        self.assertEquals(u.customerplan.plan, plan)
+        self.assertIsNone(u.customerplan.expire)
+        self.assertEqual(u.customerplan.active, True)
 
     def test_switch_from_free_set_expiry(self):
         """
@@ -218,22 +216,23 @@ class PlansTestCase(TestCase):
         Tests if account has been activated
         """
         u = User.objects.get(username='test1')
-        u.userplan.expire = None
-        u.userplan.plan = Plan.objects.get(name="Free")
-        u.userplan.save()
-        self.assertIsNone(u.userplan.expire)
-        self.assertTrue(u.userplan.plan.is_free())
+        u.customerplan.expire = None
+        u.customerplan.plan = Plan.objects.get(name="Free")
+        u.customerplan.save()
+        self.assertIsNone(u.customerplan.expire)
+        self.assertTrue(u.customerplan.plan.is_free())
 
         plan = Plan.objects.get(name="Standard")
         self.assertFalse(plan.is_free())
-        self.assertNotEqual(u.userplan.plan, plan)
+        self.assertNotEqual(u.customerplan.plan, plan)
         plan_pricing = PlanPricing.objects.filter(Q(plan=plan) & Q(pricing__period=30))[0]
 
         # Switch to Standard Plan
-        u.userplan.extend_account(plan, plan_pricing.pricing)
-        self.assertEquals(u.userplan.plan, plan)
-        self.assertIsNotNone(u.userplan.expire)
-        self.assertEqual(u.userplan.active, True)
+        u.customerplan.extend_account(plan, plan_pricing.pricing)
+        self.assertEquals(u.customerplan.plan, plan)
+        self.assertIsNotNone(u.customerplan.expire)
+        self.assertEqual(u.customerplan.active, True)
+
 
 class TestInvoice(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
@@ -267,7 +266,7 @@ class TestInvoice(TestCase):
 
     def test_get_full_number_with_settings(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.issued|date:'Y' }}." \
-                                         "{{ invoice.number }}.{{ invoice.issued|date:'m' }}"
+                                               "{{ invoice.number }}.{{ invoice.issued|date:'m' }}"
         i = Invoice()
         i.number = 123
         i.issued = date(2010, 5, 30)
@@ -308,14 +307,14 @@ class TestInvoice(TestCase):
 
     def test_invoice_number(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-                                         "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-                                         "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+                                               "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+                                               "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         o = Order.objects.all()[0]
         day = date(2010, 5, 3)
         i = Invoice(issued=day, selling_date=day, payment_date=day)
         i.copy_from_order(o)
         i.set_issuer_invoice_data()
-        i.set_buyer_invoice_data(o.user.billinginfo)
+        i.set_buyer_invoice_data(o.customer.billinginfo)
         i.clean()
         i.save()
 
@@ -324,25 +323,25 @@ class TestInvoice(TestCase):
 
     def test_invoice_number_daily(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-                                         "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-                                         "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
+                                               "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+                                               "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan,
+        o1 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan,
+        o2 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan,
+        o3 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o3.save()
@@ -351,14 +350,14 @@ class TestInvoice(TestCase):
         i1 = Invoice(issued=day, selling_date=day, payment_date=day)
         i1.copy_from_order(o1)
         i1.set_issuer_invoice_data()
-        i1.set_buyer_invoice_data(o1.user.billinginfo)
+        i1.set_buyer_invoice_data(o1.customer.billinginfo)
         i1.clean()
         i1.save()
 
         i2 = Invoice(issued=day, selling_date=day, payment_date=day)
         i2.copy_from_order(o2)
         i2.set_issuer_invoice_data()
-        i2.set_buyer_invoice_data(o2.user.billinginfo)
+        i2.set_buyer_invoice_data(o2.customer.billinginfo)
         i2.clean()
         i2.save()
 
@@ -366,7 +365,7 @@ class TestInvoice(TestCase):
         i3 = Invoice(issued=day, selling_date=day, payment_date=day)
         i3.copy_from_order(o1)
         i3.set_issuer_invoice_data()
-        i3.set_buyer_invoice_data(o1.user.billinginfo)
+        i3.set_buyer_invoice_data(o1.customer.billinginfo)
         i3.clean()
         i3.save()
 
@@ -376,25 +375,25 @@ class TestInvoice(TestCase):
 
     def test_invoice_number_monthly(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-                                         "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-                                         "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+                                               "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+                                               "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan,
+        o1 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan,
+        o2 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan,
+        o3 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o3.save()
@@ -403,7 +402,7 @@ class TestInvoice(TestCase):
         i1 = Invoice(issued=day, selling_date=day, payment_date=day)
         i1.copy_from_order(o1)
         i1.set_issuer_invoice_data()
-        i1.set_buyer_invoice_data(o1.user.billinginfo)
+        i1.set_buyer_invoice_data(o1.customer.billinginfo)
         i1.clean()
         i1.save()
 
@@ -411,7 +410,7 @@ class TestInvoice(TestCase):
         i2 = Invoice(issued=day, selling_date=day, payment_date=day)
         i2.copy_from_order(o2)
         i2.set_issuer_invoice_data()
-        i2.set_buyer_invoice_data(o2.user.billinginfo)
+        i2.set_buyer_invoice_data(o2.customer.billinginfo)
         i2.clean()
         i2.save()
 
@@ -419,7 +418,7 @@ class TestInvoice(TestCase):
         i3 = Invoice(issued=day, selling_date=day, payment_date=day)
         i3.copy_from_order(o1)
         i3.set_issuer_invoice_data()
-        i3.set_buyer_invoice_data(o1.user.billinginfo)
+        i3.set_buyer_invoice_data(o1.customer.billinginfo)
         i3.clean()
         i3.save()
 
@@ -429,25 +428,25 @@ class TestInvoice(TestCase):
 
     def test_invoice_number_annually(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-                                         "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-                                         "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
+                                               "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+                                               "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
 
         user = User.objects.get(username='test1')
         plan_pricing = PlanPricing.objects.all()[0]
         tax = getattr(settings, "PLANS_TAX")
         currency = getattr(settings, "PLANS_CURRENCY")
-        o1 = Order(user=user, plan=plan_pricing.plan,
+        o1 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o1.save()
 
-        o2 = Order(user=user, plan=plan_pricing.plan,
+        o2 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o2.save()
 
-        o3 = Order(user=user, plan=plan_pricing.plan,
+        o3 = Order(customer=user, plan=plan_pricing.plan,
                    pricing=plan_pricing.pricing, amount=plan_pricing.price,
                    tax=tax, currency=currency)
         o3.save()
@@ -456,7 +455,7 @@ class TestInvoice(TestCase):
         i1 = Invoice(issued=day, selling_date=day, payment_date=day)
         i1.copy_from_order(o1)
         i1.set_issuer_invoice_data()
-        i1.set_buyer_invoice_data(o1.user.billinginfo)
+        i1.set_buyer_invoice_data(o1.customer.billinginfo)
         i1.clean()
         i1.save()
 
@@ -464,7 +463,7 @@ class TestInvoice(TestCase):
         i2 = Invoice(issued=day, selling_date=day, payment_date=day)
         i2.copy_from_order(o2)
         i2.set_issuer_invoice_data()
-        i2.set_buyer_invoice_data(o2.user.billinginfo)
+        i2.set_buyer_invoice_data(o2.customer.billinginfo)
         i2.clean()
         i2.save()
 
@@ -472,7 +471,7 @@ class TestInvoice(TestCase):
         i3 = Invoice(issued=day, selling_date=day, payment_date=day)
         i3.copy_from_order(o1)
         i3.set_issuer_invoice_data()
-        i3.set_buyer_invoice_data(o1.user.billinginfo)
+        i3.set_buyer_invoice_data(o1.customer.billinginfo)
         i3.clean()
         i3.save()
 
@@ -487,7 +486,7 @@ class TestInvoice(TestCase):
         i.copy_from_order(o)
 
         self.assertEqual(i.order, o)
-        self.assertEqual(i.user, o.user)
+        self.assertEqual(i.customer, o.customer)
         self.assertEqual(i.total_net, o.amount)
         self.assertEqual(i.unit_price_net, o.amount)
         self.assertEqual(i.total, o.total())
@@ -501,54 +500,55 @@ class OrderTestCase(TestCase):
 
     def test_order_complete_order(self):
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=50)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        u.customerplan.expire = date.today() + timedelta(days=50)
+        u.customerplan.active = False
+        u.customerplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.customerplan.plan, pricing__period=30)
         order = Order.objects.create(
-            user=u,
+            customer=u,
             pricing=plan_pricing.pricing,
             amount=100,
             plan=plan_pricing.plan,
         )
         self.assertTrue(order.complete_order())
-        self.assertEqual(u.userplan.expire,
+        self.assertEqual(u.customerplan.expire,
                          date.today() + timedelta(days=50) + timedelta(days=plan_pricing.pricing.period))
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.active, True)
+        self.assertEqual(u.customerplan.plan, plan_pricing.plan)
+        self.assertEqual(u.customerplan.active, True)
         self.assertEqual(order.status, 2)  # completed
         self.assertEqual(order.plan_extended_from, date.today() + timedelta(days=50))
-        self.assertEqual(order.plan_extended_until, date.today() + timedelta(days=50) + timedelta(days=plan_pricing.pricing.period))
+        self.assertEqual(order.plan_extended_until,
+                         date.today() + timedelta(days=50) + timedelta(days=plan_pricing.pricing.period))
         self.assertEqual(len(mail.outbox), 3)
 
     def test_order_complete_order_invalid(self):
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=5)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        u.customerplan.expire = date.today() + timedelta(days=5)
+        u.customerplan.active = False
+        u.customerplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.customerplan.plan, pricing__period=30)
         order = Order.objects.create(
-            user=u,
+            customer=u,
             pricing=plan_pricing.pricing,
             amount=100,
             plan=PlanPricing.objects.all()[0].plan,
         )
         self.assertTrue(order.complete_order())
-        self.assertEqual(u.userplan.expire,
+        self.assertEqual(u.customerplan.expire,
                          date.today() + timedelta(days=5))
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.active, False)
+        self.assertEqual(u.customerplan.plan, plan_pricing.plan)
+        self.assertEqual(u.customerplan.active, False)
         self.assertEqual(order.status, 3)  # not valid
 
     def test_order_complete_order_completed(self):
         """ Completed order doesn't get completed any more """
         u = User.objects.get(username='test1')
-        u.userplan.expire = date.today() + timedelta(days=50)
-        u.userplan.active = False
-        u.userplan.save()
-        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        u.customerplan.expire = date.today() + timedelta(days=50)
+        u.customerplan.active = False
+        u.customerplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.customerplan.plan, pricing__period=30)
         order = Order.objects.create(
-            user=u,
+            customer=u,
             pricing=plan_pricing.pricing,
             amount=100,
             plan=plan_pricing.plan,
@@ -673,7 +673,6 @@ class ValidatorsTestCase(TestCase):
         self.assertRaises(ValidationError, validator_object, user=None, quota_dict={'QUOTA_NAME': 1})
         self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 2}), None)
         self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 3}), None)
-
 
         #   TODO: FIX this test not to use Pricing for testing  ModelAttributeValidator
         # def test_model_attribute_validator(self):

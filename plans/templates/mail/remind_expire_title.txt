@@ -1,1 +1,1 @@
-{% load i18n %}{% blocktrans count days as days %}Your account {{ user }} will expire in {{ days }} day{% plural %}Your account {{ user }} will expire in {{ days }} days{% endblocktrans %}
+{% load i18n %}{% blocktrans count days as days %}Your account {{ customer }} will expire in {{ days }} day{% plural %}Your account {{ customer }} will expire in {{ days }} days{% endblocktrans %}

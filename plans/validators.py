@@ -135,7 +135,7 @@ def plan_validation(user, plan=None, on_activation=False):
     """
     if plan is None:
         # if plan is not given, the default is to use current plan of the user
-        plan = user.userplan.plan
+        plan = user.customerplan.plan
     quota_dict = plan.get_quota_dict()
     validators = getattr(settings, 'PLANS_VALIDATORS', {})
     validators = import_name(validators)

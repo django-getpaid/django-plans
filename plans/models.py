@@ -101,14 +101,14 @@ class Plan(OrderedModel):
         return return_value
 
     @classmethod
-    def get_current_plan(cls, user):
-        """ Get current plan for user. If userplan is expired, get default plan """
-        if not user or user.is_anonymous or not hasattr(user, 'userplan') or user.userplan.is_expired():
+    def get_current_plan(cls, customer):
+        """ Get current plan for customer. If customerplan is expired, get default plan """
+        if not customer or customer.is_anonymous or not hasattr(customer, 'customerplan') or customer.customerplan.is_expired():
             default_plan = Plan.get_default_plan()
             if default_plan is None or not default_plan.is_free():
                 raise ValidationError(_('User plan has expired'))
             return default_plan
-        return user.userplan.plan
+        return customer.customerplan.plan
 
     def __str__(self):
         return self.name
@@ -129,8 +129,8 @@ class BillingInfo(models.Model):
     """
     Stores customer billing data needed to issue an invoice
     """
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_('user'),
+    customer = models.OneToOneField(
+        conf.get_customer_model_string(), verbose_name=_('customer'),
         on_delete=models.CASCADE
     )
     tax_number = models.CharField(
@@ -190,7 +190,7 @@ class CustomerPlan(models.Model):
         conf.get_customer_model_string(), verbose_name=_('customer'),
         on_delete=models.CASCADE
     )
-    plans = models.ManyToManyField('Plan', verbose_name=_('plan'), on_delete=models.CASCADE)
+    plan = models.ForeignKey('Plan', verbose_name=_('plan'), on_delete=models.CASCADE)
     expire = models.DateField(
         _('expire'), default=None, blank=True, null=True, db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
@@ -286,7 +286,7 @@ class CustomerPlan(models.Model):
 
             self.save()
             account_change_plan.send(sender=self, user=self.customer)
-            mail_context = {'customer': self.customer, 'userplan': self, 'plan': plan}
+            mail_context = {'customer': self.customer, 'customerplan': self, 'plan': plan}
             send_template_email([self.customer.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
                                 mail_context, get_user_language(self.customer))
             accounts_logger.info(
@@ -316,7 +316,7 @@ class CustomerPlan(models.Model):
                 accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
                     self.customer, self.customer.pk, pricing.period, plan, plan.pk))
                 mail_context = {'customer': self.customer,
-                                'userplan': self,
+                                'customerplan': self,
                                 'plan': plan,
                                 'pricing': pricing}
                 send_template_email([self.customer.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
@@ -335,11 +335,11 @@ class CustomerPlan(models.Model):
         accounts_logger.info(
             "Account '%s' [id=%d] has expired" % (self.customer, self.customer.pk))
 
-        mail_context = {'user': self.customer, 'userplan': self}
+        mail_context = {'customer': self.customer, 'customerplan': self}
         send_template_email([self.customer.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
                             mail_context, get_user_language(self.customer))
 
-        account_expired.send(sender=self, user=self.user)
+        account_expired.send(sender=self, user=self.customer)
 
     def remind_expire_soon(self):
         """reminds about soon account expiration"""
@@ -365,10 +365,17 @@ class CustomerPlan(models.Model):
 
     @classmethod
     def create_for_customers_without_plan(cls):
-        userplans = conf.get_customer_model().objects.filter(userplan=None)
+        userplans = conf.get_customer_model().objects.filter(customerplan=None)
         for customer in userplans:
             CustomerPlan.create_for_customer(customer)
         return userplans
+
+    def get_quota_dict(self):
+        quota_dic = {}
+        for plan_quota in PlanQuota.objects.filter(plan__customerplan=self).select_related('quota'):
+            quota_dic[plan_quota.quota.codename] = plan_quota.value
+        return quota_dic
+
 
 
 class Pricing(models.Model):
@@ -468,7 +475,7 @@ class Order(models.Model):
 
     ])
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
+    customer = models.ForeignKey(conf.get_customer_model_string(), verbose_name=_('user'), on_delete=models.CASCADE)
     flat_name = models.CharField(max_length=200, blank=True, null=True)
     plan = models.ForeignKey('Plan', verbose_name=_(
         'plan'), related_name="plan_order", on_delete=models.CASCADE)
@@ -526,16 +533,16 @@ class Order(models.Model):
             settings, 'PLANS_ORDER_EXPIRATION', 14)
 
     def get_plan_extended_from(self):
-        return self.customer.userplan.get_plan_extended_from(self.plan)
+        return self.customer.customerplan.get_plan_extended_from(self.plan)
 
     def get_plan_extended_until(self):
-        return self.customer.userplan.get_plan_extended_until(self.plan, self.pricing)
+        return self.customer.customerplan.get_plan_extended_until(self.plan, self.pricing)
 
     def complete_order(self):
         if self.completed is None:
             self.plan_extended_from = self.get_plan_extended_from()
-            status = self.customer.userplan.extend_account(self.plan, self.pricing)
-            self.plan_extended_until = self.customer.userplan.expire
+            status = self.customer.customerplan.extend_account(self.plan, self.pricing)
+            self.plan_extended_until = self.customer.customerplan.expire
             self.completed = now()
             if status:
                 self.status = Order.STATUS.COMPLETED
@@ -616,7 +623,7 @@ class Invoice(models.Model):
         MONTHLY = 2
         ANNUALLY = 3
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
+    customer = models.ForeignKey(conf.get_customer_model_string(), verbose_name=_('user'), on_delete=models.CASCADE)
     order = models.ForeignKey('Order', verbose_name=_('order'), on_delete=models.CASCADE)
     number = models.IntegerField(db_index=True)
     full_number = models.CharField(max_length=200)
@@ -768,7 +775,7 @@ class Invoice(models.Model):
         :type order: Order
         """
         self.order = order
-        self.user = order.user
+        self.customer = order.customer
         self.unit_price_net = order.amount
         self.total_net = order.amount
         self.total = order.total()
@@ -783,13 +790,13 @@ class Invoice(models.Model):
 
     @classmethod
     def create(cls, order, invoice_type):
-        language_code = get_user_language(order.user)
+        language_code = get_user_language(order.customer)
 
         if language_code is not None:
             translation.activate(language_code)
 
         try:
-            billing_info = BillingInfo.objects.get(user=order.user)
+            billing_info = BillingInfo.objects.get(customer=order.customer)
         except BillingInfo.DoesNotExist:
             return
 
@@ -810,18 +817,18 @@ class Invoice(models.Model):
             translation.deactivate()
 
     def send_invoice_by_email(self):
-        language_code = get_user_language(self.user)
+        language_code = get_user_language(self.customer)
 
         if language_code is not None:
             translation.activate(language_code)
-        mail_context = {'user': self.user,
+        mail_context = {'customer': self.customer,
                         'invoice_type': self.get_type_display(),
                         'invoice_number': self.get_full_number(),
                         'order': self.order.id,
                         'url': self.get_absolute_url(), }
         if language_code is not None:
             translation.deactivate()
-        send_template_email([self.user.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt',
+        send_template_email([self.customer.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt',
                             mail_context, language_code)
 
     def is_UE_customer(self):

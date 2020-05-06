@@ -1,1 +1,1 @@
-{% load i18n %}{% blocktrans with user=user plan=plan.name %}Your account {{ user }} has new plan {{ plan }}{% endblocktrans %}
+{% load i18n %}{% blocktrans with customer=customer plan=plan.name %}Your account {{ customer }} has new plan {{ plan }}{% endblocktrans %}

@@ -90,7 +90,7 @@
       "country": "PL",
       "zipcode": "12-234",
       "street": "Sloneczna 15",
-      "user": [
+      "customer": [
         "test1"
       ],
       "tax_number": "PL5521465632"
@@ -524,7 +524,7 @@
       "amount": "10.00",
       "pricing": 1,
       "plan": 3,
-      "user": [
+      "customer": [
         "test1"
       ]
     }
@@ -540,7 +540,7 @@
       "amount": "200.00",
       "pricing": 1,
       "plan": 5,
-      "user": [
+      "customer": [
         "test1"
       ]
     }
@@ -556,7 +556,7 @@
       "amount": "200.00",
       "pricing": 1,
       "plan": 5,
-      "user": [
+      "customer": [
         "test1"
       ]
     }
