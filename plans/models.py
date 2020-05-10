@@ -476,7 +476,7 @@ class Order(models.Model):
 
     ])
 
-    customer = models.ForeignKey(conf.get_customer_model_string(), verbose_name=_('user'), on_delete=models.CASCADE)
+    customer = models.ForeignKey(conf.get_customer_model_string(), verbose_name=_('customer'), on_delete=models.CASCADE)
     flat_name = models.CharField(max_length=200, blank=True, null=True)
     plan = models.ForeignKey('Plan', verbose_name=_(
         'plan'), related_name="plan_order", on_delete=models.CASCADE)
@@ -625,7 +625,7 @@ class Invoice(models.Model):
         MONTHLY = 2
         ANNUALLY = 3
 
-    customer = models.ForeignKey(conf.get_customer_model_string(), verbose_name=_('user'), on_delete=models.CASCADE)
+    customer = models.ForeignKey(conf.get_customer_model_string(), verbose_name=_('customer'), on_delete=models.CASCADE)
     order = models.ForeignKey('Order', verbose_name=_('order'), on_delete=models.CASCADE)
     number = models.IntegerField(db_index=True)
     full_number = models.CharField(max_length=200)

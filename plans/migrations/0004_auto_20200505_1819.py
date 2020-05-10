@@ -87,4 +87,20 @@ class Migration(migrations.Migration):
             name='plan',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='plans.Plan', verbose_name='plan'),
         ),
+        migrations.AlterModelOptions(
+            name='customerplan',
+            options={'verbose_name': 'Customer plan', 'verbose_name_plural': 'Customers plans'},
+        ),
+        migrations.AlterField(
+            model_name='invoice',
+            name='customer',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=PLAN_CUSTOMER_MODEL,
+                                    verbose_name='customer'),
+        ),
+        migrations.AlterField(
+            model_name='order',
+            name='customer',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=PLAN_CUSTOMER_MODEL,
+                                    verbose_name='customer'),
+        ),
     ]
