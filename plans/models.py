@@ -103,7 +103,8 @@ class Plan(OrderedModel):
     @classmethod
     def get_current_plan(cls, customer):
         """ Get current plan for customer. If customerplan is expired, get default plan """
-        if not customer or customer.is_anonymous or not hasattr(customer, 'customerplan') or customer.customerplan.is_expired():
+        if not customer or customer.is_anonymous or not hasattr(customer,
+                                                                'customerplan') or customer.customerplan.is_expired():
             default_plan = Plan.get_default_plan()
             if default_plan is None or not default_plan.is_free():
                 raise ValidationError(_('User plan has expired'))
@@ -194,7 +195,6 @@ class CustomerPlan(models.Model):
     expire = models.DateField(
         _('expire'), default=None, blank=True, null=True, db_index=True)
     active = models.BooleanField(_('active'), default=True, db_index=True)
-
 
     class Meta:
         verbose_name = _("Customer plan")
@@ -320,7 +320,8 @@ class CustomerPlan(models.Model):
                                 'customerplan': self,
                                 'plan': plan,
                                 'pricing': pricing}
-                send_template_email([self.customer.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
+                send_template_email([self.customer.email], 'mail/extend_account_title.txt',
+                                    'mail/extend_account_body.txt',
                                     mail_context, get_user_language(self.customer))
 
         if status:
@@ -376,7 +377,6 @@ class CustomerPlan(models.Model):
         for plan_quota in PlanQuota.objects.filter(plan__customerplan=self).select_related('quota'):
             quota_dic[plan_quota.quota.codename] = plan_quota.value
         return quota_dic
-
 
 
 class Pricing(models.Model):
@@ -496,6 +496,7 @@ class Order(models.Model):
         help_text=_('The plan was extended until this date'),
         null=True,
         blank=True,
+
     )
     amount = models.DecimalField(
         _('amount'), max_digits=7, decimal_places=2, db_index=True)
