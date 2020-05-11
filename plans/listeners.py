@@ -3,7 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
 from plans.models import Order, Invoice, CustomerPlan, Plan
 from plans.signals import order_completed, activate_user_plan
-
+from . import conf
 
 User = get_user_model()
 
@@ -29,7 +29,7 @@ def send_invoice_by_email(sender, instance, created, **kwargs):
         instance.send_invoice_by_email()
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=conf.get_customer_model_string())
 def set_default_user_plan(sender, instance, created, **kwargs):
     """
     Creates default plan for the new user but also extending an account for default grace period.
@@ -44,7 +44,7 @@ def set_default_user_plan(sender, instance, created, **kwargs):
 @receiver(activate_user_plan)
 def initialize_plan_generic(sender, user, **kwargs):
     try:
-        user.userplan.initialize()
+        user.customerplan.initialize()
     except CustomerPlan.DoesNotExist:
         return
 
@@ -54,7 +54,7 @@ try:
     @receiver(user_activated)
     def initialize_plan_django_registration(sender, user, request, **kwargs):
         try:
-             user.userplan.initialize()
+             user.customerplan.initialize()
         except CustomerPlan.DoesNotExist:
             return
 

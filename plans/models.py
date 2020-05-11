@@ -366,6 +366,13 @@ class CustomerPlan(models.Model):
             )
 
     @classmethod
+    def get_or_create_for_customer(cls, customer):
+        try:
+            return CustomerPlan.objects.get(customer=customer)
+        except CustomerPlan.DoesNotExist:
+            return cls.create_for_customer(customer)
+
+    @classmethod
     def create_for_customers_without_plan(cls):
         userplans = conf.get_customer_model().objects.filter(customerplan=None)
         for customer in userplans:
