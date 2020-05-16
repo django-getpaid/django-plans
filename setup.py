@@ -32,6 +32,7 @@ setup(
         'pytz>=2017.2',
         'django-ordered-model>=1.4.1',
         'vatnumber>=1.2',
+        'django-next-url-mixin',
         'celery',
         'suds-jurko',
         'six',
