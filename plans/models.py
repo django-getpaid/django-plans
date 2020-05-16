@@ -265,16 +265,15 @@ class UserPlan(models.Model):
         """
         Creates or updates plan renewal information for this userplan with given order
         """
-        recurring, _ = RecurringUserPlan.objects.update_or_create(
+        self.recurring.delete()
+        recurring = RecurringUserPlan.objects.create(
             user_plan=self,
-            defaults={
-                'pricing': order.pricing,
-                'amount': order.amount,
-                'tax': order.tax,
-                'currency': order.currency,
-                'has_automatic_renewal': has_automatic_renewal,
-                **kwargs,
-            },
+            pricing=order.pricing,
+            amount=order.amount,
+            tax=order.tax,
+            currency=order.currency,
+            has_automatic_renewal=has_automatic_renewal,
+            **kwargs,
         )
         return recurring
 
