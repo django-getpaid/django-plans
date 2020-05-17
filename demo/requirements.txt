@@ -6,6 +6,7 @@ django-extensions
 mock
 tox
 suds-jurko
+maxminddb-geolite2
 
 
 # Not supported in py3

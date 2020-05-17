@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core import mail
 from django.core.management import call_command
 from django.db.models import Q
+from django.urls import reverse
 
 from plans.models import PlanPricing, Invoice, Order, Plan, UserPlan
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
@@ -689,3 +690,30 @@ class ValidatorsTestCase(TestCase):
         #     validator_object = TestValidator()
         #     self.assertRaises(ValidationError, validator_object, user=None, quota_dict={'QUOTA_NAME': 360})
         #     self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 365}), None)
+
+
+class BillingInfoViewTestCase(TestCase):
+    fixtures = ['test_django-plans_auth']
+    def setUp(self):
+        user = User.objects.create_user('foo', 'myemail@test.com', 'bar')
+        self.client.login(username='foo', password='bar')
+
+    def test_default_country(self):
+        """
+        Test, that default country is PL
+        """
+        response = self.client.get(reverse('billing_info_create'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<option value="PL" selected>Poland</option>', html=True)
+
+    def test_default_country_by_IP(self):
+        """
+        Test, that default country is determined by German IP
+        """
+
+        response = self.client.get(reverse('billing_info_create'), HTTP_X_FORWARDED_FOR='85.214.132.117')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<option value="DE" selected>Germany</option>', html=True)
+        response = self.client.get(reverse('billing_info_create'), REMOTE_ADDR='85.214.132.117')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<option value="DE" selected>Germany</option>', html=True)

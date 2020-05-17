@@ -13,6 +13,11 @@ You can install app using package manager directly from github:
 
 For integration instruction please see section  :doc:`integration`.
 
+If you want to determine billing info default country by IP address, install `geolite2`:
+
+.. code-block:: bash
+
+    $ pip install maxminddb-geolite2
 
 
 Running example project

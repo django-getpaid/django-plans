@@ -17,7 +17,7 @@ from itertools import chain
 from plans.importer import import_name
 from plans.mixins import LoginRequired
 from plans.models import UserPlan, PlanPricing, Plan, Order, BillingInfo
-from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm
+from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm, get_country_code
 from plans.models import Quota, Invoice
 from plans.signals import order_started
 from plans.validators import plan_validation
@@ -184,7 +184,9 @@ class CreateOrderView(LoginRequired, CreateView):
         order.amount = amount
         order.currency = self.get_currency()
         country = getattr(billing_info, 'country', None)
-        if not country is None:
+        if country is None:
+            country = get_country_code(self.request)
+        else:
             country = country.code
         tax_number = getattr(billing_info, 'tax_number', None)
 
@@ -422,6 +424,11 @@ class BillingInfoCreateView(SuccessUrlMixin, LoginRequired, CreateView):
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update(request=self.request)
+        return kwargs
+
 
 class BillingInfoUpdateView(SuccessUrlMixin, LoginRequired, UpdateView):
     """
@@ -436,6 +443,11 @@ class BillingInfoUpdateView(SuccessUrlMixin, LoginRequired, UpdateView):
             return self.request.user.billinginfo
         except BillingInfo.DoesNotExist:
             raise Http404
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update(request=self.request)
+        return kwargs
 
 
 class BillingInfoDeleteView(LoginRequired, DeleteView):
