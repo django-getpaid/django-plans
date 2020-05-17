@@ -21,6 +21,17 @@ Example::
 
 This is the default mail ``FROM`` value for sending system notifications.
 
+``PLANS_GET_COUNTRY_FROM_IP``
+----------------------
+
+**Optional**
+
+Default: ``False``
+
+If set to True, the country default in billing info will be get from users IP.
+The ``geolite2`` library must be installed for this to work.
+
+
 ``PLANS_INVOICE_COUNTER_RESET``
 -------------------------
 
@@ -270,6 +281,17 @@ Example::
 
 
 Further reading: :doc:`taxation`
+
+``PLANS_DEFAULT_COUNTRY``
+---------------
+
+**Optional**
+
+Two letter ISO country code. This variable is used to determine default country for user on his billing info.
+
+Example::
+
+    PLANS_TAX_COUNTRY = 'PL'
 
 ``PLANS_TAX_COUNTRY``
 ---------------

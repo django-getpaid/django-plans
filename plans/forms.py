@@ -18,19 +18,19 @@ def get_client_ip(request):
 
 
 def get_country_code(request):
-    try:
-        from geolite2 import geolite2
-        reader = geolite2.reader()
-        ip_address = get_client_ip(request)
-        ip_info = reader.get(ip_address)
-    except ModuleNotFoundError:
-        ip_info = None
+    if getattr(settings, 'PLANS_GET_COUNTRY_FROM_IP', False):
+        try:
+            from geolite2 import geolite2
+            reader = geolite2.reader()
+            ip_address = get_client_ip(request)
+            ip_info = reader.get(ip_address)
+        except ModuleNotFoundError:
+            ip_info = None
 
-    if ip_info and 'country' in ip_info:
-        country_code = ip_info['country']['iso_code']
-        return country_code
-    else:
-        return settings.PLANS_TAX_COUNTRY
+        if ip_info and 'country' in ip_info:
+            country_code = ip_info['country']['iso_code']
+            return country_code
+    return getattr(settings, 'PLANS_DEFAULT_COUNTRY', None)
 
 
 class OrderForm(forms.Form):
