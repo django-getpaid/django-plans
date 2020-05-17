@@ -316,3 +316,12 @@ The ``verbose_name`` of django-plans' ``AppConfig``.
 .. note::
 
     ``settings.PLANS_TAX_COUNTRY`` is a separate value from ``settings.PLANS_INVOICE_ISSUER.issuer_country`` on purpose. ``PLANS_INVOICE_ISSUER`` is just what you want to have printed on an invoice.
+
+``PLANS_AUTORENEW_BEFORE_DAYS`` and ``PLANS_AUTORENEW_BEFORE_HOURS``
+--------------------------------------------------------------------
+
+**Optional**
+
+Default: ``0`` (for both)
+
+Time of plan automatic renewal before the plan actually expires.

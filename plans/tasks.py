@@ -4,17 +4,47 @@ from celery.schedules import crontab
 from celery.task.base import periodic_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from .signals import account_automatic_renewal
 
 
 User = get_user_model()
 logger = logging.getLogger('plans.tasks')
 
+
+def get_active_plans():
+    return User.objects.select_related('userplan').filter(userplan__active=True).exclude(userplan__expire=None)
+
+
+@periodic_task(run_every=crontab(hour=0, minute=5))
+def autorenew_account():
+    logger.info('Started automatic account renewal')
+    PLANS_AUTORENEW_BEFORE_DAYS = getattr(settings, 'PLANS_AUTORENEW_BEFORE_DAYS', 0)
+    PLANS_AUTORENEW_BEFORE_HOURS = getattr(settings, 'PLANS_AUTORENEW_BEFORE_HOURS', 0)
+
+    accounts_for_renewal = get_active_plans().filter(
+        userplan__recurring__has_automatic_renewal=True,
+        userplan__expire__lt=datetime.date.today() + datetime.timedelta(days=PLANS_AUTORENEW_BEFORE_DAYS, hours=PLANS_AUTORENEW_BEFORE_HOURS),
+    )
+
+    logger.info(f"{len(accounts_for_renewal)} accounts to be renewed.")
+
+    for user in accounts_for_renewal.all():
+        account_automatic_renewal.send(sender=None, user=user)
+    return accounts_for_renewal
+
+
 @periodic_task(run_every=crontab(hour=0, minute=5))
 def expire_account():
 
-    logger.info('Started')
+    logger.info('Started account expiration')
 
-    for user in User.objects.select_related('userplan').filter(userplan__active=True,         userplan__expire__lt=datetime.date.today()).exclude(userplan__expire=None):
+    expired_accounts = get_active_plans().filter(
+        userplan__expire__lt=datetime.date.today(),
+    ).exclude(
+        userplan__recurring__has_automatic_renewal=True,
+    )
+
+    for user in expired_accounts.all():
         user.userplan.expire_account()
 
     notifications_days_before = getattr(settings, 'PLANS_EXPIRATION_REMIND', [])

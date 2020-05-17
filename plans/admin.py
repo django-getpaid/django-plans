@@ -7,7 +7,7 @@ from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 
-from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, Order, BillingInfo
+from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, RecurringUserPlan, Order, BillingInfo
 from plans.models import Invoice
 
 
@@ -153,15 +153,30 @@ class InvoiceAdmin(admin.ModelAdmin):
     raw_id_fields = ('user', 'order')
 
 
+class RecurringPlanInline(admin.StackedInline):
+    model = RecurringUserPlan
+    extra = 0
+
+
 class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     list_filter = ('active', 'expire', 'plan__name', 'plan__available', 'plan__visible',)
     search_fields = ('user__username', 'user__email', 'plan__name',)
-    list_display = ('user', 'plan', 'expire', 'active')
+    list_display = ('user', 'plan', 'expire', 'active', 'recurring__automatic_renewal', 'recurring__pricing')
     list_display_links = list_display
     list_select_related = True
     readonly_fields = ['user_link', ]
-    fields = ('user', 'user_link', 'plan', 'expire', 'active' )
+    inlines = (RecurringPlanInline,)
+    fields = ('user', 'user_link', 'plan', 'expire', 'active')
     raw_id_fields = ['user', 'plan', ]
+
+    def recurring__automatic_renewal(self, obj):
+        return obj.recurring.has_automatic_renewal
+    recurring__automatic_renewal.admin_order_field = 'recurring__has_automatic_renewal'
+    recurring__automatic_renewal.boolean = True
+
+    def recurring__pricing(self, obj):
+        return obj.recurring.pricing
+    recurring__automatic_renewal.admin_order_field = 'recurring__pricing'
 
 
 admin.site.register(Quota, QuotaAdmin)

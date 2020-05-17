@@ -4,6 +4,7 @@ django-plans changelog
 0.9.0
 ------
 
+* Add basic recurring payments support
 * Added `expire_accounts` management command as an alternative to Celery task
 * Added free plan support, fix expired quotas.
 * It is now ensured, that we have only one default migration.

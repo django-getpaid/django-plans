@@ -19,6 +19,7 @@ Contents:
    quota_validators
    plans_change
    plans_expiration
+   plans_recurrence
    taxation
    invoicing
    templating
@@ -44,6 +45,7 @@ Contributors:
 
 * Victor Safronovich <vsafronovich@gmail.com>
 * Dominik Kozaczko <http://dominik.kozaczko.info>
+* Petr Dlouhý <petr.dlouhy@email.cz>
 
 Source code:
 https://github.com/cypreess/django-plans
