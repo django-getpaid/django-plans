@@ -4,6 +4,8 @@ django-plans changelog
 0.9.0
 ------
 
+* Disable particular e-mails from system through configuration: `PLANS_SEND_EMAILS_NO_SEND_TYPES`, `PLANS_SEND_EMAILS_PLAN_CHANGED`, `PLANS_SEND_EMAILS_PLAN_EXTENDED`
+* If e-mail template with `.html` appendix, send HTML e-mail.
 * Add basic recurring payments support
 * Added `expire_accounts` management command as an alternative to Celery task
 * Added free plan support, fix expired quotas.
