@@ -893,6 +893,7 @@ class Invoice(models.Model):
                         'invoice_type': self.get_type_display(),
                         'invoice_number': self.get_full_number(),
                         'order': self.order.id,
+                        'order_object': self.order,
                         'url': self.get_absolute_url(), }
         if language_code is not None:
             translation.deactivate()
