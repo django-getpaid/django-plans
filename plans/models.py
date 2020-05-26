@@ -265,7 +265,10 @@ class UserPlan(models.Model):
         """
         Creates or updates plan renewal information for this userplan with given order
         """
-        self.recurring.delete()
+        if hasattr(self, 'recurring'):
+            # Delete the plan to populate with default values
+            # We don't want to mix the old and new values
+            self.recurring.delete()
         recurring = RecurringUserPlan.objects.create(
             user_plan=self,
             pricing=order.pricing,
