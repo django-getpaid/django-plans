@@ -261,6 +261,15 @@ class UserPlan(models.Model):
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
 
+    def plan_autorenew_at(self):
+        """
+        Helper function which calculates when the plan autorenewal will occur
+        """
+        if self.expire:
+            plans_autorenew_before_days = getattr(settings, 'PLANS_AUTORENEW_BEFORE_DAYS', 0)
+            plans_autorenew_before_hours = getattr(settings, 'PLANS_AUTORENEW_BEFORE_HOURS', 0)
+            return self.expire - timedelta(days=plans_autorenew_before_days, hours=plans_autorenew_before_hours)
+
     def set_plan_renewal(self, order, has_automatic_renewal=True, **kwargs):
         """
         Creates or updates plan renewal information for this userplan with given order
