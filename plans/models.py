@@ -433,6 +433,7 @@ class RecurringUserPlan(models.Model):
     )
     card_expire_year = models.IntegerField(null=True, blank=True)
     card_expire_month = models.IntegerField(null=True, blank=True)
+    card_masked_number = models.CharField(null=True, blank=True, max_length=255)
 
     def create_renew_order(self):
         """
