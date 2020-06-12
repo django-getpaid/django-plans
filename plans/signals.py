@@ -22,7 +22,9 @@ Should renew the user's UserPlan by recurring payments. If this succeeds, the pl
 
 account_expired = Signal(providing_args=['user'])
 account_expired.__doc__ = """
-Sent on account expiration. This signal is send regardless ``account_deactivated`` it only means that account has expired due to plan expire date limit.
+Sent on account expiration.
+This signal is send regardless ``account_deactivated``
+it only means that account has expired due to plan expire date limit.
 """
 
 account_deactivated = Signal(providing_args=['user'])
@@ -41,5 +43,6 @@ Sent on account when plan was changed after order completion
 
 activate_user_plan = Signal(providing_args=['user'])
 activate_user_plan.__doc__ = """
-This signal should be called when user has succesfully registered (e.g. he activated account via e-mail activation). If you are using django-registration there is no need to call this signal.
+This signal should be called when user has succesfully registered (e.g. he activated account via e-mail activation).
+If you are using django-registration there is no need to call this signal.
 """

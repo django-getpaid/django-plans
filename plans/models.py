@@ -121,6 +121,7 @@ class Plan(OrderedModel):
         return self.planpricing_set.count() == 0
     is_free.boolean = True
 
+
 class BillingInfo(models.Model):
     """
     Stores customer billing data needed to issue an invoice
@@ -345,7 +346,8 @@ class UserPlan(models.Model):
                                     'userplan': self,
                                     'plan': plan,
                                     'pricing': pricing}
-                    send_template_email([self.user.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
+                    send_template_email([self.user.email], 'mail/extend_account_title.txt',
+                                        'mail/extend_account_body.txt',
                                         mail_context, get_user_language(self.user))
 
         if status:
@@ -420,7 +422,8 @@ class RecurringUserPlan(models.Model):
         null=True,
         blank=True,
     )
-    pricing = models.ForeignKey('Pricing', help_text=_('Recurring pricing'), default=None, null=True, blank=True, on_delete=models.CASCADE)
+    pricing = models.ForeignKey('Pricing', help_text=_('Recurring pricing'), default=None,
+                                null=True, blank=True, on_delete=models.CASCADE)
     amount = models.DecimalField(
         _('amount'), max_digits=7, decimal_places=2, db_index=True, null=True, blank=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
@@ -428,7 +431,10 @@ class RecurringUserPlan(models.Model):
     currency = models.CharField(_('currency'), max_length=3)
     has_automatic_renewal = models.BooleanField(
         _('has automatic plan renewal'),
-        help_text=_('Automatic renewal is enabled for associated plan. If False, the plan renewal can be still initiated by user.'),
+        help_text=_(
+            'Automatic renewal is enabled for associated plan. '
+            'If False, the plan renewal can be still initiated by user.',
+        ),
         default=False,
     )
     card_expire_year = models.IntegerField(null=True, blank=True)
@@ -609,7 +615,6 @@ class Order(models.Model):
     def is_ready_for_payment(self):
         return self.status == self.STATUS.NEW and (now() - self.created).days < getattr(
             settings, 'PLANS_ORDER_EXPIRATION', 14)
-
 
     def get_plan_extended_from(self):
         return self.user.userplan.get_plan_extended_from(self.plan)
@@ -803,8 +808,13 @@ class Invoice(models.Model):
 
         :return: string (generated full number)
         """
-        format = getattr(settings, "PLANS_INVOICE_NUMBER_FORMAT",
-                         "{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'m/Y' }}")
+        format = getattr(
+            settings,
+            "PLANS_INVOICE_NUMBER_FORMAT",
+            "{{ invoice.number }}/"
+            "{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}"
+            "/{{ invoice.issued|date:'m/Y' }}",
+        )
         return Template(format).render(Context({'invoice': self}))
 
     def set_issuer_invoice_data(self):
@@ -815,7 +825,7 @@ class Invoice(models.Model):
         """
         try:
             issuer = getattr(settings, 'PLANS_INVOICE_ISSUER')
-        except:
+        except Exception:
             raise ImproperlyConfigured(
                 "Please set PLANS_INVOICE_ISSUER in order to make an invoice.")
         self.issuer_name = issuer['issuer_name']
@@ -919,4 +929,4 @@ class Invoice(models.Model):
 
 
 # noinspection PyUnresolvedReferences
-import plans.listeners
+import plans.listeners  # noqa

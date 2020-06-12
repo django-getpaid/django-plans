@@ -23,7 +23,8 @@ class EUTaxationPolicy(TaxationPolicy):
     register in MOSS system.
     """
 
-    # Standard VAT rates according to http://ec.europa.eu/taxation_customs/resources/documents/taxation/vat/how_vat_works/rates/vat_rates_en.pdf
+    # Standard VAT rates according to
+    # http://ec.europa.eu/taxation_customs/resources/documents/taxation/vat/how_vat_works/rates/vat_rates_en.pdf
     # Situation at 1 Jan 2017
 
     EU_COUNTRIES_VAT = {
@@ -60,7 +61,6 @@ class EUTaxationPolicy(TaxationPolicy):
     @classmethod
     def is_in_EU(cls, country_code):
         return country_code.upper() in cls.EU_COUNTRIES_VAT
-
 
     @classmethod
     def get_default_tax(cls):
@@ -118,4 +118,3 @@ class EUTaxationPolicy(TaxationPolicy):
                 # Company is not from EU
                 # VAT n/a
                 return None
-

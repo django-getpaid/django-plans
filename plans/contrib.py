@@ -11,6 +11,7 @@ from django.template.exceptions import TemplateDoesNotExist
 
 email_logger = logging.getLogger('emails')
 
+
 def send_template_email(recipients, title_template, body_template, context, language):
     """Sends e-mail using templating system"""
 
@@ -59,7 +60,8 @@ def send_template_email(recipients, title_template, body_template, context, lang
 
 
 def get_user_language(user):
-    """ Simple helper that will fire django signal in order to get User language possibly given by other part of application.
+    """ Simple helper that will fire django signal in order
+    to get User language possibly given by other part of application.
     :param user:
     :return: string or None
     """

@@ -9,12 +9,15 @@ env:
 # command to install dependencies
 install:
   - "pip install -q -e ."
+  - "pip install flake8"
   - "pip install -q -r demo/requirements.txt"
   - "pip install -q Django==$DJANGO_VERSION"
   - "pip install codecov"
 
 # command to run tests
-script: "cd demo && python manage.py makemigrations && coverage run manage.py test plans"
+script:
+  - flake8
+  - "cd demo && python manage.py makemigrations && coverage run manage.py test plans"
 
 after_success:
   - codecov

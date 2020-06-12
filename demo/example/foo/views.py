@@ -46,4 +46,3 @@ class FooDeleteView(DeleteView):
             return redirect('foo_del', pk=self.get_object().pk)
         else:
             return super(FooDeleteView, self).delete(request, *args, **kwargs)
-

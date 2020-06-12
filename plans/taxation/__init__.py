@@ -1,5 +1,6 @@
 from django.conf import settings
 
+
 class TaxationPolicy(object):
     """
     Abstract class for defining taxation policies.
@@ -39,4 +40,3 @@ class TaxationPolicy(object):
         :return: Decimal()
         """
         raise NotImplementedError('Method get_tax_rate should be implemented.')
-

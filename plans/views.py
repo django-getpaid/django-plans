@@ -28,7 +28,7 @@ class AccountActivationView(LoginRequired, TemplateView):
     template_name = 'plans/account_activation.html'
 
     def get_context_data(self, **kwargs):
-        if self.request.user.userplan.active == True or self.request.user.userplan.is_expired():
+        if self.request.user.userplan.active is True or self.request.user.userplan.is_expired():
             raise Http404()
 
         context = super(AccountActivationView, self).get_context_data(**kwargs)
@@ -82,7 +82,7 @@ class PlanTableMixin(object):
         return map(lambda quota: (quota,
                                   map(lambda plan: plan_quotas_dic[plan].get(quota, None), plan_list)
 
-        ), quota_list)
+                                  ), quota_list)
 
 
 class PlanTableViewBase(PlanTableMixin, ListView):
@@ -218,10 +218,9 @@ class CreateOrderView(LoginRequired, CreateView):
                 "The selected plan is insufficient for your account. "
                 "Your account will not be activated or will not work fully after completing this order."
                 "<br><br>Following limits will be exceeded: <ul><li>%(reasons)s</ul>") % {
-                                             'reasons': '<li>'.join(chain(validation_errors['required_to_activate'],
-                                                                          validation_errors['other'])),
-                                         })
-
+                'reasons': '<li>'.join(chain(validation_errors['required_to_activate'],
+                                             validation_errors['other'])),
+            })
 
     def get_all_context(self):
         """
@@ -231,7 +230,6 @@ class CreateOrderView(LoginRequired, CreateView):
                                               Q(pk=self.kwargs['pk']) & Q(plan__available=True) & (
                                                   Q(plan__customized=self.request.user) | Q(
                                                       plan__customized__isnull=True)))
-
 
         # User is not allowed to create new order for Plan when he has different Plan
         # unless it's a free plan. Otherwise, the should use Plan Change View for this
@@ -243,7 +241,6 @@ class CreateOrderView(LoginRequired, CreateView):
 
         self.plan = self.plan_pricing.plan
         self.pricing = self.plan_pricing.pricing
-
 
     def get_billing_info(self):
         try:
@@ -339,7 +336,6 @@ class CreateOrderPlanChangeView(CreateOrderView):
 class OrderView(LoginRequired, DetailView):
     model = Order
 
-
     def get_queryset(self):
         return super(OrderView, self).get_queryset().filter(user=self.request.user).select_related('plan', 'pricing', )
 
@@ -355,7 +351,6 @@ class OrderListView(LoginRequired, ListView):
             raise ImproperlyConfigured('PLANS_CURRENCY should be configured as 3-letter currency code.')
         context['CURRENCY'] = self.CURRENCY
         return context
-
 
     def get_queryset(self):
         return super(OrderListView, self).get_queryset().filter(user=self.request.user).select_related('plan',
@@ -378,7 +373,6 @@ class OrderPaymentReturnView(LoginRequired, DetailView):
             messages.error(self.request, _('Payment was not completed correctly. Please repeat payment process.'))
 
         return HttpResponseRedirect(self.object.get_absolute_url())
-
 
     def get_queryset(self):
         return super(OrderPaymentReturnView, self).get_queryset().filter(user=self.request.user)
@@ -471,7 +465,6 @@ class InvoiceDetailView(LoginRequired, DetailView):
     def get_template_names(self):
         return getattr(settings, 'PLANS_INVOICE_TEMPLATE', 'plans/invoices/PL_EN.html')
 
-
     def get_context_data(self, **kwargs):
         context = super(InvoiceDetailView, self).get_context_data(**kwargs)
         context['logo_url'] = getattr(settings, 'PLANS_INVOICE_LOGO_URL', None)
@@ -493,7 +486,6 @@ class FakePaymentsView(LoginRequired, SingleObjectMixin, FormView):
     def get_success_url(self):
         return self.object.get_absolute_url()
 
-
     def get_queryset(self):
         return super(FakePaymentsView, self).get_queryset().filter(user=self.request.user)
 
@@ -511,4 +503,3 @@ class FakePaymentsView(LoginRequired, SingleObjectMixin, FormView):
             self.object.status = form['status'].value()
             self.object.save()
             return HttpResponseRedirect(reverse('order_payment_failure', kwargs={'pk': self.object.pk}))
-

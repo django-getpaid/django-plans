@@ -56,11 +56,10 @@ class BillingInfoForm(forms.ModelForm):
         exclude = ('user',)
 
     def __init__(self, *args, request=None, **kwargs):
-          ret_val = super().__init__(*args, **kwargs)
-          if not self.instance.country:
-              self.fields['country'].initial = get_country_code(request)
-          return ret_val
-
+        ret_val = super().__init__(*args, **kwargs)
+        if not self.instance.country:
+            self.fields['country'].initial = get_country_code(request)
+        return ret_val
 
     def clean(self):
         cleaned_data = super(BillingInfoForm, self).clean()

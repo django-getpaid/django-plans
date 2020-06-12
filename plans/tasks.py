@@ -23,7 +23,8 @@ def autorenew_account():
 
     accounts_for_renewal = get_active_plans().filter(
         userplan__recurring__has_automatic_renewal=True,
-        userplan__expire__lt=datetime.date.today() + datetime.timedelta(days=PLANS_AUTORENEW_BEFORE_DAYS, hours=PLANS_AUTORENEW_BEFORE_HOURS),
+        userplan__expire__lt=datetime.date.today() + datetime.timedelta(days=PLANS_AUTORENEW_BEFORE_DAYS,
+                                                                        hours=PLANS_AUTORENEW_BEFORE_HOURS),
     )
 
     logger.info(f"{len(accounts_for_renewal)} accounts to be renewed.")
