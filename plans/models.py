@@ -28,7 +28,7 @@ from django_countries.fields import CountryField
 from ordered_model.models import OrderedModel
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 
-from plans.enum import Enumeration
+from plans.enumeration import Enumeration
 from plans.validators import plan_validation
 from plans.taxation.eu import EUTaxationPolicy
 from plans.contrib import send_template_email, get_user_language
