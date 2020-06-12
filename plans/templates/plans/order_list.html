@@ -3,11 +3,16 @@
 
 
 {% block body %}
+    {% block order_header %}
     <h1>{% trans "List of orders" %}</h1>
+    {% endblock %}
 
     {% if object_list %}
+    {% block pagination_first %}
     {% include "plans/pagination.html" %}
+    {% endblock %}
 
+    {% block order_table %}
     <table class="table">
         <thead>
             <tr>
@@ -36,8 +41,11 @@
             {% endfor %}
         </tbody>
     </table>
+    {% endblock %}
 
+    {% block pagination_second %}
     {% include "plans/pagination.html" %}
+    {% endblock %}
 
     {% else %}
         {% blocktrans %}You do not have any orders so far.{% endblocktrans %}
