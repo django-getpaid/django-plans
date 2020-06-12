@@ -12,6 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import DeleteView, ModelFormMixin, FormView
 from django.views.generic.list import ListView
+from next_url_mixin.mixin import NextUrlMixin
 
 from itertools import chain
 from plans.importer import import_name
@@ -405,13 +406,10 @@ class BillingInfoRedirectView(LoginRequired, RedirectView):
 class SuccessUrlMixin():
     def get_success_url(self):
         messages.success(self.request, _('Billing info has been updated successfuly.'))
-        next_url = self.request.GET.get('next', None)
-        if next_url:
-            return next_url
         return reverse('billing_info_update')
 
 
-class BillingInfoCreateView(SuccessUrlMixin, LoginRequired, CreateView):
+class BillingInfoCreateView(NextUrlMixin, SuccessUrlMixin, LoginRequired, CreateView):
     """
     Creates billing data for user
     """
@@ -430,7 +428,7 @@ class BillingInfoCreateView(SuccessUrlMixin, LoginRequired, CreateView):
         return kwargs
 
 
-class BillingInfoUpdateView(SuccessUrlMixin, LoginRequired, UpdateView):
+class BillingInfoUpdateView(NextUrlMixin, SuccessUrlMixin, LoginRequired, UpdateView):
     """
     Updates billing data for user
     """
