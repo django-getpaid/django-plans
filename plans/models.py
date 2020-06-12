@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import plans.listeners
 
 import re
 import logging
@@ -120,6 +121,7 @@ class Plan(OrderedModel):
     def is_free(self):
         return self.planpricing_set.count() == 0
     is_free.boolean = True
+
 
 class BillingInfo(models.Model):
     """
@@ -420,7 +422,8 @@ class RecurringUserPlan(models.Model):
         null=True,
         blank=True,
     )
-    pricing = models.ForeignKey('Pricing', help_text=_('Recurring pricing'), default=None, null=True, blank=True, on_delete=models.CASCADE)
+    pricing = models.ForeignKey('Pricing', help_text=_('Recurring pricing'), default=None,
+                                null=True, blank=True, on_delete=models.CASCADE)
     amount = models.DecimalField(
         _('amount'), max_digits=7, decimal_places=2, db_index=True, null=True, blank=True)
     tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
@@ -609,7 +612,6 @@ class Order(models.Model):
     def is_ready_for_payment(self):
         return self.status == self.STATUS.NEW and (now() - self.created).days < getattr(
             settings, 'PLANS_ORDER_EXPIRATION', 14)
-
 
     def get_plan_extended_from(self):
         return self.user.userplan.get_plan_extended_from(self.plan)
@@ -919,4 +921,3 @@ class Invoice(models.Model):
 
 
 # noinspection PyUnresolvedReferences
-import plans.listeners

@@ -81,7 +81,6 @@ class PlansTestCase(TestCase):
         self.assertEqual(p.get_quota_dict(),
                          {u'CUSTOM_WATERMARK': 1, u'MAX_GALLERIES_COUNT': 3, u'MAX_PHOTOS_PER_GALLERY': None})
 
-
     def test_extend_account_same_plan_future(self):
         u = User.objects.get(username='test1')
         u.userplan.expire = date.today() + timedelta(days=50)
@@ -238,6 +237,7 @@ class PlansTestCase(TestCase):
         self.assertIsNotNone(u.userplan.expire)
         self.assertEqual(u.userplan.active, True)
 
+
 class TestInvoice(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
@@ -270,7 +270,7 @@ class TestInvoice(TestCase):
 
     def test_get_full_number_with_settings(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.issued|date:'Y' }}." \
-                                         "{{ invoice.number }}.{{ invoice.issued|date:'m' }}"
+            "{{ invoice.number }}.{{ invoice.issued|date:'m' }}"
         i = Invoice()
         i.number = 123
         i.issued = date(2010, 5, 30)
@@ -311,8 +311,8 @@ class TestInvoice(TestCase):
 
     def test_invoice_number(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-                                         "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-                                         "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         o = Order.objects.all()[0]
         day = date(2010, 5, 3)
         i = Invoice(issued=day, selling_date=day, payment_date=day)
@@ -327,8 +327,8 @@ class TestInvoice(TestCase):
 
     def test_invoice_number_daily(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-                                         "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-                                         "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
 
         user = User.objects.get(username='test1')
@@ -379,8 +379,8 @@ class TestInvoice(TestCase):
 
     def test_invoice_number_monthly(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-                                         "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-                                         "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
         user = User.objects.get(username='test1')
@@ -432,8 +432,8 @@ class TestInvoice(TestCase):
 
     def test_invoice_number_annually(self):
         settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-                                         "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-                                         "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
 
         user = User.objects.get(username='test1')
@@ -521,7 +521,8 @@ class OrderTestCase(TestCase):
         self.assertEqual(u.userplan.active, True)
         self.assertEqual(order.status, 2)  # completed
         self.assertEqual(order.plan_extended_from, date.today() + timedelta(days=50))
-        self.assertEqual(order.plan_extended_until, date.today() + timedelta(days=50) + timedelta(days=plan_pricing.pricing.period))
+        self.assertEqual(order.plan_extended_until, date.today() + timedelta(days=50) +
+                         timedelta(days=plan_pricing.pricing.period))
         self.assertEqual(len(mail.outbox), 3)
 
     def test_order_complete_order_invalid(self):
@@ -677,7 +678,6 @@ class ValidatorsTestCase(TestCase):
         self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 2}), None)
         self.assertEqual(validator_object(user=None, quota_dict={'QUOTA_NAME': 3}), None)
 
-
         #   TODO: FIX this test not to use Pricing for testing  ModelAttributeValidator
         # def test_model_attribute_validator(self):
         #     """
@@ -696,6 +696,7 @@ class ValidatorsTestCase(TestCase):
 
 class BillingInfoViewTestCase(TestCase):
     fixtures = ['test_django-plans_auth']
+
     def setUp(self):
         user = User.objects.create_user('foo', 'myemail@test.com', 'bar')
         self.client.login(username='foo', password='bar')

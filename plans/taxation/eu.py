@@ -61,7 +61,6 @@ class EUTaxationPolicy(TaxationPolicy):
     def is_in_EU(cls, country_code):
         return country_code.upper() in cls.EU_COUNTRIES_VAT
 
-
     @classmethod
     def get_default_tax(cls):
         issuer_country_code = cls.get_issuer_country_code()
@@ -118,4 +117,3 @@ class EUTaxationPolicy(TaxationPolicy):
                 # Company is not from EU
                 # VAT n/a
                 return None
-

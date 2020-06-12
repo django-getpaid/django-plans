@@ -51,10 +51,11 @@ def initialize_plan_generic(sender, user, **kwargs):
 
 try:
     from registration.signals import user_activated
+
     @receiver(user_activated)
     def initialize_plan_django_registration(sender, user, request, **kwargs):
         try:
-             user.userplan.initialize()
+            user.userplan.initialize()
         except UserPlan.DoesNotExist:
             return
 
@@ -66,6 +67,7 @@ except ImportError:
 # Hook to django-getpaid if it is installed
 try:
     from getpaid.signals import user_data_query
+
     @receiver(user_data_query)
     def set_user_email_for_getpaid(sender, order, user_data, **kwargs):
         user_data['email'] = order.user.email

@@ -11,6 +11,7 @@ from django.template.exceptions import TemplateDoesNotExist
 
 email_logger = logging.getLogger('emails')
 
+
 def send_template_email(recipients, title_template, body_template, context, language):
     """Sends e-mail using templating system"""
 

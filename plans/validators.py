@@ -80,7 +80,8 @@ class ModelCountValidator(QuotaValidator):
         quota = self.get_quota_value(user, quota_dict)
         total_count = self.get_queryset(user).count() + kwargs.get('add', 0)
         if not quota is None and total_count > quota:
-            raise ValidationError(message=self.get_error_message(quota), params=self.get_error_params(quota, total_count))
+            raise ValidationError(message=self.get_error_message(
+                quota), params=self.get_error_params(quota, total_count))
 
 
 class ModelAttributeValidator(ModelCountValidator):
