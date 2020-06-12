@@ -1,12 +1,14 @@
-django==2.2.13
+django-ordered-model
 django-bootstrap3
 Sphinx
 django-debug-toolbar
 django-extensions
 mock
+coverage
 tox
 suds-jurko
 maxminddb-geolite2
+model_bakery
 
 
 # Not supported in py3

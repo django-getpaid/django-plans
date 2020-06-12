@@ -12,6 +12,8 @@ from django.core.management import call_command
 from django.db.models import Q
 from django.urls import reverse
 
+from model_bakery import baker
+
 from plans.models import PlanPricing, Invoice, Order, Plan, UserPlan
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
@@ -731,7 +733,7 @@ class BillingInfoViewTestCase(TestCase):
         self.assertContains(response, '<option value="" selected>---------</option>', html=True)
 
     @override_settings(PLANS_GET_COUNTRY_FROM_IP=True)
-    def test_default_country_by_IP(self):
+    def test_default_country_by_ip(self):
         """
         Test, that default country is determined by German IP
         """
@@ -744,7 +746,7 @@ class BillingInfoViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="DE" selected>Germany</option>', html=True)
 
-    def test_default_country_by_IP(self):
+    def test_default_country_by_ip_no_settings(self):
         """
         Test, that default country is not determined
         """
@@ -752,3 +754,38 @@ class BillingInfoViewTestCase(TestCase):
         response = self.client.get(reverse('billing_info_create'), HTTP_X_FORWARDED_FOR='85.214.132.117')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="" selected>---------</option>', html=True)
+
+
+class RecurringPlansTestCase(TestCase):
+
+    def test_set_plan_renewal(self):
+        """ Test that UserPlan.set_plan_renewal() method """
+        up = baker.make('UserPlan')
+        o = baker.make('Order', amount=10)
+        up.set_plan_renewal(order=o, card_masked_number="1234")
+        self.assertEquals(up.recurring.amount, 10)
+        self.assertEquals(up.recurring.card_masked_number, "1234")
+
+        # test setting new values
+        up.set_plan_renewal(order=o)
+        self.assertEquals(up.recurring.amount, 10)
+        self.assertEquals(up.recurring.card_masked_number, None)
+
+    def test_plan_autorenew_at(self):
+        """ Test that UserPlan.plan_autorenew_at() method """
+        up = baker.make('UserPlan')
+        self.assertEquals(up.plan_autorenew_at(), None)
+
+    def test_plan_autorenew_at_expire(self):
+        """ Test that UserPlan.plan_autorenew_at() method """
+        up = baker.make('UserPlan', expire=date(2020, 1, 1))
+        self.assertEquals(up.plan_autorenew_at(), date(2020, 1, 1))
+
+    @override_settings(
+        PLANS_AUTORENEW_BEFORE_DAYS=3,
+        PLANS_AUTORENEW_BEFORE_HOURS=24,
+    )
+    def test_plan_autorenew_at_settings(self):
+        """ Test that UserPlan.plan_autorenew_at() method """
+        up = baker.make('UserPlan', expire=date(2020, 1, 5))
+        self.assertEquals(up.plan_autorenew_at(), date(2020, 1, 1))

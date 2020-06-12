@@ -28,7 +28,7 @@ from django_countries.fields import CountryField
 from ordered_model.models import OrderedModel
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 
-from plans.enum import Enumeration
+from plans.enumeration import Enumeration
 from plans.validators import plan_validation
 from plans.taxation.eu import EUTaxationPolicy
 from plans.contrib import send_template_email, get_user_language
@@ -261,11 +261,23 @@ class UserPlan(models.Model):
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
 
+    def plan_autorenew_at(self):
+        """
+        Helper function which calculates when the plan autorenewal will occur
+        """
+        if self.expire:
+            plans_autorenew_before_days = getattr(settings, 'PLANS_AUTORENEW_BEFORE_DAYS', 0)
+            plans_autorenew_before_hours = getattr(settings, 'PLANS_AUTORENEW_BEFORE_HOURS', 0)
+            return self.expire - timedelta(days=plans_autorenew_before_days, hours=plans_autorenew_before_hours)
+
     def set_plan_renewal(self, order, has_automatic_renewal=True, **kwargs):
         """
         Creates or updates plan renewal information for this userplan with given order
         """
-        self.recurring.delete()
+        if hasattr(self, 'recurring'):
+            # Delete the plan to populate with default values
+            # We don't want to mix the old and new values
+            self.recurring.delete()
         recurring = RecurringUserPlan.objects.create(
             user_plan=self,
             pricing=order.pricing,
@@ -421,6 +433,7 @@ class RecurringUserPlan(models.Model):
     )
     card_expire_year = models.IntegerField(null=True, blank=True)
     card_expire_month = models.IntegerField(null=True, blank=True)
+    card_masked_number = models.CharField(null=True, blank=True, max_length=255)
 
     def create_renew_order(self):
         """
