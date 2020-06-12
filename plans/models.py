@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import plans.listeners  # noqa
 
 import re
 import logging
@@ -930,3 +929,4 @@ class Invoice(models.Model):
 
 
 # noinspection PyUnresolvedReferences
+import plans.listeners  # noqa
