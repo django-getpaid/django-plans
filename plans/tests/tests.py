@@ -4,7 +4,7 @@ from datetime import timedelta
 from io import StringIO
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core import mail
@@ -698,7 +698,11 @@ class BillingInfoViewTestCase(TestCase):
         user = User.objects.create_user('foo', 'myemail@test.com', 'bar')
         self.client.login(username='foo', password='bar')
 
-    def test_default_country(self):
+    @override_settings(
+        PLANS_GET_COUNTRY_FROM_IP=True,
+        PLANS_DEFAULT_COUNTRY='PL',
+    )
+    def test_default_country_set(self):
         """
         Test, that default country is PL
         """
@@ -706,6 +710,27 @@ class BillingInfoViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="PL" selected>Poland</option>', html=True)
 
+    @override_settings(
+        PLANS_DEFAULT_COUNTRY='PL',
+    )
+    def test_default_country_set_no_ip(self):
+        """
+        Test, that default country is PL
+        """
+        response = self.client.get(reverse('billing_info_create'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<option value="PL" selected>Poland</option>', html=True)
+
+    @override_settings(PLANS_GET_COUNTRY_FROM_IP=True)
+    def test_default_country_unset(self):
+        """
+        Test, that default country is None
+        """
+        response = self.client.get(reverse('billing_info_create'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<option value="" selected>---------</option>', html=True)
+
+    @override_settings(PLANS_GET_COUNTRY_FROM_IP=True)
     def test_default_country_by_IP(self):
         """
         Test, that default country is determined by German IP
@@ -714,6 +739,16 @@ class BillingInfoViewTestCase(TestCase):
         response = self.client.get(reverse('billing_info_create'), HTTP_X_FORWARDED_FOR='85.214.132.117')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="DE" selected>Germany</option>', html=True)
+
         response = self.client.get(reverse('billing_info_create'), REMOTE_ADDR='85.214.132.117')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="DE" selected>Germany</option>', html=True)
+
+    def test_default_country_by_IP(self):
+        """
+        Test, that default country is not determined
+        """
+
+        response = self.client.get(reverse('billing_info_create'), HTTP_X_FORWARDED_FOR='85.214.132.117')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<option value="" selected>---------</option>', html=True)
