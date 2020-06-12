@@ -298,9 +298,10 @@ class UserPlan(models.Model):
 
             self.save()
             account_change_plan.send(sender=self, user=self.user)
-            mail_context = {'user': self.user, 'userplan': self, 'plan': plan}
-            send_template_email([self.user.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
-                                mail_context, get_user_language(self.user))
+            if getattr(settings, 'PLANS_SEND_EMAILS_PLAN_CHANGED', True):
+                mail_context = {'user': self.user, 'userplan': self, 'plan': plan}
+                send_template_email([self.user.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
+                                    mail_context, get_user_language(self.user))
             accounts_logger.info(
                 "Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.user, self.user.pk, plan, plan.pk))
             status = True
@@ -327,12 +328,13 @@ class UserPlan(models.Model):
                 self.save()
                 accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
                     self.user, self.user.pk, pricing.period, plan, plan.pk))
-                mail_context = {'user': self.user,
-                                'userplan': self,
-                                'plan': plan,
-                                'pricing': pricing}
-                send_template_email([self.user.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
-                                    mail_context, get_user_language(self.user))
+                if getattr(settings, 'PLANS_SEND_EMAILS_PLAN_EXTENDED', True):
+                    mail_context = {'user': self.user,
+                                    'userplan': self,
+                                    'plan': plan,
+                                    'pricing': pricing}
+                    send_template_email([self.user.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
+                                        mail_context, get_user_language(self.user))
 
         if status:
             self.clean_activation()
@@ -880,6 +882,9 @@ class Invoice(models.Model):
             translation.deactivate()
 
     def send_invoice_by_email(self):
+        if self.type in getattr(settings, 'PLANS_SEND_EMAILS_DISABLED_INVOICE_TYPES', []):
+            return
+
         language_code = get_user_language(self.user)
 
         if language_code is not None:
@@ -888,6 +893,7 @@ class Invoice(models.Model):
                         'invoice_type': self.get_type_display(),
                         'invoice_number': self.get_full_number(),
                         'order': self.order.id,
+                        'order_object': self.order,
                         'url': self.get_absolute_url(), }
         if language_code is not None:
             translation.deactivate()

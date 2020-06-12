@@ -247,6 +247,34 @@ Default: ``True``
 
 Boolean value for enabling (default) or disabling the sending of plan related emails.
 
+``PLANS_SEND_EMAILS_DISABLED_INVOICE_TYPES``
+------------------------------
+
+**Optional**
+
+Default: ``[]``
+
+Disable listed invoice types to be send via e-mails.
+
+``PLANS_SEND_EMAILS_PLAN_CHANGED``
+------------------------------
+
+**Optional**
+
+Default: ``True``
+
+Disable plans changed e-mail.
+
+``PLANS_SEND_EMAILS_PLAN_EXTENDED``
+------------------------------
+
+**Optional**
+
+Default: ``True``
+
+Disable plan extended e-mail.
+
+
 ``PLANS_TAX``
 -------
 

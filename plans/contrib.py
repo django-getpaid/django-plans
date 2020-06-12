@@ -7,6 +7,7 @@ from django.template import loader
 from django.utils import translation
 from plans.signals import user_language
 from django.core.exceptions import ImproperlyConfigured
+from django.template.exceptions import TemplateDoesNotExist
 
 email_logger = logging.getLogger('emails')
 
@@ -38,13 +39,18 @@ def send_template_email(recipients, title_template, body_template, context, lang
     mail_body_template = loader.get_template(body_template)
     title = mail_title_template.render(context)
     body = mail_body_template.render(context)
+    try:
+        mail_body_template_html = loader.get_template(body_template.replace('.txt', '.html'))
+        html_body = mail_body_template_html.render(context)
+    except TemplateDoesNotExist:
+        html_body = None
 
     try:
         email_from = getattr(settings, 'DEFAULT_FROM_EMAIL')
     except AttributeError:
         raise ImproperlyConfigured('DEFAULT_FROM_EMAIL setting needed for sending e-mails')
 
-    mail.send_mail(title, body, email_from, recipients)
+    mail.send_mail(title, body, email_from, recipients, html_message=html_body)
 
     if language is not None:
         translation.deactivate()
