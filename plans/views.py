@@ -28,7 +28,7 @@ class AccountActivationView(LoginRequired, TemplateView):
     template_name = 'plans/account_activation.html'
 
     def get_context_data(self, **kwargs):
-        if self.request.user.userplan.active == True or self.request.user.userplan.is_expired():
+        if self.request.user.userplan.active is True or self.request.user.userplan.is_expired():
             raise Http404()
 
         context = super(AccountActivationView, self).get_context_data(**kwargs)

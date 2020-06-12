@@ -23,7 +23,8 @@ class EUTaxationPolicy(TaxationPolicy):
     register in MOSS system.
     """
 
-    # Standard VAT rates according to http://ec.europa.eu/taxation_customs/resources/documents/taxation/vat/how_vat_works/rates/vat_rates_en.pdf
+    # Standard VAT rates according to
+    # http://ec.europa.eu/taxation_customs/resources/documents/taxation/vat/how_vat_works/rates/vat_rates_en.pdf
     # Situation at 1 Jan 2017
 
     EU_COUNTRIES_VAT = {

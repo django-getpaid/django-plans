@@ -698,7 +698,7 @@ class BillingInfoViewTestCase(TestCase):
     fixtures = ['test_django-plans_auth']
 
     def setUp(self):
-        user = User.objects.create_user('foo', 'myemail@test.com', 'bar')
+        User.objects.create_user('foo', 'myemail@test.com', 'bar')
         self.client.login(username='foo', password='bar')
 
     @override_settings(

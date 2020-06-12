@@ -49,7 +49,8 @@ class PlanChangePolicy(object):
 class StandardPlanChangePolicy(PlanChangePolicy):
     """
     This plan switch policy follows the rules:
-        * user can downgrade a plan for free if the plan is cheaper or have exact the same price (additional constant charge can be applied)
+        * user can downgrade a plan for free if the plan is
+          cheaper or have exact the same price (additional constant charge can be applied)
         * user need to pay extra amount depending of plans price difference (additional constant charge can be applied)
 
     Change percent rate while upgrading is defined in ``StandardPlanChangePolicy.UPGRADE_PERCENT_RATE``

@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-import plans.listeners
+import plans.listeners  # noqa
 
 import re
 import logging
@@ -347,7 +347,8 @@ class UserPlan(models.Model):
                                     'userplan': self,
                                     'plan': plan,
                                     'pricing': pricing}
-                    send_template_email([self.user.email], 'mail/extend_account_title.txt', 'mail/extend_account_body.txt',
+                    send_template_email([self.user.email], 'mail/extend_account_title.txt',
+                                        'mail/extend_account_body.txt',
                                         mail_context, get_user_language(self.user))
 
         if status:
@@ -431,7 +432,10 @@ class RecurringUserPlan(models.Model):
     currency = models.CharField(_('currency'), max_length=3)
     has_automatic_renewal = models.BooleanField(
         _('has automatic plan renewal'),
-        help_text=_('Automatic renewal is enabled for associated plan. If False, the plan renewal can be still initiated by user.'),
+        help_text=_(
+            'Automatic renewal is enabled for associated plan. '
+            'If False, the plan renewal can be still initiated by user.',
+        ),
         default=False,
     )
     card_expire_year = models.IntegerField(null=True, blank=True)
@@ -805,8 +809,13 @@ class Invoice(models.Model):
 
         :return: string (generated full number)
         """
-        format = getattr(settings, "PLANS_INVOICE_NUMBER_FORMAT",
-                         "{{ invoice.number }}/{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}/{{ invoice.issued|date:'m/Y' }}")
+        format = getattr(
+            settings,
+            "PLANS_INVOICE_NUMBER_FORMAT",
+            "{{ invoice.number }}/"
+            "{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}"
+            "/{{ invoice.issued|date:'m/Y' }}",
+        )
         return Template(format).render(Context({'invoice': self}))
 
     def set_issuer_invoice_data(self):
@@ -817,7 +826,7 @@ class Invoice(models.Model):
         """
         try:
             issuer = getattr(settings, 'PLANS_INVOICE_ISSUER')
-        except:
+        except Exception:
             raise ImproperlyConfigured(
                 "Please set PLANS_INVOICE_ISSUER in order to make an invoice.")
         self.issuer_name = issuer['issuer_name']

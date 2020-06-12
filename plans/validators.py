@@ -79,7 +79,7 @@ class ModelCountValidator(QuotaValidator):
     def __call__(self, user, quota_dict=None, **kwargs):
         quota = self.get_quota_value(user, quota_dict)
         total_count = self.get_queryset(user).count() + kwargs.get('add', 0)
-        if not quota is None and total_count > quota:
+        if quota is not None and total_count > quota:
             raise ValidationError(message=self.get_error_message(
                 quota), params=self.get_error_params(quota, total_count))
 
@@ -116,7 +116,7 @@ class ModelAttributeValidator(ModelCountValidator):
     def __call__(self, user, quota_dict=None, **kwargs):
         quota_value = self.get_quota_value(user, quota_dict)
         not_valid_objects = []
-        if not quota_value is None:
+        if quota_value is not None:
             for obj in self.get_queryset(user):
                 if not self.check_attribute_value(getattr(obj, self.attribute), quota_value):
                     not_valid_objects.append(obj)

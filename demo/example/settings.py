@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 # Django settings for example project.
 import os
 from decimal import Decimal
-from django.conf import global_settings
 
 
 EMAIL_FROM = "Test <test@server.com>"

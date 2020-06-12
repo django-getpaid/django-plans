@@ -1,6 +1,6 @@
 from django.contrib import admin
 from modeltranslation.admin import TranslationAdmin
-from plans.admin import UserLinkMixin, PlanAdmin, QuotaAdmin
+from plans.admin import PlanAdmin, QuotaAdmin
 from plans.models import Plan, Quota, Pricing
 
 # Admin translation for django-plans
