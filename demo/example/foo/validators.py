@@ -9,4 +9,5 @@ class MaxFoosValidator(ModelCountValidator):
     def get_queryset(self, user):
         return super(MaxFoosValidator, self).get_queryset(user).filter(user=user)
 
+
 max_foos_validator = MaxFoosValidator()

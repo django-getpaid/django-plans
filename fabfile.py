@@ -1,5 +1,6 @@
 from fabric.api import *
 
+
 @task
 def push_lang():
     with lcd('demo/example'):
@@ -9,6 +10,7 @@ def push_lang():
         local('django-admin.py makemessages -l en')
 
     local('tx push -s')
+
 
 @task
 def pull_lang():
