@@ -8,6 +8,7 @@ coverage
 tox
 suds-jurko
 maxminddb-geolite2
+model_bakery
 
 
 # Not supported in py3
