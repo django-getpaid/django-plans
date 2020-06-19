@@ -31,7 +31,7 @@ def send_template_email(recipients, title_template, body_template, context, lang
         except LookupError:
             pass
 
-    context.update({'site_name': site_name, 'site_domain': domain})
+    context.update({'site_name': site_name, 'site_domain': domain, 'site': current_site})
 
     if language is not None:
         translation.activate(language)
