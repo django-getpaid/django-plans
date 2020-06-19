@@ -647,6 +647,9 @@ class Order(models.Model):
     def get_all_invoices(self):
         return self.invoice_set.order_by('issued', 'issued_duplicate', 'pk')
 
+    def get_plan_pricing(self):
+        return PlanPricing.objects.get(plan=self.plan, pricing=self.pricing)
+
     def tax_total(self):
         if self.tax is None:
             return Decimal('0.00')
