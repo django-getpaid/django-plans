@@ -415,10 +415,8 @@ class BillingInfoCreateView(NextUrlMixin, SuccessUrlMixin, LoginRequired, Create
     template_name = 'plans/billing_info_create.html'
 
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.user = self.request.user
-        self.object.save()
-        return HttpResponseRedirect(self.get_success_url())
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
