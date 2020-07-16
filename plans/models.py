@@ -398,6 +398,10 @@ class UserPlan(models.Model):
             UserPlan.create_for_user(user)
         return userplans
 
+    def get_current_plan(self):
+        """ Tiny helper, very usefull in templates """
+        return Plan.get_current_plan(self.user)
+
 
 class RecurringUserPlan(models.Model):
     """
