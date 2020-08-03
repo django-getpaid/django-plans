@@ -442,6 +442,13 @@ class RecurringUserPlan(models.Model):
         ),
         default=False,
     )
+    token_verified = models.BooleanField(
+        _('token has been verified by payment'),
+        help_text=_(
+            'The recurring token has been verified by at least one payment to be working.',
+        ),
+        default=False,
+    )
     card_expire_year = models.IntegerField(null=True, blank=True)
     card_expire_month = models.IntegerField(null=True, blank=True)
     card_masked_number = models.CharField(null=True, blank=True, max_length=255)
