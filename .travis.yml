@@ -2,6 +2,10 @@ language: python
 python:
   - "3.6"
   - "3.7"
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+services:
+  - postgresql
 env:
   - DJANGO_VERSION=2.0.*
   - DJANGO_VERSION=2.1.*

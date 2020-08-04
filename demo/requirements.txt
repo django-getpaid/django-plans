@@ -11,6 +11,7 @@ maxminddb-geolite2
 model_bakery
 django-concurrent-test-helper
 freezegun
+psycopg2
 
 
 # Not supported in py3
