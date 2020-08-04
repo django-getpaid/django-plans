@@ -1,16 +1,22 @@
 from decimal import Decimal
+import random
 from datetime import date
 from datetime import timedelta
 from io import StringIO
 
-from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.test import TestCase, override_settings
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.management import call_command
+from django.db import transaction
 from django.db.models import Q
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
+
+from django_concurrent_tests.helpers import call_concurrently
+
+from freezegun import freeze_time
 
 from model_bakery import baker
 
@@ -497,6 +503,40 @@ class TestInvoice(TestCase):
         self.assertEqual(i.tax, o.tax)
         self.assertEqual(i.tax_total, o.total() - o.amount)
         self.assertEqual(i.currency, o.currency)
+
+
+@transaction.atomic
+def complete_order():
+    user = User.objects.get(username='test1')
+
+    plan_pricing = PlanPricing.objects.all()[0]
+    o1 = Order(user=user, plan=plan_pricing.plan,
+               pricing=plan_pricing.pricing, amount=plan_pricing.price,
+               )
+    o1.save()
+    with freeze_time(random.choice(["2012-01-14", "2012-02-14"])):
+        o1.complete_order()
+
+
+class ConcurrentTestInvoice(TransactionTestCase):
+    fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
+
+    @freeze_time("2012-01-14")
+    def test_invoice_number_monthly_duplicity(self):
+        """
+        Test for problem where two simultaneously created invoices had duplicate number
+        """
+        call_concurrently(15, complete_order)
+        invoices = Invoice.objects.filter(type=Invoice.INVOICE_TYPES.INVOICE).order_by("issued", "number")
+
+        first_december_number = 0
+        for i in range(1, 15):
+            invoice = invoices[i - 1]
+            if invoice.issued.month == 2 and first_december_number == 0:
+                first_december_number = i - 1
+            invoice_number = i - first_december_number
+            self.assertEqual(invoice.number, invoice_number)
+            self.assertEqual(invoice.full_number, f"{invoice_number}/FV/0{1 if first_december_number == 0 else 2}/2012")
 
 
 class OrderTestCase(TestCase):

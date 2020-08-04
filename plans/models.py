@@ -7,8 +7,7 @@ import vatnumber
 from decimal import Decimal
 from datetime import date, timedelta
 
-from django.db import models
-from django.db.models import Max
+from django.db import models, transaction
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -36,6 +35,7 @@ from plans.signals import (order_completed, account_activated,
                            account_expired, account_change_plan,
                            account_deactivated)
 
+from sequences import get_next_value
 
 accounts_logger = logging.getLogger('accounts')
 
@@ -768,24 +768,42 @@ class Invoice(models.Model):
             invoice_counter_reset = getattr(
                 settings, 'PLANS_INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
 
+            # To avoid duplicates as well as gaps in the sequence, we are using django-sequences
+            # to generate sequence number for each invoice
+            # We keep the old sequence generating mechanism to get lower initial value,
+            # so that the sequence will continue backward compatibly
+            older_invoices = Invoice.objects.filter(type=self.type)
             if invoice_counter_reset == Invoice.NUMBERING.DAILY:
-                last_number = Invoice.objects.filter(issued=self.issued, type=self.type).aggregate(Max('number'))[
-                    'number__max'] or 0
+                invoice_counter_value = f"{self.issued.year}_{self.issued.month}_{self.issued.day}"
+                older_invoices = older_invoices.filter(issued=self.issued)
             elif invoice_counter_reset == Invoice.NUMBERING.MONTHLY:
-                last_number = Invoice.objects.filter(issued__year=self.issued.year, issued__month=self.issued.month,
-                                                     type=self.type).aggregate(Max('number'))['number__max'] or 0
+                invoice_counter_value = f"{self.issued.year}_{self.issued.month}"
+                older_invoices = older_invoices.filter(
+                    issued__year=self.issued.year,
+                    issued__month=self.issued.month,
+                )
             elif invoice_counter_reset == Invoice.NUMBERING.ANNUALLY:
-                last_number = \
-                    Invoice.objects.filter(issued__year=self.issued.year, type=self.type).aggregate(Max('number'))[
-                        'number__max'] or 0
+                invoice_counter_value = f"{self.issued.year}"
+                older_invoices = older_invoices.filter(issued__year=self.issued.year)
             else:
                 raise ImproperlyConfigured(
                     "PLANS_INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly.")
-            self.number = last_number + 1
 
+            # get initial value for backward compatibility
+            self.initial_number = getattr(older_invoices.order_by("number").last(), 'number', 0) + 1
+            self.sequence_name = f"invoice_numbers_{self.type}_{invoice_counter_reset}_{invoice_counter_value}"
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            if self.number is None:
+                self.number = get_next_value(self.sequence_name, initial_value=self.initial_number)
+            super().save(*args, **kwargs)
+
+        # We need to generate full number based on what invoice sequence number actually ended up in DB
+        self.refresh_from_db()
         if self.full_number == "":
             self.full_number = self.get_full_number()
-        super(Invoice, self).clean()
+        super().save(update_fields=["full_number"])
 
     #    def validate_unique(self, exclude=None):
     #        super(Invoice, self).validate_unique(exclude)

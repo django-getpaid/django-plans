@@ -35,6 +35,7 @@ setup(
         'django-next-url-mixin==0.1.0',
         'celery',
         'suds-jurko',
+        'django-sequences',
         'six',
     ],
     extras_require={

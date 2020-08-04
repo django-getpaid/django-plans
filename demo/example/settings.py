@@ -120,10 +120,12 @@ INSTALLED_APPS = [
 
     'ordered_model',
     'bootstrap3',
+    'django_concurrent_tests',
 
     'plans',
     'example.foo',
-    'django_extensions'
+    'django_extensions',
+    'sequences.apps.SequencesConfig',
 ]
 
 LOGGING = {

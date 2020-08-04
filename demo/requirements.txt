@@ -9,6 +9,8 @@ tox
 suds-jurko
 maxminddb-geolite2
 model_bakery
+django-concurrent-test-helper
+freezegun
 
 
 # Not supported in py3
