@@ -9,6 +9,7 @@ services:
 env:
   - DJANGO_VERSION=2.0.*
   - DJANGO_VERSION=2.1.*
+  - DJANGO_VERSION=2.2.*
   - DJANGO_VERSION=3.0.*
 # command to install dependencies
 install:
