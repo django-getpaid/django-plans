@@ -40,7 +40,7 @@ The ``geolite2`` library must be installed for this to work.
 Default: ``monthly``
 
 This settings switches invoice counting per days, month or year basis. It requires to
-provide one of the value:
+provide one of the value or a callable:
 
  * Invoice.NUMBERING.DAILY
  * Invoice.NUMBERING.MONTHLY
@@ -49,6 +49,26 @@ provide one of the value:
 Example::
 
     PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
+
+The callable takes the invoce and should return following values in tuple:
+
+ * sequence identifier - any string, every it's value will hold separate sequence
+ * initial number - minimal initail value for the sequence
+   This is usefull for backward compatibility with sequences before the sequence identifier was introduced
+   In case whithout prevous invoices in the system, just return `None`
+
+Example (get separate counter for each currency)::
+
+   def PLANS_INVOICE_COUNTER_RESET(invoice):
+       from plans.models import Invoice, get_initial_number
+       older_invoices = Invoice.objects.filter(
+           type=invoice.type,
+           issued__year=invoice.issued.year,
+           issued__month=invoice.issued.month,
+           currency=invoice.currency,
+       )
+       sequence_name = f"{invoice.issued.year}_{invoice.issued.month}_{invoice.currency}"
+       return sequence_name, get_initial_number(older_invoices)
 
 .. warning::
 
