@@ -166,7 +166,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     search_fields = ('user__username', 'user__email', 'plan__name',)
     list_display = (
         'user', 'plan', 'expire', 'active', 'recurring__automatic_renewal',
-        'recurring__token_verified', 'recurring__pricing',
+        'recurring__token_verified', 'recurring__payment_provider', 'recurring__pricing',
     )
     list_display_links = list_display
     list_select_related = True
@@ -186,6 +186,11 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     recurring__token_verified.admin_order_field = 'recurring__token_verified'
     recurring__token_verified.boolean = True
     recurring__token_verified.short_description = "Renewal token verified"
+
+    def recurring__payment_provider(self, obj):
+        return obj.recurring.payment_provider
+    recurring__payment_provider.admin_order_field = 'recurring__payment_provider'
+    recurring__payment_provider.short_description = "Renewal payment_provider"
 
     def recurring__pricing(self, obj):
         return obj.recurring.pricing
