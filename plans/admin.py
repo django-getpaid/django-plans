@@ -163,7 +163,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         'active', 'expire', 'plan__name', 'plan__available', 'plan__visible',
         'recurring__has_automatic_renewal', 'recurring__token_verified', 'recurring__pricing',
     )
-    search_fields = ('user__username', 'user__email', 'plan__name',)
+    search_fields = ('user__username', 'user__email', 'plan__name', 'recurring__token')
     list_display = (
         'user', 'plan', 'expire', 'active', 'recurring__automatic_renewal',
         'recurring__token_verified', 'recurring__payment_provider', 'recurring__pricing',
