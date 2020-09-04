@@ -255,7 +255,7 @@ class UserPlan(models.Model):
         return date.today()
 
     def has_automatic_renewal(self):
-        return hasattr(self, 'recurring') and self.recurring.has_automatic_renewal
+        return hasattr(self, 'recurring') and self.recurring.has_automatic_renewal and self.recurring.token_verified
 
     def get_plan_extended_until(self, plan, pricing):
         if plan.is_free():
