@@ -260,8 +260,6 @@ class UserPlan(models.Model):
     def get_plan_extended_until(self, plan, pricing):
         if plan.is_free():
             return None
-        if not self.plan.is_free() and self.expire is None:
-            return None
         if pricing is None:
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
