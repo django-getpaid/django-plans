@@ -502,8 +502,8 @@ class Quota(OrderedModel):
 
 
 class PlanPricingManager(models.Manager):
-    def get_query_set(self):
-        return super(PlanPricingManager, self).get_query_set().select_related('plan', 'pricing')
+    def get_queryset(self):
+        return super(PlanPricingManager, self).get_queryset().select_related('plan', 'pricing')
 
 
 class PlanPricing(models.Model):
@@ -529,8 +529,8 @@ class PlanPricing(models.Model):
 
 
 class PlanQuotaManager(models.Manager):
-    def get_query_set(self):
-        return super(PlanQuotaManager, self).get_query_set().select_related('plan', 'quota')
+    def get_queryset(self):
+        return super(PlanQuotaManager, self).get_queryset().select_related('plan', 'quota')
 
 
 class PlanQuota(models.Model):
@@ -676,18 +676,18 @@ class Order(models.Model):
 
 
 class InvoiceManager(models.Manager):
-    def get_query_set(self):
-        return super(InvoiceManager, self).get_query_set().filter(type=Invoice.INVOICE_TYPES['INVOICE'])
+    def get_queryset(self):
+        return super(InvoiceManager, self).get_queryset().filter(type=Invoice.INVOICE_TYPES['INVOICE'])
 
 
 class InvoiceProformaManager(models.Manager):
-    def get_query_set(self):
-        return super(InvoiceProformaManager, self).get_query_set().filter(type=Invoice.INVOICE_TYPES['PROFORMA'])
+    def get_queryset(self):
+        return super(InvoiceProformaManager, self).get_queryset().filter(type=Invoice.INVOICE_TYPES['PROFORMA'])
 
 
 class InvoiceDuplicateManager(models.Manager):
-    def get_query_set(self):
-        return super(InvoiceDuplicateManager, self).get_query_set().filter(type=Invoice.INVOICE_TYPES['DUPLICATE'])
+    def get_queryset(self):
+        return super(InvoiceDuplicateManager, self).get_queryset().filter(type=Invoice.INVOICE_TYPES['DUPLICATE'])
 
 
 class Invoice(models.Model):
