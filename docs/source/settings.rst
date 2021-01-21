@@ -1,11 +1,12 @@
 Configuration via `settings`
 ============================
 
-Swappable models
-----------------
+``Swappable models``
+--------------------
 
-It's possible to supply alternative models which extend the base models of
-django-plans by defining the following settings:
+Given a django app named ``custom_plans``, it's possible to supply 
+alternative models which extend the base models of django-plans by 
+defining the following settings:
 
 .. code-block:: python
 
@@ -20,7 +21,7 @@ django-plans by defining the following settings:
     PLANS_INVOICE_MODEL = 'custom_plans.Invoice'
 
 ``PLANS_CURRENCY``
-------------
+------------------
 
 **Required**
 
@@ -39,7 +40,7 @@ Example::
 This is the default mail ``FROM`` value for sending system notifications.
 
 ``PLANS_GET_COUNTRY_FROM_IP``
-----------------------
+-----------------------------
 
 **Optional**
 
@@ -50,7 +51,7 @@ The ``geolite2`` library must be installed for this to work.
 
 
 ``PLANS_INVOICE_COUNTER_RESET``
--------------------------
+-------------------------------
 
 **Optional**
 
@@ -95,7 +96,7 @@ Example (get separate counter for each currency)::
 
 
 ``PLANS_INVOICE_NUMBER_FORMAT``
--------------------------
+-------------------------------
 
 **Optional**
 
@@ -117,7 +118,7 @@ This example for invoice issued on ``March 5th, 2010``, with sequential number `
    Full number of an invoice is saved with the Invoice object. Changing this value in settings will affect only newly created invoices.
 
 ``PLANS_INVOICE_LOGO_URL``
---------------------
+--------------------------
 
 **Optional**
 
@@ -136,7 +137,7 @@ Example::
 
 
 ``PLANS_INVOICE_TEMPLATE``
---------------------
+--------------------------
 
 **Optional**
 
@@ -159,7 +160,7 @@ Example::
 
 
 ``PLANS_INVOICE_ISSUER``
----------------
+------------------------
 **Required**
 
 You need to define a dictionary that will store information needed to issue an invoice. Fill dict fields as in an example.
@@ -180,7 +181,7 @@ Example::
 
 
 ``PLANS_ORDER_EXPIRATION``
---------------------
+--------------------------
 
 **Optional**
 
@@ -217,7 +218,7 @@ User will receive notification before 7 , 3 and 1 day to account expire.
 
 
 ``PLANS_CHANGE_POLICY``
-----------------------
+-----------------------
 
 **Optional**
 
@@ -226,7 +227,7 @@ Default: ``'plans.plan_change.StandardPlanChangePolicy'``
 A full python to path that should be used as plan change policy.
 
 ``PLANS_DEFAULT_GRACE_PERIOD``
------------------------------
+------------------------------
 
 **Optional**
 
@@ -249,7 +250,7 @@ Example::
 
 
 ``PLANS_VALIDATORS``
-------------------------------
+--------------------
 
 **Optional**
 
@@ -276,7 +277,7 @@ The dict itself could be also lazy imported string::
 Further reading: :doc:`quota_validators`
 
 ``SEND_PLANS_EMAILS``
-------------------------------
+---------------------
 
 **Optional**
 
@@ -285,7 +286,7 @@ Default: ``True``
 Boolean value for enabling (default) or disabling the sending of plan related emails.
 
 ``PLANS_SEND_EMAILS_DISABLED_INVOICE_TYPES``
-------------------------------
+--------------------------------------------
 
 **Optional**
 
@@ -294,7 +295,7 @@ Default: ``[]``
 Disable listed invoice types to be send via e-mails.
 
 ``PLANS_SEND_EMAILS_PLAN_CHANGED``
-------------------------------
+----------------------------------
 
 **Optional**
 
@@ -303,7 +304,7 @@ Default: ``True``
 Disable plans changed e-mail.
 
 ``PLANS_SEND_EMAILS_PLAN_EXTENDED``
-------------------------------
+-----------------------------------
 
 **Optional**
 
@@ -313,7 +314,7 @@ Disable plan extended e-mail.
 
 
 ``PLANS_TAX``
--------
+-------------
 
 **Required**
 
@@ -334,7 +335,7 @@ Default: ``None``
 .. _settings-TAXATION_POLICY:
 
 ``PLANS_TAXATION_POLICY``
--------------------
+-------------------------
 
 **Required**
 
@@ -348,7 +349,7 @@ Example::
 Further reading: :doc:`taxation`
 
 ``PLANS_DEFAULT_COUNTRY``
----------------
+-------------------------
 
 **Optional**
 
@@ -359,7 +360,7 @@ Example::
     PLANS_TAX_COUNTRY = 'PL'
 
 ``PLANS_TAX_COUNTRY``
----------------
+---------------------
 
 **Optional**
 
