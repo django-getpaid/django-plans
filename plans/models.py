@@ -398,6 +398,10 @@ class UserPlan(models.Model):
             UserPlan.create_for_user(user)
         return userplans
 
+    def get_current_plan(self):
+        """ Tiny helper, very usefull in templates """
+        return Plan.get_current_plan(self.user)
+
 
 class RecurringUserPlan(models.Model):
     """
@@ -646,6 +650,9 @@ class Order(models.Model):
 
     def get_all_invoices(self):
         return self.invoice_set.order_by('issued', 'issued_duplicate', 'pk')
+
+    def get_plan_pricing(self):
+        return PlanPricing.objects.get(plan=self.plan, pricing=self.pricing)
 
     def tax_total(self):
         if self.tax is None:

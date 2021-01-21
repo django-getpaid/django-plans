@@ -31,14 +31,14 @@ def send_template_email(recipients, title_template, body_template, context, lang
         except LookupError:
             pass
 
-    context.update({'site_name': site_name, 'site_domain': domain})
+    context.update({'site_name': site_name, 'site_domain': domain, 'site': current_site})
 
     if language is not None:
         translation.activate(language)
 
     mail_title_template = loader.get_template(title_template)
     mail_body_template = loader.get_template(body_template)
-    title = mail_title_template.render(context)
+    title = mail_title_template.render(context).strip()
     body = mail_body_template.render(context)
     try:
         mail_body_template_html = loader.get_template(body_template.replace('.txt', '.html'))
