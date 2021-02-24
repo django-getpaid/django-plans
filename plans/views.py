@@ -189,7 +189,7 @@ class CreateOrderView(LoginRequired, CreateView):
             country = get_country_code(self.request)
         else:
             country = country.code
-        tax_number = getattr(billing_info, 'tax_number', None)
+        tax_number = BillingInfo.get_full_tax_number(billing_info.tax_number, country)
 
         # Calculating tax can be complex task (e.g. VIES webservice call)
         # To ensure that tax calculated on order preview will be the same on final order

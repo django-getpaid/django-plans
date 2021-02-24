@@ -153,16 +153,25 @@ class BillingInfo(models.Model):
         verbose_name_plural = _("Billing infos")
 
     @staticmethod
+    def get_full_tax_number(tax_number, country):
+        number = tax_number
+        if tax_number.startswith(country):
+            number = tax_number[len(country):]
+        return country + number
+
+    @staticmethod
     def clean_tax_number(tax_number, country):
         tax_number = re.sub(r'[^A-Z0-9]', '', tax_number.upper())
+
+        country_str = tax_number[:len(country)]
+        if country_str.isalpha() and country_str != country:
+            raise ValidationError(_('VAT ID country code doesn\'t corespond with country'))
+
         if tax_number and country:
 
             if country in vatnumber.countries():
-                number = tax_number
-                if tax_number.startswith(country):
-                    number = tax_number[len(country):]
-
-                if not vatnumber.check_vat(country + number):
+                full_number = BillingInfo.get_full_tax_number(tax_number, country)
+                if not vatnumber.check_vat(full_number):
                     #           This is a proper solution to bind ValidationError to a Field but it is not
                     #           working due to django bug :(
                     #                    errors = defaultdict(list)
