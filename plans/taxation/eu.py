@@ -55,7 +55,7 @@ class EUTaxationPolicy(TaxationPolicy):
         'SK': Decimal('20'),  # Slovakia
         'FI': Decimal('24'),  # Finland
         'SE': Decimal('25'),  # Sweden
-        'GB': Decimal('20'),  # United Kingdom (Great Britain)
+        # 'GB': Decimal('20'),  # United Kingdom (Great Britain)
     }
 
     @classmethod
