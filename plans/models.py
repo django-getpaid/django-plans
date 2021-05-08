@@ -55,11 +55,12 @@ class Plan(OrderedModel):
     """
     name = models.CharField(_('name'), max_length=100)
     description = models.TextField(_('description'), blank=True)
-    default = models.NullBooleanField(
+    default = models.BooleanField(
         help_text=_('Both "Unknown" and "No" means that the plan is not default'),
         default=None,
         db_index=True,
         unique=True,
+        null=True,
     )
     available = models.BooleanField(
         _('available'), default=False, db_index=True,
