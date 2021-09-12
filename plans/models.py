@@ -163,12 +163,7 @@ class BillingInfo(models.Model):
                     number = tax_number[len(country):]
 
                 if not vatnumber.check_vat(country + number):
-                    #           This is a proper solution to bind ValidationError to a Field but it is not
-                    #           working due to django bug :(
-                    #                    errors = defaultdict(list)
-                    #                    errors['tax_number'].append(_('VAT ID is not correct'))
-                    #                    raise ValidationError(errors)
-                    raise ValidationError(_('VAT ID is not correct'))
+                    raise ValidationError({'tax_number': _('VAT ID is not correct')})
 
             return tax_number
         else:
@@ -176,9 +171,9 @@ class BillingInfo(models.Model):
 
 
 # FIXME: How to make validation in Model clean and attach it to a field? Seems that it is not working right now
-#    def clean(self):
-#        super(BillingInfo, self).clean()
-#        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
+    def clean(self):
+        super(BillingInfo, self).clean()
+        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
 
 class UserPlan(models.Model):
     """
