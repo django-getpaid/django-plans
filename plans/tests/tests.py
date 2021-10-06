@@ -489,6 +489,72 @@ class TestInvoice(TestCase):
         self.assertEqual(i2.full_number, "2/FV/1991")
         self.assertEqual(i3.full_number, "1/FV/1992")
 
+    def test_invoice_number_custom(self):
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
+            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
+
+        def plans_invoice_counter_reset_function(invoice):
+            from plans.models import Invoice, get_initial_number
+            older_invoices = Invoice.objects.filter(
+                type=invoice.type,
+                issued__year=invoice.issued.year,
+                issued__month=invoice.issued.month,
+                currency=invoice.currency,
+            )
+            sequence_name = f"{invoice.issued.year}_{invoice.issued.month}_{invoice.currency}"
+            return sequence_name, get_initial_number(older_invoices)
+
+        settings.PLANS_INVOICE_COUNTER_RESET = plans_invoice_counter_reset_function
+
+        user = User.objects.get(username='test1')
+        plan_pricing = PlanPricing.objects.all()[0]
+        tax = getattr(settings, "PLANS_TAX")
+        currency = getattr(settings, "PLANS_CURRENCY")
+        currency1 = 'CZK'
+        o1 = Order(user=user, plan=plan_pricing.plan,
+                   pricing=plan_pricing.pricing, amount=plan_pricing.price,
+                   tax=tax, currency=currency)
+        o1.save()
+
+        o2 = Order(user=user, plan=plan_pricing.plan,
+                   pricing=plan_pricing.pricing, amount=plan_pricing.price,
+                   tax=tax, currency=currency1)
+        o2.save()
+
+        o3 = Order(user=user, plan=plan_pricing.plan,
+                   pricing=plan_pricing.pricing, amount=plan_pricing.price,
+                   tax=tax, currency=currency)
+        o3.save()
+
+        day = date(1991, 7, 13)
+        i1 = Invoice(issued=day, selling_date=day, payment_date=day)
+        i1.copy_from_order(o1)
+        i1.set_issuer_invoice_data()
+        i1.set_buyer_invoice_data(o1.user.billinginfo)
+        i1.clean()
+        i1.save()
+
+        day = date(1991, 7, 13)
+        i2 = Invoice(issued=day, selling_date=day, payment_date=day)
+        i2.copy_from_order(o2)
+        i2.set_issuer_invoice_data()
+        i2.set_buyer_invoice_data(o2.user.billinginfo)
+        i2.clean()
+        i2.save()
+
+        day = date(1991, 7, 13)
+        i3 = Invoice(issued=day, selling_date=day, payment_date=day)
+        i3.copy_from_order(o1)
+        i3.set_issuer_invoice_data()
+        i3.set_buyer_invoice_data(o1.user.billinginfo)
+        i3.clean()
+        i3.save()
+
+        self.assertEqual(i1.full_number, "1/FV/1991")
+        self.assertEqual(i2.full_number, "1/FV/1991")
+        self.assertEqual(i3.full_number, "2/FV/1991")
+
     def test_set_order(self):
         o = Order.objects.all()[0]
 
