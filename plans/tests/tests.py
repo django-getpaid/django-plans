@@ -20,6 +20,7 @@ from freezegun import freeze_time
 
 from model_bakery import baker
 
+from plans import tasks
 from plans.models import PlanPricing, Invoice, Order, Plan, UserPlan
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
@@ -130,6 +131,7 @@ class PlansTestCase(TestCase):
         self.assertEqual(u.userplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
+    @freeze_time("2012-01-14")
     def test_extend_account_other_expire_none(self):
         """
         Tests extending expired=None account with other Plan that user had before and is expired:
@@ -144,7 +146,7 @@ class PlansTestCase(TestCase):
         plan_pricing = PlanPricing.objects.filter(~Q(plan=u.userplan.plan) & Q(pricing__period=30))[0]
         default_plan = Plan.objects.get(pk=1)
         u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire, None)
+        self.assertEqual(u.userplan.expire, date(2012, 2, 13))
         self.assertEqual(u.userplan.plan, default_plan)
         self.assertEqual(u.userplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
@@ -830,3 +832,31 @@ class RecurringPlansTestCase(TestCase):
         """ Test that UserPlan.plan_autorenew_at() method """
         up = baker.make('UserPlan', expire=date(2020, 1, 5))
         self.assertEquals(up.plan_autorenew_at(), date(2020, 1, 1))
+
+    def test_has_automatic_renewal(self):
+        """ Test UserPlan.has_automatic_renewal() method """
+        user_plan = baker.make('UserPlan')
+        order = baker.make('Order', amount=10)
+        user_plan.set_plan_renewal(order=order, card_masked_number="1234")
+        self.assertEquals(user_plan.has_automatic_renewal(), False)
+
+        user_plan.recurring.token_verified = True
+        self.assertEquals(user_plan.has_automatic_renewal(), True)
+
+
+class TasksTestCase(TestCase):
+    def test_expire_account_task(self):
+        order = baker.make('Order', amount=10)
+        userplan = baker.make('UserPlan', user=baker.make('User'))
+        userplan.expire = date.today() - timedelta(days=1)
+        userplan.active = True
+
+        # If the automatic renewal didn't go through, even automatic renewal plans has to go
+        userplan.set_plan_renewal(order=order, card_masked_number="1234")
+
+        userplan.save()
+        tasks.expire_account()
+
+        userplan.refresh_from_db()
+        self.assertEqual(userplan.active, False)
+        # self.assertEqual(len(mail.outbox), 1)
