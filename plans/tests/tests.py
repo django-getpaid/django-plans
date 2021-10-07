@@ -738,7 +738,7 @@ class BillingInfoViewTestCase(TestCase):
     fixtures = ['test_django-plans_auth']
 
     def setUp(self):
-        User.objects.create_user('foo', 'myemail@test.com', 'bar')
+        self.user = User.objects.create_user('foo', 'myemail@test.com', 'bar')
         self.client.login(username='foo', password='bar')
 
     @override_settings(
@@ -795,6 +795,29 @@ class BillingInfoViewTestCase(TestCase):
         response = self.client.get(reverse('billing_info_create'), HTTP_X_FORWARDED_FOR='85.214.132.117')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="" selected>---------</option>', html=True)
+
+    def test_redirect_view_create(self):
+        """
+        Test, BillingInfoRedirectView
+        """
+
+        response = self.client.get(reverse('billing_info'))
+        self.assertRedirects(
+            response, '/plan/billing/create/', status_code=302,
+            target_status_code=200, fetch_redirect_response=True,
+        )
+
+    def test_redirect_view_update_next(self):
+        """
+        Test, BillingInfoRedirectView redirects to next url, BillingInfo already exists
+        """
+
+        baker.make('BillingInfo', user=self.user)
+        response = self.client.get(reverse('billing_info')  + "?next=foo")
+        self.assertRedirects(
+            response, '/plan/billing/update/?next=foo', status_code=302,
+            target_status_code=200, fetch_redirect_response=True,
+        )
 
 
 class RecurringPlansTestCase(TestCase):
