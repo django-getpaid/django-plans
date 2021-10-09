@@ -254,10 +254,11 @@ class UserPlan(models.Model):
             return self.expire
         return date.today()
 
+    def has_automatic_renewal(self):
+        return hasattr(self, 'recurring') and self.recurring.has_automatic_renewal and self.recurring.token_verified
+
     def get_plan_extended_until(self, plan, pricing):
         if plan.is_free():
-            return None
-        if not self.plan.is_free() and self.expire is None:
             return None
         if pricing is None:
             return self.expire
@@ -439,6 +440,13 @@ class RecurringUserPlan(models.Model):
         help_text=_(
             'Automatic renewal is enabled for associated plan. '
             'If False, the plan renewal can be still initiated by user.',
+        ),
+        default=False,
+    )
+    token_verified = models.BooleanField(
+        _('token has been verified by payment'),
+        help_text=_(
+            'The recurring token has been verified by at least one payment to be working.',
         ),
         default=False,
     )

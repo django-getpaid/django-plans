@@ -23,6 +23,7 @@ def autorenew_account():
 
     accounts_for_renewal = get_active_plans().filter(
         userplan__recurring__has_automatic_renewal=True,
+        userplan__recurring__token_verified=True,
         userplan__expire__lt=datetime.date.today() + datetime.timedelta(days=PLANS_AUTORENEW_BEFORE_DAYS,
                                                                         hours=PLANS_AUTORENEW_BEFORE_HOURS),
     )
@@ -39,11 +40,7 @@ def expire_account():
 
     logger.info('Started account expiration')
 
-    expired_accounts = get_active_plans().filter(
-        userplan__expire__lt=datetime.date.today(),
-    ).exclude(
-        userplan__recurring__has_automatic_renewal=True,
-    )
+    expired_accounts = get_active_plans().filter(userplan__expire__lt=datetime.date.today())
 
     for user in expired_accounts.all():
         user.userplan.expire_account()
