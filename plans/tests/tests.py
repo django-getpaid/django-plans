@@ -589,7 +589,6 @@ def complete_order():
 class ConcurrentTestInvoice(TransactionTestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
-    @freeze_time("2012-01-14")
     def test_invoice_number_monthly_duplicity(self):
         """
         Test for problem where two simultaneously created invoices had duplicate number
@@ -881,7 +880,7 @@ class BillingInfoViewTestCase(TestCase):
         """
 
         baker.make('BillingInfo', user=self.user)
-        response = self.client.get(reverse('billing_info')  + "?next=foo")
+        response = self.client.get(reverse('billing_info') + "?next=foo")
         self.assertRedirects(
             response, '/plan/billing/update/?next=foo', status_code=302,
             target_status_code=200, fetch_redirect_response=True,
