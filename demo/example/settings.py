@@ -26,11 +26,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'travis_ci_test',  # Or path to database file if using sqlite3.
+        'NAME': 'postgres',  # Or path to database file if using sqlite3.
         'USER': 'postgres',  # Not used with sqlite3.
-        'PASSWORD': '',  # Not used with sqlite3.
-        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+        'PASSWORD': 'postgres',  # Not used with sqlite3.
+        'HOST': 'localhost',  # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '5432',  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -94,6 +94,7 @@ TEMPLATES = [
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
+                'django.template.context_processors.request',
                 'django.contrib.messages.context_processors.messages',
                 'plans.context_processors.account_status',
             ],
@@ -108,6 +109,8 @@ TEMPLATES = [
 
 ROOT_URLCONF = 'example.urls'
 WSGI_APPLICATION = 'example.wsgi.application'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
