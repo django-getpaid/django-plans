@@ -143,7 +143,13 @@ class InvoiceAdmin(admin.ModelAdmin):
         'full_number', 'buyer_tax_number',
         'user__username', 'user__email'
     )
-    list_filter = ('type', 'issued')
+    list_filter = (
+        'type',
+        'issued',
+        'tax',
+        'currency',
+        'buyer_country',
+    )
     list_display = (
         'full_number', 'issued', 'total_net', 'currency', 'user',
         'tax', 'buyer_name', 'buyer_city', 'buyer_tax_number'
