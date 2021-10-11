@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 
 from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, RecurringUserPlan, Order, BillingInfo
+from .signals import account_automatic_renewal
 from plans.models import Invoice
 
 
@@ -164,6 +165,17 @@ class RecurringPlanInline(admin.StackedInline):
     extra = 0
 
 
+def autorenew_payment(modeladmin, request, queryset):
+    """
+    Automatically renew payment for this plan
+    """
+    for user_plan in queryset:
+        account_automatic_renewal.send(sender=None, user=user_plan.user)
+
+
+autorenew_payment.short_description = _('Autorenew plan')
+
+
 class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     list_filter = (
         'active', 'expire', 'plan__name', 'plan__available', 'plan__visible',
@@ -178,6 +190,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     list_select_related = True
     readonly_fields = ['user_link', ]
     inlines = (RecurringPlanInline,)
+    actions = [autorenew_payment, ]
     fields = ('user', 'user_link', 'plan', 'expire', 'active')
     raw_id_fields = ['user', 'plan', ]
 
