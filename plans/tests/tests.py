@@ -6,12 +6,13 @@ from io import StringIO
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.core import mail
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.management import call_command
 from django.db import transaction
 from django.db.models import Q
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 
 from django_concurrent_tests.helpers import call_concurrently
@@ -21,11 +22,12 @@ from freezegun import freeze_time
 from model_bakery import baker
 
 from plans import tasks
-from plans.models import PlanPricing, Invoice, Order, Plan, UserPlan
+from plans.models import BillingInfo, PlanPricing, Invoice, Order, Plan, UserPlan
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
 from plans.validators import ModelCountValidator
+from plans.views import CreateOrderView
 
 from unittest import mock
 
@@ -765,6 +767,42 @@ class EUTaxationPolicyTestCase(TestCase):
     def test_company_EU_notsame_vies_not_ok(self):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), Decimal('20.0'))
+
+
+class BillingInfoTestCase(TestCase):
+    def test_clean_tax_number(self):
+        with self.assertRaises(ValidationError):
+            BillingInfo.clean_tax_number('123456', 'CZ')
+
+    def test_clean_tax_number_valid(self):
+        self.assertEqual(BillingInfo.clean_tax_number('48136450', 'CZ'), '48136450')
+
+    def test_clean_tax_number_valid_with_country(self):
+        self.assertEqual(BillingInfo.clean_tax_number('CZ48136450', 'CZ'), 'CZ48136450')
+
+    def test_clean_tax_number_country_code_does_not_equal_as_country(self):
+        with self.assertRaisesRegexp(ValidationError, 'VAT ID country code doesn\'t corespond with country'):
+            BillingInfo.clean_tax_number('AT48136450', 'CZ')
+
+
+class CreateOrderViewTestCase(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_recalculate_order(self):
+        request = self.factory.get('')
+        middleware = SessionMiddleware()
+        middleware.process_request(request)
+        c = CreateOrderView()
+        c.request = request
+        o = c.recalculate(10, BillingInfo(tax_number='CZ48136450', country='CZ'))
+        self.assertEqual(o.tax, None)
+
+        o = c.recalculate(10, BillingInfo(tax_number='48136450', country='CZ'))
+        self.assertEqual(o.tax, None)
+
+        o = c.recalculate(10, BillingInfo(tax_number='1234565', country='CZ'))
+        self.assertEqual(o.tax, 21)
 
 
 class ValidatorsTestCase(TestCase):
