@@ -551,7 +551,7 @@ class PlanQuotaManager(models.Manager):
 class PlanQuota(models.Model):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     quota = models.ForeignKey('Quota', on_delete=models.CASCADE)
-    value = models.IntegerField(default=1, null=True, blank=True)
+    value = models.BigIntegerField(default=1, null=True, blank=True)
 
     objects = PlanQuotaManager()
 
