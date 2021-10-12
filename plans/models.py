@@ -113,10 +113,7 @@ class Plan(OrderedModel):
         return self.name
 
     def get_quota_dict(self):
-        quota_dic = {}
-        for plan_quota in PlanQuota.objects.filter(plan=self).select_related('quota'):
-            quota_dic[plan_quota.quota.codename] = plan_quota.value
-        return quota_dic
+        return dict(self.planquota_set.values_list('quota__codename', 'value'))
 
     def is_free(self):
         return self.planpricing_set.count() == 0
