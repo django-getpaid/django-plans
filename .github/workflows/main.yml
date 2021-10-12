@@ -65,5 +65,4 @@ jobs:
       - name: Install
         run: |
           pip install flake8
-          cd demo
           flake8
