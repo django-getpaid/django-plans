@@ -33,7 +33,6 @@ setup(
         'django-ordered-model>=1.4.1',
         'vatnumber>=1.2',
         'django-next-url-mixin==0.1.0',
-        'celery',
         'suds-jurko',
         'django-sequences',
         'six',

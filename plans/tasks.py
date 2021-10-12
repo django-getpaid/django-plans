@@ -1,7 +1,5 @@
 import datetime
 import logging
-from celery.schedules import crontab
-from celery.task.base import periodic_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from .signals import account_automatic_renewal
@@ -15,7 +13,6 @@ def get_active_plans():
     return User.objects.select_related('userplan').filter(userplan__active=True).exclude(userplan__expire=None)
 
 
-@periodic_task(run_every=crontab(hour=0, minute=5))
 def autorenew_account():
     logger.info('Started automatic account renewal')
     PLANS_AUTORENEW_BEFORE_DAYS = getattr(settings, 'PLANS_AUTORENEW_BEFORE_DAYS', 0)
@@ -35,7 +32,6 @@ def autorenew_account():
     return accounts_for_renewal
 
 
-@periodic_task(run_every=crontab(hour=0, minute=5))
 def expire_account():
 
     logger.info('Started account expiration')

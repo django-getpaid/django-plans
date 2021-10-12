@@ -13,7 +13,6 @@ django-concurrent-test-helper
 freezegun
 flake8
 psycopg2<2.9
-celery<5
 
 
 # Not supported in py3
