@@ -49,11 +49,21 @@ jobs:
 
       - name: Testing
         run: |
-          flake8
-          cd demo && python manage.py makemigrations && coverage run manage.py test plans
+          cd demo
+          python manage.py makemigrations
+          coverage run manage.py test plans
         env:
           POSTGRES_HOST: postgres
           POSTGRES_PORT: 5432
 
       - name: Collect results
-        run: codecov
+        run: coverage xml && codecov
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install
+        run: |
+          pip install flake8
+          cd demo
+          flake8
