@@ -39,11 +39,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ hashFiles('setup.py') }}-${{ hashFiles('demo/requirements.txt') }}-${{ matrix.DJANGO_VERSION }}
 
       - name: Install
         run: |
            pip install -q -e .
-           pip install -q -r demo/requirements.txt
+           pip install -q --upgrade --upgrade-strategy eager -r demo/requirements.txt
            pip install -q Django==${{ matrix.DJANGO_VERSION }} 
            pip install codecov
 
