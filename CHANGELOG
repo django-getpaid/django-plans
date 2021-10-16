@@ -1,6 +1,10 @@
 django-plans changelog
 ======================
 
+1.0.0
+-----
+* Celery dependency was removed. Now the implementor has to connect the `plans.tasks.autorenew_account` `plans.tasks.expire_account` tasks by himself or use management command.
+
 0.9.0
 ------
 
