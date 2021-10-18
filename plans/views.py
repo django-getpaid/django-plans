@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.urls import reverse
 from django.core.exceptions import ImproperlyConfigured
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView, RedirectView, CreateView, UpdateView, View
 from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
@@ -365,6 +365,12 @@ class BillingInfoRedirectView(LoginRequired, RedirectView):
         if next_url:
             return redirect_url + "?next=" + next_url
         return redirect_url
+
+
+def billing_info_create_or_update(request, *args, **kwargs):
+    if hasattr(request.user, 'billinginfo'):
+        return redirect('billing_info_update')
+    return redirect('billing_info_create')
 
 
 class SuccessUrlMixin():
