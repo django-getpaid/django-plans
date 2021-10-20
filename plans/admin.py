@@ -179,7 +179,8 @@ autorenew_payment.short_description = _('Autorenew plan')
 class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     list_filter = (
         'active', 'expire', 'plan__name', 'plan__available', 'plan__visible',
-        'recurring__has_automatic_renewal', 'recurring__token_verified', 'recurring__pricing',
+        'recurring__has_automatic_renewal', 'recurring__payment_provider',
+        'recurring__token_verified', 'recurring__pricing',
     )
     search_fields = ('user__username', 'user__email', 'plan__name', 'recurring__token')
     list_display = (
