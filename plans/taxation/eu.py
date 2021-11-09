@@ -6,6 +6,7 @@ from suds.transport import TransportError
 import vatnumber
 import stdnum
 from plans.taxation import TaxationPolicy
+from plans.utils import country_code_transform
 
 logger = logging.getLogger('plans.taxation.eu.vies')
 
@@ -60,11 +61,12 @@ class EUTaxationPolicy(TaxationPolicy):
 
     @classmethod
     def is_in_EU(cls, country_code):
-        return country_code.upper() in cls.EU_COUNTRIES_VAT
+        return country_code_transform(country_code).upper() in cls.EU_COUNTRIES_VAT
 
     @classmethod
     def get_default_tax(cls):
         issuer_country_code = cls.get_issuer_country_code()
+        issuer_country_code = country_code_transform(issuer_country_code)
         try:
             return cls.EU_COUNTRIES_VAT[issuer_country_code]
         except KeyError:
@@ -72,6 +74,7 @@ class EUTaxationPolicy(TaxationPolicy):
 
     @classmethod
     def get_tax_rate(cls, tax_id, country_code):
+        country_code = country_code_transform(country_code)
         issuer_country_code = cls.get_issuer_country_code()
         if not cls.is_in_EU(issuer_country_code):
             raise ImproperlyConfigured("EUTaxationPolicy requires that issuer country is in EU")
