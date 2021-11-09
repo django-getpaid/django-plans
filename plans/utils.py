@@ -32,3 +32,11 @@ def get_currency():
     if len(CURRENCY) != 3:
         raise ImproperlyConfigured('PLANS_CURRENCY should be configured as 3-letter currency code.')
     return CURRENCY
+
+
+def country_code_transform(country_code):
+    """ Transform country code to the code used by VIES """
+    transform_dict = {
+        "GR": "EL",
+    }
+    return transform_dict.get(country_code, country_code)
