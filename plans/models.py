@@ -28,12 +28,14 @@ from ordered_model.models import OrderedModel
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 
 from plans.enumeration import Enumeration
+from plans.importer import import_name
 from plans.validators import plan_validation
 from plans.taxation.eu import EUTaxationPolicy
 from plans.contrib import send_template_email, get_user_language
 from plans.signals import (order_completed, account_activated,
                            account_expired, account_change_plan,
                            account_deactivated)
+from plans.utils import get_country_code, get_currency
 
 from sequences import get_next_value
 
@@ -465,14 +467,16 @@ class RecurringUserPlan(models.Model):
         Create order for plan renewal
         """
         userplan = self.user_plan
-        return Order.objects.create(
+        order = Order.objects.create(
             user=userplan.user,
             plan=userplan.plan,
             pricing=userplan.recurring.pricing,
             amount=userplan.recurring.amount,
-            tax=userplan.recurring.tax,
             currency=userplan.recurring.currency,
         )
+        order.recalculate(userplan.recurring.amount, userplan.user.billinginfo)
+        order.save()
+        return order
 
 
 class Pricing(models.Model):
@@ -683,6 +687,44 @@ class Order(models.Model):
 
     def get_absolute_url(self):
         return reverse('order', kwargs={'pk': self.pk})
+
+    def recalculate(self, amount, billing_info, request=None):
+        """
+        Calculates and return pre-filled Order
+        """
+        self.amount = amount
+        self.currency = get_currency()
+        country = getattr(billing_info, 'country', None)
+        if country is None:
+            country = get_country_code(request)
+        else:
+            country = country.code
+        if hasattr(billing_info, 'tax_number') and billing_info.tax_number:
+            tax_number = BillingInfo.get_full_tax_number(billing_info.tax_number, country)
+        else:
+            tax_number = None
+
+        # Calculating tax can be complex task (e.g. VIES webservice call)
+        # To ensure that tax calculated on order preview will be the same on final order
+        # tax rate is cached for a given billing data (as this value only depends on it)
+        tax_session_key = "tax_%s_%s" % (tax_number, country)
+
+        if request:
+            tax = request.session.get(tax_session_key)
+        else:
+            tax = None
+        if tax is None:
+            taxation_policy = getattr(settings, 'PLANS_TAXATION_POLICY', None)
+            if not taxation_policy:
+                raise ImproperlyConfigured('PLANS_TAXATION_POLICY is not set')
+            taxation_policy = import_name(taxation_policy)
+            tax = str(taxation_policy.get_tax_rate(tax_number, country))
+            # Because taxation policy could return None which clutters with saving this value
+            # into cache, we use str() representation of this value
+            if request:
+                request.session[tax_session_key] = tax
+
+        self.tax = Decimal(tax) if tax != 'None' else None
 
     class Meta:
         ordering = ('-created', )

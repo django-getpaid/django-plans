@@ -969,6 +969,15 @@ class RecurringPlansTestCase(TestCase):
         user_plan.recurring.token_verified = True
         self.assertEquals(user_plan.has_automatic_renewal(), True)
 
+    def test_create_new_order(self):
+        rup = baker.make(
+            'RecurringUserPlan',
+            user_plan__user__billinginfo__country='CZ',
+            amount=10,
+        )
+        order = rup.create_renew_order()
+        self.assertEqual(order.tax, 21)
+
 
 class TasksTestCase(TestCase):
     def test_expire_account_task(self):
