@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError, ImproperlyConfigured
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 import six
 
 from plans.importer import import_name

@@ -2,7 +2,7 @@ from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms.widgets import HiddenInput
-from django.utils.translation import ugettext
+from django.utils.translation import gettext
 
 from .models import PlanPricing, BillingInfo
 from plans.models import Order
@@ -80,4 +80,4 @@ class BillingInfoWithoutShippingForm(BillingInfoForm):
 
 
 class FakePaymentsForm(forms.Form):
-    status = forms.ChoiceField(choices=Order.STATUS, required=True, label=ugettext('Change order status to'))
+    status = forms.ChoiceField(choices=Order.STATUS, required=True, label=gettext('Change order status to'))

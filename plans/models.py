@@ -21,7 +21,7 @@ from django.template import Context
 from django.template.base import Template
 from django.utils import translation
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _, pgettext_lazy
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
 
 from django_countries.fields import CountryField
 from ordered_model.models import OrderedModel
