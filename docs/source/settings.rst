@@ -4,8 +4,8 @@ Configuration via `settings`
 ``Swappable models``
 --------------------
 
-Given a django app named ``custom_plans``, it's possible to supply 
-alternative models which extend the base models of django-plans by 
+Given a django app named ``custom_plans``, it's possible to supply
+alternative models which extend the base models of django-plans by
 defining the following settings:
 
 .. code-block:: python
@@ -78,7 +78,8 @@ The callable takes the invoce and should return following values in tuple:
 Example (get separate counter for each currency)::
 
    def PLANS_INVOICE_COUNTER_RESET(invoice):
-       from plans.models import Invoice, get_initial_number
+       from plans.models import Invoice
+       from plans.base.models import get_initial_number
        older_invoices = Invoice.objects.filter(
            type=invoice.type,
            issued__year=invoice.issued.year,

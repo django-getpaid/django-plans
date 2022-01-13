@@ -503,7 +503,8 @@ class TestInvoice(TestCase):
             "{% endif %}/{{ invoice.issued|date:'Y' }}"
 
         def plans_invoice_counter_reset_function(invoice):
-            from plans.models import Invoice, get_initial_number
+            from plans.models import Invoice
+            from plans.base.models import get_initial_number
             older_invoices = Invoice.objects.filter(
                 type=invoice.type,
                 issued__year=invoice.issued.year,

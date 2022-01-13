@@ -14,15 +14,6 @@ from plans.base.models import (AbstractPlan, AbstractBillingInfo, AbstractUserPl
                                AbstractPricing, AbstractPlanPricing, AbstractQuota,
                                AbstractPlanQuota, AbstractOrder, AbstractInvoice,
                                AbstractRecurringUserPlan)
-from plans.enumeration import Enumeration
-from plans.importer import import_name
-from plans.validators import plan_validation
-from plans.taxation.eu import EUTaxationPolicy
-from plans.contrib import send_template_email, get_user_language
-from plans.signals import (order_completed, account_activated,
-                           account_expired, account_change_plan,
-                           account_deactivated)
-from sequences import get_next_value
 
 class Plan(AbstractPlan):
     class Meta(AbstractPlan.Meta):

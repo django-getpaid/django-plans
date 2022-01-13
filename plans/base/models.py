@@ -65,11 +65,12 @@ class AbstractPlan(AbstractMixin, OrderedModel):
     """
     name = models.CharField(_('name'), max_length=100)
     description = models.TextField(_('description'), blank=True)
-    default = models.NullBooleanField(
+    default = models.BooleanField(
         help_text=_('Both "Unknown" and "No" means that the plan is not default'),
         default=None,
         db_index=True,
         unique=True,
+        null=True,
     )
     available = models.BooleanField(
         _('available'), default=False, db_index=True,
@@ -122,11 +123,7 @@ class AbstractPlan(AbstractMixin, OrderedModel):
         return self.name
 
     def get_quota_dict(self):
-        quota_dic = {}
-        PlanQuota = AbstractPlanQuota.get_concrete_model()
-        for plan_quota in PlanQuota.objects.filter(plan=self).select_related('quota'):
-            quota_dic[plan_quota.quota.codename] = plan_quota.value
-        return quota_dic
+        return dict(self.planquota_set.values_list('quota__codename', 'value'))
 
     def is_free(self):
         return self.planpricing_set.count() == 0
@@ -164,16 +161,24 @@ class AbstractBillingInfo(AbstractMixin, models.Model):
         verbose_name_plural = _("Billing infos")
 
     @staticmethod
+    def get_full_tax_number(tax_number, country):
+        number = tax_number
+        if tax_number.startswith(country):
+            number = tax_number[len(country):]
+        return country + number
+
+    @staticmethod
     def clean_tax_number(tax_number, country):
         tax_number = re.sub(r'[^A-Z0-9]', '', tax_number.upper())
+
+        country_str = tax_number[:len(country)]
+        if country_str.isalpha() and country_str != country:
+            raise ValidationError(_('VAT ID country code doesn\'t corespond with country'))
+
         if tax_number and country:
-
             if country in vatnumber.countries():
-                number = tax_number
-                if tax_number.startswith(country):
-                    number = tax_number[len(country):]
-
-                if not vatnumber.check_vat(country + number):
+                full_number = AbstractBillingInfo.get_full_tax_number(tax_number, country)
+                if not vatnumber.check_vat(full_number):
                     #           This is a proper solution to bind ValidationError to a Field but it is not
                     #           working due to django bug :(
                     #                    errors = defaultdict(list)
@@ -267,10 +272,11 @@ class AbstractUserPlan(AbstractMixin, models.Model):
             return self.expire
         return date.today()
 
+    def has_automatic_renewal(self):
+        return hasattr(self, 'recurring') and self.recurring.has_automatic_renewal and self.recurring.token_verified
+
     def get_plan_extended_until(self, plan, pricing):
         if plan.is_free():
-            return None
-        if not self.plan.is_free() and self.expire is None:
             return None
         if pricing is None:
             return self.expire
@@ -453,6 +459,13 @@ class AbstractRecurringUserPlan(AbstractMixin, models.Model):
         ),
         default=False,
     )
+    token_verified = models.BooleanField(
+        _('token has been verified by payment'),
+        help_text=_(
+            'The recurring token has been verified by at least one payment to be working.',
+        ),
+        default=False,
+    )
     card_expire_year = models.IntegerField(null=True, blank=True)
     card_expire_month = models.IntegerField(null=True, blank=True)
     card_masked_number = models.CharField(null=True, blank=True, max_length=255)
@@ -557,7 +570,7 @@ class PlanQuotaManager(models.Manager):
 class AbstractPlanQuota(AbstractMixin, models.Model):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     quota = models.ForeignKey('Quota', on_delete=models.CASCADE)
-    value = models.IntegerField(default=1, null=True, blank=True)
+    value = models.BigIntegerField(default=1, null=True, blank=True)
 
     objects = PlanQuotaManager()
 
@@ -711,6 +724,9 @@ class InvoiceDuplicateManager(models.Manager):
         return super(InvoiceDuplicateManager, self).get_queryset().filter(type=AbstractInvoice.INVOICE_TYPES['DUPLICATE'])
 
 
+def get_initial_number(older_invoices):
+    return getattr(older_invoices.order_by("number").last(), 'number', 0) + 1
+
 @python_2_unicode_compatible
 class AbstractInvoice(AbstractMixin, models.Model):
     """
@@ -756,21 +772,21 @@ class AbstractInvoice(AbstractMixin, models.Model):
         max_digits=4, decimal_places=2, default=Decimal(0))
     currency = models.CharField(max_length=3, default='EUR')
     item_description = models.CharField(max_length=200)
-    buyer_name = models.CharField(max_length=200, verbose_name=_("Name"))
-    buyer_street = models.CharField(max_length=200, verbose_name=_("Street"))
+    buyer_name = models.CharField(max_length=200, verbose_name=_("Name"), blank=True)
+    buyer_street = models.CharField(max_length=200, verbose_name=_("Street"), blank=True)
     buyer_zipcode = models.CharField(
-        max_length=200, verbose_name=_("Zip code"))
-    buyer_city = models.CharField(max_length=200, verbose_name=_("City"))
-    buyer_country = CountryField(verbose_name=_("Country"), default='PL')
+        max_length=200, verbose_name=_("Zip code"), blank=True)
+    buyer_city = models.CharField(max_length=200, verbose_name=_("City"), blank=True)
+    buyer_country = CountryField(verbose_name=_("Country"), default='PL', blank=True)
     buyer_tax_number = models.CharField(
         max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
-    shipping_name = models.CharField(max_length=200, verbose_name=_("Name"))
+    shipping_name = models.CharField(max_length=200, verbose_name=_("Name"), blank=True)
     shipping_street = models.CharField(
-        max_length=200, verbose_name=_("Street"))
+        max_length=200, verbose_name=_("Street"), blank=True)
     shipping_zipcode = models.CharField(
-        max_length=200, verbose_name=_("Zip code"))
-    shipping_city = models.CharField(max_length=200, verbose_name=_("City"))
-    shipping_country = CountryField(verbose_name=_("Country"), default='PL')
+        max_length=200, verbose_name=_("Zip code"), blank=True)
+    shipping_city = models.CharField(max_length=200, verbose_name=_("City"), blank=True)
+    shipping_country = CountryField(verbose_name=_("Country"), default='PL', blank=True)
     require_shipment = models.BooleanField(default=False, db_index=True)
     issuer_name = models.CharField(max_length=200, verbose_name=_("Name"))
     issuer_street = models.CharField(max_length=200, verbose_name=_("Street"))
@@ -797,12 +813,14 @@ class AbstractInvoice(AbstractMixin, models.Model):
             Invoice = self.get_concrete_model()
             invoice_counter_reset = getattr(
                 settings, 'PLANS_INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
+            invoice_counter_reset_name = invoice_counter_reset
 
             # To avoid duplicates as well as gaps in the sequence, we are using django-sequences
             # to generate sequence number for each invoice
             # We keep the old sequence generating mechanism to get lower initial value,
             # so that the sequence will continue backward compatibly
             older_invoices = Invoice.objects.filter(type=self.type)
+            initial_number = None
             if invoice_counter_reset == Invoice.NUMBERING.DAILY:
                 invoice_counter_value = f"{self.issued.year}_{self.issued.month}_{self.issued.day}"
                 older_invoices = older_invoices.filter(issued=self.issued)
@@ -815,13 +833,19 @@ class AbstractInvoice(AbstractMixin, models.Model):
             elif invoice_counter_reset == Invoice.NUMBERING.ANNUALLY:
                 invoice_counter_value = f"{self.issued.year}"
                 older_invoices = older_invoices.filter(issued__year=self.issued.year)
+            elif callable(invoice_counter_reset):
+                invoice_counter_value, initial_number = invoice_counter_reset(self)
+                invoice_counter_reset_name = 'call'
             else:
                 raise ImproperlyConfigured(
                     "PLANS_INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly.")
 
             # get initial value for backward compatibility
-            self.initial_number = getattr(older_invoices.order_by("number").last(), 'number', 0) + 1
-            self.sequence_name = f"invoice_numbers_{self.type}_{invoice_counter_reset}_{invoice_counter_value}"
+            if initial_number:
+                self.initial_number = initial_number
+            else:
+                self.initial_number = get_initial_number(older_invoices)
+            self.sequence_name = f"invoice_numbers_{self.type}_{invoice_counter_reset_name}_{invoice_counter_value}"
 
     def save(self, *args, **kwargs):
         with transaction.atomic():
