@@ -761,6 +761,20 @@ class EUTaxationPolicyTestCase(TestCase):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'PL'), Decimal('23.0'))
 
+    def test_company_EU_GR_vies_tax(self):
+        """
+        Test, that greece has VAT OK. Greece has code GR in django-countries, but EL in VIES
+        Tax ID is not valid VAT ID, so tax is counted
+        """
+        self.assertEqual(self.policy.get_tax_rate('123456', 'GR'), 24)
+
+    def test_company_EU_GR_vies_zero(self):
+        """
+        Test, that greece has VAT OK. Greece has code GR in django-countries, but EL in VIES
+        Tax ID is valid VAT ID, so no tax is counted
+        """
+        self.assertEqual(self.policy.get_tax_rate('EL090145420', 'GR'), None)
+
     @mock.patch("stdnum.eu.vat.check_vies")
     def test_company_EU_notsame_vies_ok(self, mock_check):
         mock_check.return_value = {'valid': True}
@@ -787,6 +801,10 @@ class BillingInfoTestCase(TestCase):
 
     def test_clean_tax_number_valid_with_country(self):
         self.assertEqual(BillingInfo.clean_tax_number('CZ48136450', 'CZ'), 'CZ48136450')
+
+    def test_clean_tax_number_vat_id_is_not_correct(self):
+        with self.assertRaisesRegex(ValidationError, 'VAT ID is not correct'):
+            BillingInfo.clean_tax_number('GR48136450', 'GR')
 
     def test_clean_tax_number_country_code_does_not_equal_as_country(self):
         with self.assertRaisesRegex(ValidationError, 'VAT ID country code doesn\'t corespond with country'):
@@ -826,6 +844,12 @@ class CreateOrderViewTestCase(TestCase):
 
         o = c.recalculate(10, BillingInfo(tax_number='1234565', country='BE'))
         self.assertEqual(o.tax, 21)
+
+        o = c.recalculate(10, BillingInfo(tax_number='1234567', country='GR'))
+        self.assertEqual(o.tax, 24)
+
+        o = c.recalculate(10, BillingInfo(tax_number='090145420', country='GR'))
+        self.assertEqual(o.tax, None)
 
 
 class ValidatorsTestCase(TestCase):

@@ -5,10 +5,10 @@ from urllib.error import URLError
 import stdnum.eu.vat
 from django.core.exceptions import ImproperlyConfigured
 from plans.taxation import TaxationPolicy
+from plans.utils import country_code_transform
 from requests.exceptions import ConnectionError
 from suds import WebFault
 from suds.transport import TransportError
-from plans.utils import country_code_transform
 
 logger = logging.getLogger('plans.taxation.eu.vies')
 
