@@ -19,7 +19,7 @@ jobs:
   tests:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-        
+
     strategy:
       matrix:
         DJANGO_VERSION: [ '2.2.*', '3.0.*', '3.1.*', '3.2.*', '4.0.*' ]
@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -57,13 +57,23 @@ jobs:
         run: |
            pip install -q -e .
            pip install -q --upgrade --upgrade-strategy eager -r demo/requirements.txt
-           pip install -q Django==${{ matrix.DJANGO_VERSION }} 
+           pip install -q Django==${{ matrix.DJANGO_VERSION }}
            pip install codecov
+
+      - name: Run migration check
+        run: |
+          OUTPUT=$(python demo/manage.py makemigrations --dry-run plans)
+          echo $OUTPUT | grep "No changes detected" &>/dev/null &&
+            echo "SUCCESS: Migrations check successful!" ||
+              {
+                echo $OUTPUT
+                echo "ERROR: Migrations check failed! Models' changes not migrated, please run './manage.py makemigrations' to solve the issue!" 1>&2;
+                FAILURE=1
+              }
 
       - name: Testing
         run: |
           cd demo
-          python manage.py makemigrations
           case "${{ matrix.DJANGO_VERSION }}" in
             2.2.*|3.0.*|3.1.*)  # Django runs with warnings in this python version
               python -m coverage run manage.py test plans
