@@ -320,9 +320,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i.buyer_country, u.billinginfo.shipping_country)
 
     def test_invoice_number(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'m/Y' }}"
         o = Order.objects.all()[0]
         day = date(2010, 5, 3)
         i = Invoice(issued=day, selling_date=day, payment_date=day)
@@ -336,9 +336,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i.full_number, '1/FV/05/2010')
 
     def test_invoice_number_daily(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'d/m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
 
         user = User.objects.get(username='test1')
@@ -388,9 +388,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/04/05/2001")
 
     def test_invoice_number_monthly(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
         user = User.objects.get(username='test1')
@@ -441,9 +441,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/06/2002")
 
     def test_invoice_number_annually(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
 
         user = User.objects.get(username='test1')
@@ -494,9 +494,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/1992")
 
     def test_invoice_number_custom(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'Y' }}"
 
         def plans_invoice_counter_reset_function(invoice):
             from plans.models import Invoice, get_initial_number

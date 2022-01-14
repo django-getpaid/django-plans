@@ -864,7 +864,7 @@ class Invoice(models.Model):
             settings,
             "PLANS_INVOICE_NUMBER_FORMAT",
             "{{ invoice.number }}/"
-            "{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}"
+            "{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endif %}"
             "/{{ invoice.issued|date:'m/Y' }}",
         )
         return Template(format).render(Context({'invoice': self}))

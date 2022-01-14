@@ -9,7 +9,7 @@
 
         {% for page in page_obj.paginator.page_range %}
 
-            <li {% ifequal page page_obj.number %}class="active"{% endifequal %}>
+            <li {% if page == page_obj.number %}class="active"{% endif %}>
                 <a href="?page={{ page }}&query={{ query }}">{{ page }}</a></li>
         {% endfor %}
 

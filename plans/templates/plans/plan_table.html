@@ -5,7 +5,7 @@
     <tr>
         <th></th>
         {% for plan in plan_list %}
-            <th class="plan_header {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+            <th class="plan_header {% if forloop.counter0 == current_userplan_index %}current{% endif %}">
                 {% if plan.url %}<a href="{{ plan.url }}" class="info_link plan">{% endif %}
                 <span class="plan_name">{{  plan.name }}</span>
                 <span class="plan_description">{{ plan.description }}</span>
@@ -31,7 +31,7 @@
 
             {% for plan_quota in quota_row.1 %}
 
-                <td class="{% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+                <td class="{% if forloop.counter0 == current_userplan_index %}current{% endif %}">
                     {% ifnotequal plan_quota None %}
                         {% if quota_row.0.is_boolean %}
                             {% if plan_quota.value %} + {% else %} - {% endif %}
@@ -56,7 +56,7 @@
     <tr>
         <th></th>
         {% for plan in plan_list %}
-        <th class="planpricing_footer {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+        <th class="planpricing_footer {% if forloop.counter0 == current_userplan_index %}current{% endif %}">
             {% if plan != userplan.plan and not userplan.is_expired and not userplan.plan.is_free %}
                 <a href="{% url 'create_order_plan_change' pk=plan.id %}" class="change_plan">{% trans "Change" %}</a>{% endif %}
         </th>
@@ -68,7 +68,7 @@
     <tr>
         <th></th>
         {% for plan in plan_list %}
-            <th class="planpricing_footer {% ifequal forloop.counter0 current_userplan_index %}current{% endifequal %}">
+            <th class="planpricing_footer {% if forloop.counter0 == current_userplan_index %}current{% endif %}">
                 {% if plan.available %}
                     <ul>
                     {% if not plan.is_free %}
