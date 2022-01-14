@@ -791,7 +791,7 @@ class CreateOrderViewTestCase(TestCase):
 
     def test_recalculate_order(self):
         request = self.factory.get('')
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(lambda x: x)
         middleware.process_request(request)
         c = CreateOrderView()
         c.request = request
