@@ -1,9 +1,7 @@
 from decimal import Decimal
 import logging
 from django.core.exceptions import ImproperlyConfigured
-from suds import WebFault
-from suds.transport import TransportError
-import vatnumber
+import pyvat
 import stdnum
 from plans.taxation import TaxationPolicy
 
@@ -34,7 +32,7 @@ class EUTaxationPolicy(TaxationPolicy):
         'DK': Decimal('25'),  # Denmark
         'DE': Decimal('19'),  # Germany
         'EE': Decimal('20'),  # Estonia
-        'EL': Decimal('24'),  # Greece
+        'GR': Decimal('24'),  # Greece
         'ES': Decimal('21'),  # Spain
         'FR': Decimal('20'),  # France
         'HR': Decimal('25'),  # Croatia
@@ -102,15 +100,15 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(country_code):
                 # Company is from other EU country
                 try:
-                    vies_result = vatnumber.check_vies(tax_id)
-                    logger.info("TAX_ID=%s RESULT=%s" % (tax_id, vies_result))
-                    if tax_id and vies_result:
+                    vies_result = pyvat.check_vat_number(tax_id)
+                    logger.info("TAX_ID=%s RESULT=%s" % (tax_id, vies_result.is_valid))
+                    if tax_id and vies_result.is_valid:
                         # Company is registered in VIES
                         # Charge back
                         return None
                     else:
                         return cls.EU_COUNTRIES_VAT[country_code]
-                except (WebFault, TransportError, stdnum.exceptions.InvalidComponent):
+                except (stdnum.exceptions.InvalidComponent):
                     # If we could not connect to VIES or the VAT ID is incorrect
                     logger.exception("TAX_ID=%s" % (tax_id))
                     return cls.EU_COUNTRIES_VAT[country_code]

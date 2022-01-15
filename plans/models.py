@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import re
 import logging
-import vatnumber
+import pyvat
 
 from decimal import Decimal
 from datetime import date, timedelta
@@ -166,9 +166,9 @@ class BillingInfo(models.Model):
 
         if tax_number and country:
 
-            if country in vatnumber.countries():
+            if country in pyvat.countries.EU_COUNTRY_CODES:
                 full_number = BillingInfo.get_full_tax_number(tax_number, country)
-                if not vatnumber.check_vat(full_number):
+                if not pyvat.check_vat_number(full_number).is_valid:
                     #           This is a proper solution to bind ValidationError to a Field but it is not
                     #           working due to django bug :(
                     #                    errors = defaultdict(list)

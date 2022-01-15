@@ -6,7 +6,6 @@ django-extensions
 mock
 coverage
 tox
-suds-jurko
 maxminddb-geolite2
 model_bakery
 django-concurrent-test-helper
