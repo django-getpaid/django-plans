@@ -6,13 +6,13 @@ django-extensions
 mock
 coverage
 tox
-suds-jurko
 maxminddb-geolite2
 model_bakery
 django-concurrent-test-helper
 freezegun
 flake8
 psycopg2<2.9
+internet-sabotage3
 
 
 # Not supported in py3

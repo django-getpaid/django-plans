@@ -1,9 +1,12 @@
 from decimal import Decimal
+import requests
 import random
 from datetime import date
 from datetime import timedelta
 from io import StringIO
 
+from internet_sabotage import no_connection
+from unittest.mock import patch
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -758,13 +761,15 @@ class EUTaxationPolicyTestCase(TestCase):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'PL'), Decimal('23.0'))
 
-    @mock.patch("vatnumber.check_vies", lambda x: True)
-    def test_company_EU_notsame_vies_ok(self):
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_company_EU_notsame_vies_ok(self, mock_check):
+        mock_check.return_value = {'valid': True}
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), None)
 
-    @mock.patch("vatnumber.check_vies", lambda x: False)
-    def test_company_EU_notsame_vies_not_ok(self):
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_company_EU_notsame_vies_not_ok(self, mock_check):
+        mock_check.return_value = {'valid': False}
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
             self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), Decimal('20.0'))
 
@@ -775,7 +780,10 @@ class BillingInfoTestCase(TestCase):
             BillingInfo.clean_tax_number('123456', 'CZ')
 
     def test_clean_tax_number_valid(self):
-        self.assertEqual(BillingInfo.clean_tax_number('48136450', 'CZ'), '48136450')
+        self.assertEqual(BillingInfo.clean_tax_number('48136450', 'CZ'), 'CZ48136450')
+
+    def test_clean_tax_number_valid_space(self):
+        self.assertEqual(BillingInfo.clean_tax_number('48 136 450', 'CZ'), 'CZ48136450')
 
     def test_clean_tax_number_valid_with_country(self):
         self.assertEqual(BillingInfo.clean_tax_number('CZ48136450', 'CZ'), 'CZ48136450')
@@ -785,16 +793,29 @@ class BillingInfoTestCase(TestCase):
             BillingInfo.clean_tax_number('AT48136450', 'CZ')
 
 
+def timeout(*args, **kwargs):
+    raise requests.Timeout
+
+
 class CreateOrderViewTestCase(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-
-    def test_recalculate_order(self):
         request = self.factory.get('')
         middleware = SessionMiddleware(lambda x: x)
         middleware.process_request(request)
-        c = CreateOrderView()
-        c.request = request
+        self.create_view = CreateOrderView()
+        self.create_view.request = request
+
+    def test_recalculate_order_no_connection(self):
+        # VAT is right, but with no internet connection
+        with no_connection():
+            with patch('plans.taxation.eu.logger') as mock_logger:
+                o = self.create_view.recalculate(10, BillingInfo(tax_number='48136450', country='CZ'))
+                self.assertEqual(o.tax, 21)
+                mock_logger.exception.assert_called_with("TAX_ID=CZ48136450")
+
+    def test_recalculate_order(self):
+        c = self.create_view
         o = c.recalculate(10, BillingInfo(tax_number='CZ48136450', country='CZ'))
         self.assertEqual(o.tax, None)
 

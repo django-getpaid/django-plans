@@ -1,11 +1,13 @@
-from decimal import Decimal
 import logging
+from decimal import Decimal
+from urllib.error import URLError
+
+import stdnum.eu.vat
 from django.core.exceptions import ImproperlyConfigured
+from plans.taxation import TaxationPolicy
+from requests.exceptions import ConnectionError
 from suds import WebFault
 from suds.transport import TransportError
-import vatnumber
-import stdnum
-from plans.taxation import TaxationPolicy
 
 logger = logging.getLogger('plans.taxation.eu.vies')
 
@@ -102,7 +104,7 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(country_code):
                 # Company is from other EU country
                 try:
-                    vies_result = vatnumber.check_vies(tax_id)
+                    vies_result = bool(stdnum.eu.vat.check_vies(tax_id)['valid'])
                     logger.info("TAX_ID=%s RESULT=%s" % (tax_id, vies_result))
                     if tax_id and vies_result:
                         # Company is registered in VIES
@@ -110,7 +112,7 @@ class EUTaxationPolicy(TaxationPolicy):
                         return None
                     else:
                         return cls.EU_COUNTRIES_VAT[country_code]
-                except (WebFault, TransportError, stdnum.exceptions.InvalidComponent):
+                except (WebFault, TransportError, stdnum.exceptions.InvalidComponent, ConnectionError, URLError):
                     # If we could not connect to VIES or the VAT ID is incorrect
                     logger.exception("TAX_ID=%s" % (tax_id))
                     return cls.EU_COUNTRIES_VAT[country_code]
