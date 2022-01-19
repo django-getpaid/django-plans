@@ -1,0 +1,7 @@
+{% extends 'plans/base.html' %}
+{% load i18n %}
+
+{% block body %}
+    <h2>{% trans "See our great value plans" %}</h2>
+    {% include "plans/plan_table.html" %}
+{% endblock %}

@@ -7,12 +7,20 @@ from ordered_model.admin import OrderedModelAdmin
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 
-from .models import UserPlan, Plan, PlanQuota, Quota, PlanPricing, Pricing, RecurringUserPlan, Order, BillingInfo
 from .signals import account_automatic_renewal
-from plans.base.models import AbstractInvoice
+from plans.base.models import AbstractInvoice, AbstractUserPlan, AbstractPlan, AbstractPlanQuota, AbstractQuota, AbstractPlanPricing, AbstractPricing, AbstractRecurringUserPlan, AbstractOrder, AbstractBillingInfo
 
 
 Invoice = AbstractInvoice.get_concrete_model()
+UserPlan = AbstractUserPlan.get_concrete_model()
+Plan = AbstractPlan.get_concrete_model()
+PlanQuota = AbstractPlanQuota.get_concrete_model()
+Quota = AbstractQuota.get_concrete_model()
+PlanPricing = AbstractPlanPricing.get_concrete_model()
+Pricing = AbstractPricing.get_concrete_model()
+RecurringUserPlan = AbstractRecurringUserPlan.get_concrete_model()
+Order = AbstractOrder.get_concrete_model()
+BillingInfo = AbstractBillingInfo.get_concrete_model()
 
 
 class UserLinkMixin(object):

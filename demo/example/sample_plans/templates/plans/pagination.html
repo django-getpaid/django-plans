@@ -1,0 +1,22 @@
+{% load i18n %}
+{% if is_paginated %}
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+            <li><a class="pagination__prev" href="?page={{ page_obj.previous_page_number }}&query={{ query }}">&laquo;</a></li>
+        {% else %}
+            <li class="disabled"><span>&laquo;</span></li>
+        {% endif %}
+
+        {% for page in page_obj.paginator.page_range %}
+
+            <li {% if page == page_obj.number %}class="active"{% endif %}>
+                <a href="?page={{ page }}&query={{ query }}">{{ page }}</a></li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li><a class="pagination__next" href="?page={{ page_obj.next_page_number }}&query={{ query }}">&raquo;</a></li>
+        {% else %}
+            <li class="disabled"><span>&raquo;</span></li>
+        {% endif %}
+    </ul>
+{% endif %}

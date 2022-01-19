@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans %}Your account {{ user }} has just expired{% endblocktrans %}

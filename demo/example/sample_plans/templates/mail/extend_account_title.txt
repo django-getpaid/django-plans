@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans with user=user days=pricing.period %}Your account {{ user }} has been extended by {{ days }} days{% endblocktrans %}

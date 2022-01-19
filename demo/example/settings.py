@@ -180,3 +180,21 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 LOGIN_REDIRECT_URL = '/foo/list/'
 
 ENABLE_FAKE_PAYMENTS = True
+
+if os.environ.get('SAMPLE_APP', False):
+    INSTALLED_APPS.remove('plans')
+    INSTALLED_APPS.append('example.sample_plans')
+
+    PLANS_PLAN_MODEL = 'sample_plans.Plan'
+    PLANS_BILLINGINFO_MODEL = 'sample_plans.BillingInfo'
+    PLANS_USERPLAN_MODEL = 'sample_plans.UserPlan'
+    PLANS_PRICING_MODEL = 'sample_plans.Pricing'
+    PLANS_PLANPRICING_MODEL = 'sample_plans.PlanPricing'
+    PLANS_QUOTA_MODEL = 'sample_plans.Quota'
+    PLANS_PLANQUOTA_MODEL = 'sample_plans.PlanQuota'
+    PLANS_ORDER_MODEL = 'sample_plans.Order'
+    PLANS_INVOICE_MODEL = 'sample_plans.Invoice'
+    PLANS_RECURRINGUSERPLAN_MODEL = 'sample_plans.RecurringUserPlan'
+
+    # Celery auto detects tasks only from INSTALLED_APPS
+    CELERY_IMPORTS = ('openwisp_notifications.tasks',)

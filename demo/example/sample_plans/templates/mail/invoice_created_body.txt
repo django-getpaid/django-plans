@@ -1,0 +1,14 @@
+{% load i18n %}{% autoescape off %}
+{% trans "Hi" %} {% firstof user.get_full_name user.username %},
+
+{% blocktrans %}We are writing to inform you, that {{ invoice_type }} {{ invoice_number }} has been issued. You can view it and print it at:
+http://{{ site_domain }}{{ url }}
+{% endblocktrans %}
+
+{% trans "Details of the order can be see on:" %}:
+http://{{ site_domain }}{% url 'order' pk=order %}
+
+{% trans "Thank you" %}
+--
+{% blocktrans %}The Team at {{ site_name }}{% endblocktrans %}
+{% endautoescape %}

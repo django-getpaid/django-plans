@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}
+{% trans "Hi" %} {% firstof user.get_full_name user.username %},
+
+{% blocktrans with days=pricing.period plan_name=plan.name expire=userplan.expire %}Your account has just been extended by {{ days }} days. Your current plan is {{ plan_name }} and it will expire on {{ expire }}. {% endblocktrans %}
+
+{% trans "An invoice will be sent with another e-mail, if billing data was provided." %}
+
+{% trans "Thank you" %}
+--
+{% blocktrans %}The Team at {{ site_name }}{% endblocktrans %}
+{% endautoescape %}

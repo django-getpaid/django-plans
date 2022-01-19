@@ -1,0 +1,28 @@
+[
+    {
+        "pk": 1,
+        "model": "sample_plans.plan",
+        "fields": {
+            "default" : true,
+            "available": false,
+            "created": "2012-07-12T17:33:30.112Z",
+            "customized": null,
+            "description": "Default Plan",
+            "name": "Default Plan",
+            "order": 0
+        }
+    },
+    {
+        "pk": 2,
+        "model": "sample_plans.plan",
+        "fields": {
+            "default" : null,
+            "available": false,
+            "name": "Default Plan",
+            "created": "2012-07-12T17:33:30.112Z",
+            "customized": null,
+            "description": "Default Plan",
+            "order": 0
+        }
+    }
+]

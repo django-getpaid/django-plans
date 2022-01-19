@@ -1,0 +1,15 @@
+{% extends 'plans/base.html' %}
+{% load i18n %}
+
+{% block body %}
+    <h1>Billing data</h1>
+
+    <form method="post" action="{% url 'billing_info_delete' %}">
+        {% csrf_token %}
+        {% trans "Are you sure to delete billing info?" %}
+        <p>
+        <button type="submit" class="btn btn-danger">
+            <span class="glyphicon glyphicon-trash"></span> Confirm delete
+        </button>
+    </form>
+{% endblock %}

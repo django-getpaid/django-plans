@@ -26,7 +26,7 @@ from freezegun import freeze_time
 from model_bakery import baker
 
 from plans import tasks
-from plans.models import BillingInfo, PlanPricing, Invoice, Order, Plan, UserPlan
+from plans.base.models import AbstractBillingInfo, AbstractPlanPricing, AbstractInvoice, AbstractOrder, AbstractPlan, AbstractUserPlan
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
@@ -37,7 +37,12 @@ from unittest import mock
 
 
 User = get_user_model()
-
+BillingInfo = AbstractBillingInfo.get_concrete_model()
+PlanPricing = AbstractPlanPricing.get_concrete_model()
+Invoice = AbstractInvoice.get_concrete_model()
+Order = AbstractOrder.get_concrete_model()
+Plan = AbstractPlan.get_concrete_model()
+UserPlan = AbstractUserPlan.get_concrete_model()
 
 class PlansTestCase(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
@@ -503,8 +508,8 @@ class TestInvoice(TestCase):
             "{% endif %}/{{ invoice.issued|date:'Y' }}"
 
         def plans_invoice_counter_reset_function(invoice):
-            from plans.models import Invoice
             from plans.base.models import get_initial_number
+
             older_invoices = Invoice.objects.filter(
                 type=invoice.type,
                 issued__year=invoice.issued.year,

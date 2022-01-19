@@ -1,0 +1,15 @@
+{% load i18n %}{% autoescape off %}
+{% trans "Hi" %} {% firstof user.get_full_name user.username %},
+
+{% blocktrans %}Your account will expire in {{ days }} days.{% endblocktrans %}
+
+{% blocktrans with plan_name=userplan.plan.name %}You can extend your current plan {{ plan_name }} on page:{% endblocktrans %}
+http://{{ site_domain }}{% url 'current_plan' %}
+
+{% blocktrans %}or you can upgrade your plan here:{% endblocktrans %}
+http://{{ site_domain }}{% url 'upgrade_plan' %}
+
+{% trans "Thank you" %}
+--
+{% blocktrans %}The Team at {{ site_name }}{% endblocktrans %}
+{% endautoescape %}

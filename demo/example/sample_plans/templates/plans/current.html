@@ -1,0 +1,43 @@
+{% extends 'plans/base.html' %}
+{% load i18n %}
+
+{% block body %}
+
+    {% block account_details %}
+    <h1>{% trans "Your account" %}</h1>
+
+    <dl class="dl-horizontal">
+        <dt>{% trans "Account" %}:</dt>
+        <dd>{{ user }}</dd>
+        <dt>{% trans "State" %}:</dt>
+        <dd>{% if userplan.active %} {% trans "active" %} {% else %}
+            {% trans "expired" %} {% endif %}</dd>
+        <dt>{% trans "Expire" %}:</dt>
+        <dd> {{ userplan.expire }}</dd>
+        <dt>{% trans "Plan" %}:</dt>
+        <dd>{{ userplan.plan }} <a href="{% url 'upgrade_plan' %}">{% trans "upgrade" %}</a></dd>
+    </dl>
+    {% endblock %}
+
+    {% block plan_details %}
+    <h2>{% trans "Plan details" %}</h2>
+
+
+    <div class="row">
+        <div class="col-md-5">
+            {% include "plans/plan_table.html" %}
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block need_more %}
+    <h1>{% trans "Need more?" %}</h1>
+
+    {% url 'upgrade_plan' as upgrade_url %}
+    {% blocktrans %}
+        Please see other <a href="{{ upgrade_url }}">currently available plans</a>.
+    {% endblocktrans %}
+    {% endblock %}
+
+
+{% endblock %}
