@@ -6,7 +6,6 @@ import vatnumber
 
 from decimal import Decimal
 from datetime import date, timedelta
-from six import python_2_unicode_compatible
 
 from django.db import models, transaction
 from django.db.models import Max
@@ -51,7 +50,6 @@ class AbstractMixin(object):
         return load_model('plans', cls.__name__.replace('Abstract', ''))
 
 
-@python_2_unicode_compatible
 class AbstractPlan(AbstractMixin, OrderedModel):
     """
     Single plan defined in the system. A plan can customized (referred to user) which means
@@ -196,7 +194,6 @@ class AbstractBillingInfo(AbstractMixin, models.Model):
 #        super(BillingInfo, self).clean()
 #        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
 
-@python_2_unicode_compatible
 class AbstractUserPlan(AbstractMixin, models.Model):
     """
     Currently selected plan for user account.
@@ -421,7 +418,6 @@ class AbstractUserPlan(AbstractMixin, models.Model):
         return userplans
 
 
-@python_2_unicode_compatible
 class AbstractRecurringUserPlan(AbstractMixin, models.Model):
     """
     OneToOne model associated with UserPlan that stores information about the plan recurrence.
@@ -488,7 +484,6 @@ class AbstractRecurringUserPlan(AbstractMixin, models.Model):
         )
 
 
-@python_2_unicode_compatible
 class AbstractPricing(AbstractMixin, models.Model):
     """
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
@@ -509,7 +504,6 @@ class AbstractPricing(AbstractMixin, models.Model):
         return "%s (%d " % (self.name, self.period) + "%s)" % _("days")
 
 
-@python_2_unicode_compatible
 class AbstractQuota(AbstractMixin, OrderedModel):
     """
     Single countable or boolean property of system (limitation).
@@ -538,7 +532,6 @@ class PlanPricingManager(models.Manager):
         return super(PlanPricingManager, self).get_queryset().select_related('plan', 'pricing')
 
 
-@python_2_unicode_compatible
 class AbstractPlanPricing(AbstractMixin, models.Model):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
@@ -580,7 +573,6 @@ class AbstractPlanQuota(AbstractMixin, models.Model):
         verbose_name_plural = _("Plans quotas")
 
 
-@python_2_unicode_compatible
 class AbstractOrder(AbstractMixin, models.Model):
     """
     Order in this app supports only one item per order. This item is defined by
@@ -727,7 +719,6 @@ class InvoiceDuplicateManager(models.Manager):
 def get_initial_number(older_invoices):
     return getattr(older_invoices.order_by("number").last(), 'number', 0) + 1
 
-@python_2_unicode_compatible
 class AbstractInvoice(AbstractMixin, models.Model):
     """
     Single invoice document.
