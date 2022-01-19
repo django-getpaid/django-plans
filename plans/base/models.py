@@ -22,7 +22,7 @@ from django.template import Context
 from django.template.base import Template
 from django.utils import translation
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _, pgettext_lazy
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
 
 from django_countries.fields import CountryField
 from ordered_model.models import OrderedModel
@@ -876,7 +876,7 @@ class AbstractInvoice(AbstractMixin, models.Model):
             settings,
             "PLANS_INVOICE_NUMBER_FORMAT",
             "{{ invoice.number }}/"
-            "{% ifequal invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endifequal %}"
+            "{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endif %}"
             "/{{ invoice.issued|date:'m/Y' }}",
         )
         return Template(format).render(Context({'invoice': self}))
