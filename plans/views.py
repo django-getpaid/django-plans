@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.conf import settings
 from django.contrib import messages
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import DeleteView, ModelFormMixin, FormView
 from django.views.generic.list import ListView

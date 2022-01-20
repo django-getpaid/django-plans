@@ -17,8 +17,8 @@
     <tbody>
     <td>{{ order.name }}</td>
     <td>{{ order.amount }} {{ order.currency }}</td>
-    <td>{% ifequal order.tax None %}n/a{% else %}{{ order.tax }} %{% endifequal %}</td>
-    <td>{% ifequal order.tax_total None %}n/a{% else %}{{ order.tax_total }} {{ order.currency }}{% endifequal %}</td>
+    <td>{% if order.tax == None %}n/a{% else %}{{ order.tax }} %{% endif %}</td>
+    <td>{% if order.tax_total == None %}n/a{% else %}{{ order.tax_total }} {{ order.currency }}{% endif %}</td>
     <td class="number total">{{ order.total }} {{ order.currency }}</td>
     <td class="date">{{ order.completed|date|default:"-" }}</td>
     <td class="date">{{ order.get_plan_extended_from|date|default:"-" }}</td>
@@ -27,11 +27,11 @@
 </table>
 {% endblock %}
 
-{% ifequal order.tax None %}
+{% if order.tax == None %}
     <h2>{% trans "EU VAT" %}</h2>
     <div class="alert alert-info">
         {% blocktrans %}
             VAT is not applied to order.
         {% endblocktrans %}
     </div>
-{% endifequal %}
+{% endif %}

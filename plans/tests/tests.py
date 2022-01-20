@@ -218,7 +218,7 @@ class PlansTestCase(TestCase):
 
         # Switch to Free Plan
         u.userplan.extend_account(plan, None)
-        self.assertEquals(u.userplan.plan, plan)
+        self.assertEqual(u.userplan.plan, plan)
         self.assertIsNone(u.userplan.expire)
         self.assertEqual(u.userplan.active, True)
 
@@ -243,7 +243,7 @@ class PlansTestCase(TestCase):
 
         # Switch to Standard Plan
         u.userplan.extend_account(plan, plan_pricing.pricing)
-        self.assertEquals(u.userplan.plan, plan)
+        self.assertEqual(u.userplan.plan, plan)
         self.assertIsNotNone(u.userplan.expire)
         self.assertEqual(u.userplan.active, True)
 
@@ -320,9 +320,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i.buyer_country, u.billinginfo.shipping_country)
 
     def test_invoice_number(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'m/Y' }}"
         o = Order.objects.all()[0]
         day = date(2010, 5, 3)
         i = Invoice(issued=day, selling_date=day, payment_date=day)
@@ -336,9 +336,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i.full_number, '1/FV/05/2010')
 
     def test_invoice_number_daily(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'d/m/Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'d/m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.DAILY
 
         user = User.objects.get(username='test1')
@@ -388,9 +388,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/04/05/2001")
 
     def test_invoice_number_monthly(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'m/Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'m/Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
 
         user = User.objects.get(username='test1')
@@ -441,9 +441,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/06/2002")
 
     def test_invoice_number_annually(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'Y' }}"
         settings.PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.ANNUALLY
 
         user = User.objects.get(username='test1')
@@ -494,9 +494,9 @@ class TestInvoice(TestCase):
         self.assertEqual(i3.full_number, "1/FV/1992")
 
     def test_invoice_number_custom(self):
-        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% ifequal " \
-            "invoice.type invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
-            "{% endifequal %}/{{ invoice.issued|date:'Y' }}"
+        settings.PLANS_INVOICE_NUMBER_FORMAT = "{{ invoice.number }}/{% if " \
+            "invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV" \
+            "{% endif %}/{{ invoice.issued|date:'Y' }}"
 
         def plans_invoice_counter_reset_function(invoice):
             from plans.models import Invoice, get_initial_number
@@ -781,7 +781,7 @@ class BillingInfoTestCase(TestCase):
         self.assertEqual(BillingInfo.clean_tax_number('CZ48136450', 'CZ'), 'CZ48136450')
 
     def test_clean_tax_number_country_code_does_not_equal_as_country(self):
-        with self.assertRaisesRegexp(ValidationError, 'VAT ID country code doesn\'t corespond with country'):
+        with self.assertRaisesRegex(ValidationError, 'VAT ID country code doesn\'t corespond with country'):
             BillingInfo.clean_tax_number('AT48136450', 'CZ')
 
 
@@ -791,7 +791,7 @@ class CreateOrderViewTestCase(TestCase):
 
     def test_recalculate_order(self):
         request = self.factory.get('')
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(lambda x: x)
         middleware.process_request(request)
         c = CreateOrderView()
         c.request = request
@@ -932,23 +932,23 @@ class RecurringPlansTestCase(TestCase):
         up = baker.make('UserPlan')
         o = baker.make('Order', amount=10)
         up.set_plan_renewal(order=o, card_masked_number="1234")
-        self.assertEquals(up.recurring.amount, 10)
-        self.assertEquals(up.recurring.card_masked_number, "1234")
+        self.assertEqual(up.recurring.amount, 10)
+        self.assertEqual(up.recurring.card_masked_number, "1234")
 
         # test setting new values
         up.set_plan_renewal(order=o)
-        self.assertEquals(up.recurring.amount, 10)
-        self.assertEquals(up.recurring.card_masked_number, None)
+        self.assertEqual(up.recurring.amount, 10)
+        self.assertEqual(up.recurring.card_masked_number, None)
 
     def test_plan_autorenew_at(self):
         """ Test that UserPlan.plan_autorenew_at() method """
         up = baker.make('UserPlan')
-        self.assertEquals(up.plan_autorenew_at(), None)
+        self.assertEqual(up.plan_autorenew_at(), None)
 
     def test_plan_autorenew_at_expire(self):
         """ Test that UserPlan.plan_autorenew_at() method """
         up = baker.make('UserPlan', expire=date(2020, 1, 1))
-        self.assertEquals(up.plan_autorenew_at(), date(2020, 1, 1))
+        self.assertEqual(up.plan_autorenew_at(), date(2020, 1, 1))
 
     @override_settings(
         PLANS_AUTORENEW_BEFORE_DAYS=3,
@@ -957,17 +957,17 @@ class RecurringPlansTestCase(TestCase):
     def test_plan_autorenew_at_settings(self):
         """ Test that UserPlan.plan_autorenew_at() method """
         up = baker.make('UserPlan', expire=date(2020, 1, 5))
-        self.assertEquals(up.plan_autorenew_at(), date(2020, 1, 1))
+        self.assertEqual(up.plan_autorenew_at(), date(2020, 1, 1))
 
     def test_has_automatic_renewal(self):
         """ Test UserPlan.has_automatic_renewal() method """
         user_plan = baker.make('UserPlan')
         order = baker.make('Order', amount=10)
         user_plan.set_plan_renewal(order=order, card_masked_number="1234")
-        self.assertEquals(user_plan.has_automatic_renewal(), False)
+        self.assertEqual(user_plan.has_automatic_renewal(), False)
 
         user_plan.recurring.token_verified = True
-        self.assertEquals(user_plan.has_automatic_renewal(), True)
+        self.assertEqual(user_plan.has_automatic_renewal(), True)
 
 
 class TasksTestCase(TestCase):
