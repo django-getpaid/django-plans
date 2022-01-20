@@ -18,9 +18,10 @@ from itertools import chain
 from plans.importer import import_name
 from plans.mixins import LoginRequired
 from plans.models import UserPlan, PlanPricing, Plan, Order, BillingInfo
-from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm, get_country_code
+from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm
 from plans.models import Quota, Invoice
 from plans.signals import order_started
+from plans.utils import get_currency
 from plans.validators import plan_validation
 
 
@@ -182,36 +183,7 @@ class CreateOrderView(LoginRequired, CreateView):
         Calculates and return pre-filled Order
         """
         order = Order(pk=-1)
-        order.amount = amount
-        order.currency = self.get_currency()
-        country = getattr(billing_info, 'country', None)
-        if country is None:
-            country = get_country_code(self.request)
-        else:
-            country = country.code
-        if hasattr(billing_info, 'tax_number') and billing_info.tax_number:
-            tax_number = BillingInfo.get_full_tax_number(billing_info.tax_number, country)
-        else:
-            tax_number = None
-
-        # Calculating tax can be complex task (e.g. VIES webservice call)
-        # To ensure that tax calculated on order preview will be the same on final order
-        # tax rate is cached for a given billing data (as this value only depends on it)
-        tax_session_key = "tax_%s_%s" % (tax_number, country)
-
-        tax = self.request.session.get(tax_session_key)
-        if tax is None:
-            taxation_policy = getattr(settings, 'PLANS_TAXATION_POLICY', None)
-            if not taxation_policy:
-                raise ImproperlyConfigured('PLANS_TAXATION_POLICY is not set')
-            taxation_policy = import_name(taxation_policy)
-            tax = str(taxation_policy.get_tax_rate(tax_number, country))
-            # Because taxation policy could return None which clutters with saving this value
-            # into cache, we use str() representation of this value
-            self.request.session[tax_session_key] = tax
-
-        order.tax = Decimal(tax) if tax != 'None' else None
-
+        order.recalculate(amount, billing_info, self.request)
         return order
 
     def validate_plan(self, plan):
@@ -251,12 +223,6 @@ class CreateOrderView(LoginRequired, CreateView):
         except BillingInfo.DoesNotExist:
             return None
 
-    def get_currency(self):
-        CURRENCY = getattr(settings, 'PLANS_CURRENCY', '')
-        if len(CURRENCY) != 3:
-            raise ImproperlyConfigured('PLANS_CURRENCY should be configured as 3-letter currency code.')
-        return CURRENCY
-
     def get_price(self):
         return self.plan_pricing.price
 
@@ -268,7 +234,7 @@ class CreateOrderView(LoginRequired, CreateView):
         order = self.recalculate(self.get_price() or Decimal('0.0'), context['billing_info'])
         order.plan = self.plan_pricing.plan
         order.pricing = self.plan_pricing.pricing
-        order.currency = self.get_currency()
+        order.currency = get_currency()
         order.user = self.request.user
         context['object'] = order
 
