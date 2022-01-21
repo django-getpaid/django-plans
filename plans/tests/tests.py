@@ -815,14 +815,16 @@ class CreateOrderViewTestCase(TestCase):
                 mock_logger.exception.assert_called_with("TAX_ID=CZ48136450")
 
     def test_recalculate_order(self):
+        # BE 0203.201.340 is VAT ID of Belgium national bank.
+        # It is used, because national provider for VIES seems to be stable enough
         c = self.create_view
-        o = c.recalculate(10, BillingInfo(tax_number='CZ48136450', country='CZ'))
+        o = c.recalculate(10, BillingInfo(tax_number='BE 0203 201 340', country='BE'))
         self.assertEqual(o.tax, None)
 
-        o = c.recalculate(10, BillingInfo(tax_number='48136450', country='CZ'))
+        o = c.recalculate(10, BillingInfo(tax_number='0203 201 340', country='BE'))
         self.assertEqual(o.tax, None)
 
-        o = c.recalculate(10, BillingInfo(tax_number='1234565', country='CZ'))
+        o = c.recalculate(10, BillingInfo(tax_number='1234565', country='BE'))
         self.assertEqual(o.tax, 21)
 
 
