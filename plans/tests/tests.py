@@ -9,6 +9,7 @@ from internet_sabotage import no_connection
 from unittest.mock import patch
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core import mail
 from django.core.exceptions import ImproperlyConfigured, ValidationError
@@ -739,53 +740,53 @@ class EUTaxationPolicyTestCase(TestCase):
 
     def test_none(self):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate(None, None), Decimal('23.0'))
+            self.assertEqual(self.policy.get_tax_rate(None, None), (Decimal('23.0'), True))
 
     def test_private_nonEU(self):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate(None, 'RU'), None)
+            self.assertEqual(self.policy.get_tax_rate(None, 'RU'), (None, True))
 
     def test_private_EU_same(self):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate(None, 'PL'), Decimal('23.0'))
+            self.assertEqual(self.policy.get_tax_rate(None, 'PL'), (Decimal('23.0'), True))
 
     def test_private_EU_notsame(self):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate(None, 'AT'), Decimal('20.0'))
+            self.assertEqual(self.policy.get_tax_rate(None, 'AT'), (Decimal('20.0'), True))
 
     def test_company_nonEU(self):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate('123456', 'RU'), None)
+            self.assertEqual(self.policy.get_tax_rate('123456', 'RU'), (None, True))
 
     def test_company_EU_same(self):
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate('123456', 'PL'), Decimal('23.0'))
+            self.assertEqual(self.policy.get_tax_rate('123456', 'PL'), (Decimal('23.0'), True))
 
     def test_company_EU_GR_vies_tax(self):
         """
         Test, that greece has VAT OK. Greece has code GR in django-countries, but EL in VIES
         Tax ID is not valid VAT ID, so tax is counted
         """
-        self.assertEqual(self.policy.get_tax_rate('123456', 'GR'), 24)
+        self.assertEqual(self.policy.get_tax_rate('123456', 'GR'), (24, False))
 
     def test_company_EU_GR_vies_zero(self):
         """
         Test, that greece has VAT OK. Greece has code GR in django-countries, but EL in VIES
         Tax ID is valid VAT ID, so no tax is counted
         """
-        self.assertEqual(self.policy.get_tax_rate('EL090145420', 'GR'), None)
+        self.assertEqual(self.policy.get_tax_rate('EL090145420', 'GR'), (None, True))
 
     @mock.patch("stdnum.eu.vat.check_vies")
     def test_company_EU_notsame_vies_ok(self, mock_check):
         mock_check.return_value = {'valid': True}
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), None)
+            self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), (None, True))
 
     @mock.patch("stdnum.eu.vat.check_vies")
     def test_company_EU_notsame_vies_not_ok(self, mock_check):
         mock_check.return_value = {'valid': False}
         with self.settings(PLANS_TAX=Decimal('23.0'), PLANS_TAX_COUNTRY='PL'):
-            self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), Decimal('20.0'))
+            self.assertEqual(self.policy.get_tax_rate('123456', 'AT'), (Decimal('20.0'), True))
 
 
 class BillingInfoTestCase(TestCase):
@@ -827,6 +828,8 @@ class CreateOrderViewTestCase(TestCase):
         request = self.factory.get('')
         middleware = SessionMiddleware(lambda x: x)
         middleware.process_request(request)
+        messages = FallbackStorage(request)
+        setattr(request, '_messages', messages)
         self.create_view = CreateOrderView()
         self.create_view.request = request
 
@@ -837,6 +840,15 @@ class CreateOrderViewTestCase(TestCase):
                 o = self.create_view.recalculate(10, BillingInfo(tax_number='48136450', country='CZ'))
                 self.assertEqual(o.tax, 21)
                 mock_logger.exception.assert_called_with("TAX_ID=CZ48136450")
+        message = self.create_view.request._messages._queued_messages[0].message
+        self.assertEqual(
+            message,
+            'There was an error during determining validity of your VAT ID.<br/>'
+            'If you think, you have european VAT ID and should not be taxed, '
+            'please try resaving billing info later.<br/><br/>'
+            'European VAT Information Exchange System throw following error: '
+            '&lt;urlopen error Internet is disabled&gt;',
+        )
 
     def test_recalculate_order(self):
         # BE 0203.201.340 is VAT ID of Belgium national bank.

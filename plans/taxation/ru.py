@@ -15,6 +15,6 @@ class RussianTaxationPolicy(TaxationPolicy):
 #    def get_issuer_country_code(self):
 #        return getattr(settings, 'PLANS_TAX_COUNTRY', None)
 
-    def get_tax_rate(self, tax_id, country_code):
+    def get_tax_rate(self, tax_id, country_code, request=None):
         # TODO
-        return 0
+        return 0, True
