@@ -35,7 +35,7 @@ from plans.contrib import send_template_email, get_user_language
 from plans.signals import (order_completed, account_activated,
                            account_expired, account_change_plan,
                            account_deactivated)
-from plans.utils import get_country_code, get_currency
+from plans.utils import country_code_transform, get_country_code, get_currency
 
 from sequences import get_next_value
 
@@ -156,7 +156,7 @@ class BillingInfo(models.Model):
         number = tax_number
         if tax_number.startswith(country):
             number = tax_number[len(country):]
-        return country + number
+        return country_code_transform(country) + number
 
     @staticmethod
     def clean_tax_number(tax_number, country):
