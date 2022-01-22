@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import re
 import logging
-import vatnumber
+import stdnum.eu.vat
 
 from decimal import Decimal
 from datetime import date, timedelta
@@ -35,7 +35,7 @@ from plans.contrib import send_template_email, get_user_language
 from plans.signals import (order_completed, account_activated,
                            account_expired, account_change_plan,
                            account_deactivated)
-from plans.utils import get_country_code, get_currency
+from plans.utils import country_code_transform, get_country_code, get_currency
 
 from sequences import get_next_value
 
@@ -156,7 +156,7 @@ class BillingInfo(models.Model):
         number = tax_number
         if tax_number.startswith(country):
             number = tax_number[len(country):]
-        return country + number
+        return country_code_transform(country) + number
 
     @staticmethod
     def clean_tax_number(tax_number, country):
@@ -168,25 +168,17 @@ class BillingInfo(models.Model):
 
         if tax_number and country:
 
-            if country in vatnumber.countries():
+            if country.lower() in stdnum.eu.vat.MEMBER_STATES:
                 full_number = BillingInfo.get_full_tax_number(tax_number, country)
-                if not vatnumber.check_vat(full_number):
-                    #           This is a proper solution to bind ValidationError to a Field but it is not
-                    #           working due to django bug :(
-                    #                    errors = defaultdict(list)
-                    #                    errors['tax_number'].append(_('VAT ID is not correct'))
-                    #                    raise ValidationError(errors)
-                    raise ValidationError(_('VAT ID is not correct'))
+                try:
+                    return stdnum.eu.vat.validate(full_number)
+                except stdnum.exceptions.ValidationError as e:
+                    raise ValidationError(_(f'VAT ID is not correct: {e.message}'))
 
             return tax_number
         else:
             return ''
 
-
-# FIXME: How to make validation in Model clean and attach it to a field? Seems that it is not working right now
-#    def clean(self):
-#        super(BillingInfo, self).clean()
-#        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
 
 class UserPlan(models.Model):
     """

@@ -1,11 +1,14 @@
-from decimal import Decimal
 import logging
+from decimal import Decimal
+from urllib.error import URLError
+
+import stdnum.eu.vat
 from django.core.exceptions import ImproperlyConfigured
+from plans.taxation import TaxationPolicy
+from plans.utils import country_code_transform
+from requests.exceptions import ConnectionError
 from suds import WebFault
 from suds.transport import TransportError
-import vatnumber
-import stdnum
-from plans.taxation import TaxationPolicy
 
 logger = logging.getLogger('plans.taxation.eu.vies')
 
@@ -60,11 +63,12 @@ class EUTaxationPolicy(TaxationPolicy):
 
     @classmethod
     def is_in_EU(cls, country_code):
-        return country_code.upper() in cls.EU_COUNTRIES_VAT
+        return country_code_transform(country_code).upper() in cls.EU_COUNTRIES_VAT
 
     @classmethod
     def get_default_tax(cls):
         issuer_country_code = cls.get_issuer_country_code()
+        issuer_country_code = country_code_transform(issuer_country_code)
         try:
             return cls.EU_COUNTRIES_VAT[issuer_country_code]
         except KeyError:
@@ -72,6 +76,7 @@ class EUTaxationPolicy(TaxationPolicy):
 
     @classmethod
     def get_tax_rate(cls, tax_id, country_code):
+        country_code = country_code_transform(country_code)
         issuer_country_code = cls.get_issuer_country_code()
         if not cls.is_in_EU(issuer_country_code):
             raise ImproperlyConfigured("EUTaxationPolicy requires that issuer country is in EU")
@@ -102,7 +107,7 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(country_code):
                 # Company is from other EU country
                 try:
-                    vies_result = vatnumber.check_vies(tax_id)
+                    vies_result = bool(stdnum.eu.vat.check_vies(tax_id)['valid'])
                     logger.info("TAX_ID=%s RESULT=%s" % (tax_id, vies_result))
                     if tax_id and vies_result:
                         # Company is registered in VIES
@@ -110,7 +115,7 @@ class EUTaxationPolicy(TaxationPolicy):
                         return None
                     else:
                         return cls.EU_COUNTRIES_VAT[country_code]
-                except (WebFault, TransportError, stdnum.exceptions.InvalidComponent):
+                except (WebFault, TransportError, stdnum.exceptions.InvalidComponent, ConnectionError, URLError):
                     # If we could not connect to VIES or the VAT ID is incorrect
                     logger.exception("TAX_ID=%s" % (tax_id))
                     return cls.EU_COUNTRIES_VAT[country_code]
