@@ -163,6 +163,9 @@ class BillingInfo(models.Model):
         tax_number = re.sub(r'[^A-Z0-9]', '', tax_number.upper())
 
         country_str = tax_number[:len(country)]
+        if country_str == country_code_transform(country):
+            country = country_code_transform(country)
+
         if country_str.isalpha() and country_str != country:
             raise ValidationError(_('VAT ID country code doesn\'t corespond with country'))
 

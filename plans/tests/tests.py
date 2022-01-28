@@ -802,6 +802,12 @@ class BillingInfoTestCase(TestCase):
     def test_clean_tax_number_valid_with_country(self):
         self.assertEqual(BillingInfo.clean_tax_number('CZ48136450', 'CZ'), 'CZ48136450')
 
+    def test_clean_tax_number_valid_with_country_GR(self):
+        self.assertEqual(BillingInfo.clean_tax_number('GR104594676', 'GR'), 'EL104594676')
+
+    def test_clean_tax_number_valid_with_country_EL(self):
+        self.assertEqual(BillingInfo.clean_tax_number('EL104594676', 'GR'), 'EL104594676')
+
     def test_clean_tax_number_vat_id_is_not_correct(self):
         with self.assertRaisesRegex(ValidationError, 'VAT ID is not correct'):
             BillingInfo.clean_tax_number('GR48136450', 'GR')
