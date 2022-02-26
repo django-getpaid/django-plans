@@ -3,7 +3,9 @@ from decimal import Decimal
 from urllib.error import URLError
 
 import stdnum.eu.vat
+from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.html import format_html
 from plans.taxation import TaxationPolicy
 from plans.utils import country_code_transform
 from requests.exceptions import ConnectionError
@@ -75,7 +77,7 @@ class EUTaxationPolicy(TaxationPolicy):
             raise ImproperlyConfigured("EUTaxationPolicy requires that issuer country is in EU")
 
     @classmethod
-    def get_tax_rate(cls, tax_id, country_code):
+    def get_tax_rate(cls, tax_id, country_code, request=None):
         country_code = country_code_transform(country_code)
         issuer_country_code = cls.get_issuer_country_code()
         if not cls.is_in_EU(issuer_country_code):
@@ -83,7 +85,7 @@ class EUTaxationPolicy(TaxationPolicy):
 
         if not tax_id and not country_code:
             # No vat id, no country
-            return cls.get_default_tax()
+            return cls.get_default_tax(), True
 
         elif not tax_id and country_code:
             # Customer is not a company, we know his country
@@ -91,11 +93,11 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(country_code):
                 # Customer (private person) is from a EU
                 # Customer pays his VAT rate
-                return cls.EU_COUNTRIES_VAT[country_code]
+                return cls.EU_COUNTRIES_VAT[country_code], True
             else:
                 # Customer (private person) not from EU
                 # VAT n/a
-                return None
+                return None, True
 
         else:
             # Customer is company, we now country and vat id
@@ -103,7 +105,8 @@ class EUTaxationPolicy(TaxationPolicy):
             if country_code.upper() == issuer_country_code.upper():
                 # Company is from the same country as issuer
                 # Normal tax
-                return cls.get_default_tax()
+                return cls.get_default_tax(), True
+
             if cls.is_in_EU(country_code):
                 # Company is from other EU country
                 try:
@@ -112,14 +115,26 @@ class EUTaxationPolicy(TaxationPolicy):
                     if tax_id and vies_result:
                         # Company is registered in VIES
                         # Charge back
-                        return None
+                        return None, True
                     else:
-                        return cls.EU_COUNTRIES_VAT[country_code]
-                except (WebFault, TransportError, stdnum.exceptions.InvalidComponent, ConnectionError, URLError):
+                        return cls.EU_COUNTRIES_VAT[country_code], True
+                except (WebFault, TransportError, stdnum.exceptions.InvalidComponent, ConnectionError, URLError) as e:
                     # If we could not connect to VIES or the VAT ID is incorrect
+                    if request:
+                        messages.warning(
+                            request,
+                            format_html(
+                                'There was an error during determining validity of your VAT ID.<br/>'
+                                'If you think, you have european VAT ID and should not be taxed, '
+                                'please try resaving billing info later.<br/>'
+                                '<br/>'
+                                'European VAT Information Exchange System throw following error: {}',
+                                e,
+                            )
+                        )
                     logger.exception("TAX_ID=%s" % (tax_id))
-                    return cls.EU_COUNTRIES_VAT[country_code]
+                    return cls.EU_COUNTRIES_VAT[country_code], False
             else:
                 # Company is not from EU
                 # VAT n/a
-                return None
+                return None, True

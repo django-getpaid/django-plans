@@ -713,10 +713,11 @@ class Order(models.Model):
             if not taxation_policy:
                 raise ImproperlyConfigured('PLANS_TAXATION_POLICY is not set')
             taxation_policy = import_name(taxation_policy)
-            tax = str(taxation_policy.get_tax_rate(tax_number, country))
+            tax, save_to_cache = taxation_policy.get_tax_rate(tax_number, country, request)
+            tax = str(tax)
             # Because taxation policy could return None which clutters with saving this value
             # into cache, we use str() representation of this value
-            if request:
+            if request and save_to_cache:
                 request.session[tax_session_key] = tax
 
         self.tax = Decimal(tax) if tax != 'None' else None
