@@ -44,7 +44,15 @@ accounts_logger = logging.getLogger('accounts')
 # Create your models here.
 
 
-class Plan(OrderedModel):
+class BaseMixin(models.Model):
+    created = models.DateTimeField(_('created'), db_index=True, auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class Plan(BaseMixin, OrderedModel):
     """
     Single plan defined in the system. A plan can customized (referred to user) which means
     that only this user can purchase this plan and have it selected.
@@ -72,7 +80,6 @@ class Plan(OrderedModel):
         _('visible'), default=True, db_index=True,
         help_text=_('Is visible in current offer')
     )
-    created = models.DateTimeField(_('created'), db_index=True)
     customized = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,
         verbose_name=_('customized'),
@@ -86,12 +93,6 @@ class Plan(OrderedModel):
         ordering = ('order',)
         verbose_name = _("Plan")
         verbose_name_plural = _("Plans")
-
-    def save(self, *args, **kwargs):
-        if not self.created:
-            self.created = now()
-
-        super(Plan, self).save(*args, **kwargs)
 
     @classmethod
     def get_default_plan(cls):
@@ -122,7 +123,7 @@ class Plan(OrderedModel):
     is_free.boolean = True
 
 
-class BillingInfo(models.Model):
+class BillingInfo(BaseMixin):
     """
     Stores customer billing data needed to issue an invoice
     """
@@ -183,7 +184,7 @@ class BillingInfo(models.Model):
             return ''
 
 
-class UserPlan(models.Model):
+class UserPlan(BaseMixin):
     """
     Currently selected plan for user account.
     """
@@ -408,7 +409,7 @@ class UserPlan(models.Model):
         return Plan.get_current_plan(self.user)
 
 
-class RecurringUserPlan(models.Model):
+class RecurringUserPlan(BaseMixin):
     """
     OneToOne model associated with UserPlan that stores information about the plan recurrence.
 
@@ -474,7 +475,7 @@ class RecurringUserPlan(models.Model):
         return order
 
 
-class Pricing(models.Model):
+class Pricing(BaseMixin):
     """
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
     """
@@ -493,7 +494,7 @@ class Pricing(models.Model):
         return "%s (%d " % (self.name, self.period) + "%s)" % _("days")
 
 
-class Quota(OrderedModel):
+class Quota(BaseMixin, OrderedModel):
     """
     Single countable or boolean property of system (limitation).
     """
@@ -520,7 +521,7 @@ class PlanPricingManager(models.Manager):
         return super(PlanPricingManager, self).get_queryset().select_related('plan', 'pricing')
 
 
-class PlanPricing(models.Model):
+class PlanPricing(BaseMixin):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
@@ -547,7 +548,7 @@ class PlanQuotaManager(models.Manager):
         return super(PlanQuotaManager, self).get_queryset().select_related('plan', 'quota')
 
 
-class PlanQuota(models.Model):
+class PlanQuota(BaseMixin):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     quota = models.ForeignKey('Quota', on_delete=models.CASCADE)
     value = models.BigIntegerField(default=1, null=True, blank=True)
@@ -559,7 +560,7 @@ class PlanQuota(models.Model):
         verbose_name_plural = _("Plans quotas")
 
 
-class Order(models.Model):
+class Order(BaseMixin):
     """
     Order in this app supports only one item per order. This item is defined by
     plan and pricing attributes. If both are defined the order represents buying
@@ -583,7 +584,6 @@ class Order(models.Model):
         'plan'), related_name="plan_order", on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_(
         'pricing'), on_delete=models.CASCADE)  # if pricing is None the order is upgrade plan, not buy new pricing
-    created = models.DateTimeField(_('created'), db_index=True)
     completed = models.DateTimeField(
         _('completed'), null=True, blank=True, db_index=True)
     plan_extended_from = models.DateField(
@@ -605,11 +605,6 @@ class Order(models.Model):
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
     status = models.IntegerField(
         _('status'), choices=STATUS, default=STATUS.NEW)
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if self.created is None:
-            self.created = now()
-        return super(Order, self).save(force_insert, force_update, using)
 
     def __str__(self):
         return _("Order #%(id)d") % {'id': self.id}
@@ -747,7 +742,7 @@ def get_initial_number(older_invoices):
     return getattr(older_invoices.order_by("number").last(), 'number', 0) + 1
 
 
-class Invoice(models.Model):
+class Invoice(BaseMixin):
     """
     Single invoice document.
     """
