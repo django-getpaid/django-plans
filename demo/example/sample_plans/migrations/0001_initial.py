@@ -97,7 +97,7 @@ class Migration(migrations.Migration):
                 'ordering': ('order',),
                 'abstract': False,
             },
-            bases=(plans.base.models.AbstractMixin, models.Model),
+            bases=(plans.base.models.BaseMixin, models.Model),
         ),
         migrations.CreateModel(
             name='Pricing',
@@ -138,7 +138,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),
@@ -199,7 +199,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),
@@ -273,7 +273,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),
@@ -381,7 +381,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),
@@ -420,7 +420,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),
@@ -472,7 +472,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),
@@ -600,7 +600,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),
@@ -754,7 +754,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),
@@ -843,7 +843,7 @@ class Migration(migrations.Migration):
             },
             bases=(
                 example.sample_plans.models.DetailFieldMixin,
-                plans.base.models.AbstractMixin,
+                plans.base.models.BaseMixin,
                 models.Model,
             ),
         ),

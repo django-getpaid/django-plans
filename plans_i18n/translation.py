@@ -7,6 +7,7 @@ Quota = AbstractQuota.get_concrete_model()
 
 # Translations for django-plans
 
+
 class PlanTranslationOptions(TranslationOptions):
     fields = ('name', 'description', )
 
@@ -23,5 +24,6 @@ translator.register(Pricing, PricingTranslationOptions)
 
 class QuotaTranslationOptions(TranslationOptions):
     fields = ('name', 'description', 'unit')
+
 
 translator.register(Quota, QuotaTranslationOptions)

@@ -46,11 +46,6 @@ class Plan(AbstractPlan):
         abstract = False
 
 
-class PlanPricing(DetailFieldMixin, AbstractPlanPricing):
-    class Meta(AbstractPlanPricing.Meta):
-        abstract = False
-
-
 class PlanQuota(DetailFieldMixin, AbstractPlanQuota):
     class Meta(AbstractPlanQuota.Meta):
         abstract = False

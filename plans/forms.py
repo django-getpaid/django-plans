@@ -2,39 +2,13 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import HiddenInput
 from django.utils.translation import gettext
-
-
+from .utils import get_country_code
 from plans.base.models import AbstractOrder, AbstractPlanPricing, AbstractBillingInfo
 
 
 Order = AbstractOrder.get_concrete_model()
 PlanPricing = AbstractPlanPricing.get_concrete_model()
 BillingInfo = AbstractBillingInfo.get_concrete_model()
-
-
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-
-
-def get_country_code(request):
-    if getattr(settings, 'PLANS_GET_COUNTRY_FROM_IP', False):
-        try:
-            from geolite2 import geolite2
-            reader = geolite2.reader()
-            ip_address = get_client_ip(request)
-            ip_info = reader.get(ip_address)
-        except ModuleNotFoundError:
-            ip_info = None
-
-        if ip_info and 'country' in ip_info:
-            country_code = ip_info['country']['iso_code']
-            return country_code
-    return getattr(settings, 'PLANS_DEFAULT_COUNTRY', None)
 
 
 class OrderForm(forms.Form):

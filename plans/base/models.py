@@ -2,13 +2,12 @@ from __future__ import unicode_literals
 
 import re
 import logging
-import vatnumber
+import stdnum.eu.vat
 
 from decimal import Decimal
 from datetime import date, timedelta
 
 from django.db import models, transaction
-from django.db.models import Max
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -37,6 +36,8 @@ from plans.contrib import send_template_email, get_user_language
 from plans.signals import (order_completed, account_activated,
                            account_expired, account_change_plan,
                            account_deactivated)
+from plans.utils import country_code_transform, get_country_code, get_currency
+from plans.importer import import_name
 
 from sequences import get_next_value
 
@@ -44,13 +45,19 @@ from sequences import get_next_value
 accounts_logger = logging.getLogger('accounts')
 
 
-class AbstractMixin(object):
+class BaseMixin(models.Model):
+    created = models.DateTimeField(_('created'), db_index=True, auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+
+    class Meta:
+        abstract = True
+
     @classmethod
     def get_concrete_model(cls):
         return load_model('plans', cls.__name__.replace('Abstract', ''))
 
 
-class AbstractPlan(AbstractMixin, OrderedModel):
+class AbstractPlan(BaseMixin, OrderedModel):
     """
     Single plan defined in the system. A plan can customized (referred to user) which means
     that only this user can purchase this plan and have it selected.
@@ -78,7 +85,6 @@ class AbstractPlan(AbstractMixin, OrderedModel):
         _('visible'), default=True, db_index=True,
         help_text=_('Is visible in current offer')
     )
-    created = models.DateTimeField(_('created'), db_index=True)
     customized = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,
         verbose_name=_('customized'),
@@ -93,11 +99,6 @@ class AbstractPlan(AbstractMixin, OrderedModel):
         ordering = ('order',)
         verbose_name = _("Plan")
         verbose_name_plural = _("Plans")
-
-    def save(self, *args, **kwargs):
-        if not self.created:
-            self.created = now()
-        super(AbstractPlan, self).save(*args, **kwargs)
 
     @classmethod
     def get_default_plan(cls):
@@ -128,7 +129,7 @@ class AbstractPlan(AbstractMixin, OrderedModel):
     is_free.boolean = True
 
 
-class AbstractBillingInfo(AbstractMixin, models.Model):
+class AbstractBillingInfo(BaseMixin, models.Model):
     """
     Stores customer billing data needed to issue an invoice
     """
@@ -163,38 +164,34 @@ class AbstractBillingInfo(AbstractMixin, models.Model):
         number = tax_number
         if tax_number.startswith(country):
             number = tax_number[len(country):]
-        return country + number
+        return country_code_transform(country) + number
 
     @staticmethod
     def clean_tax_number(tax_number, country):
         tax_number = re.sub(r'[^A-Z0-9]', '', tax_number.upper())
 
         country_str = tax_number[:len(country)]
+        if country_str == country_code_transform(country):
+            country = country_code_transform(country)
+
         if country_str.isalpha() and country_str != country:
             raise ValidationError(_('VAT ID country code doesn\'t corespond with country'))
 
         if tax_number and country:
-            if country in vatnumber.countries():
-                full_number = AbstractBillingInfo.get_full_tax_number(tax_number, country)
-                if not vatnumber.check_vat(full_number):
-                    #           This is a proper solution to bind ValidationError to a Field but it is not
-                    #           working due to django bug :(
-                    #                    errors = defaultdict(list)
-                    #                    errors['tax_number'].append(_('VAT ID is not correct'))
-                    #                    raise ValidationError(errors)
-                    raise ValidationError(_('VAT ID is not correct'))
+
+            if country.lower() in stdnum.eu.vat.MEMBER_STATES:
+                full_number = AbstractBillingInfo.get_concrete_model().get_full_tax_number(tax_number, country)
+                try:
+                    return stdnum.eu.vat.validate(full_number)
+                except stdnum.exceptions.ValidationError as e:
+                    raise ValidationError(_(f'VAT ID is not correct: {e.message}'))
 
             return tax_number
         else:
             return ''
 
 
-# FIXME: How to make validation in Model clean and attach it to a field? Seems that it is not working right now
-#    def clean(self):
-#        super(BillingInfo, self).clean()
-#        self.tax_number = BillingInfo.clean_tax_number(self.tax_number, self.country)
-
-class AbstractUserPlan(AbstractMixin, models.Model):
+class AbstractUserPlan(BaseMixin, models.Model):
     """
     Currently selected plan for user account.
     """
@@ -418,7 +415,7 @@ class AbstractUserPlan(AbstractMixin, models.Model):
         return userplans
 
 
-class AbstractRecurringUserPlan(AbstractMixin, models.Model):
+class AbstractRecurringUserPlan(BaseMixin, models.Model):
     """
     OneToOne model associated with UserPlan that stores information about the plan recurrence.
     More about recurring payments in docs.
@@ -474,7 +471,7 @@ class AbstractRecurringUserPlan(AbstractMixin, models.Model):
         Create order for plan renewal
         """
         userplan = self.user_plan
-        return Order.objects.create(
+        order = AbstractOrder.get_concrete_model().objects.create(
             user=userplan.user,
             plan=userplan.plan,
             pricing=userplan.recurring.pricing,
@@ -482,9 +479,12 @@ class AbstractRecurringUserPlan(AbstractMixin, models.Model):
             tax=userplan.recurring.tax,
             currency=userplan.recurring.currency,
         )
+        order.recalculate(userplan.recurring.amount, userplan.user.billinginfo)
+        order.save()
+        return order
 
 
-class AbstractPricing(AbstractMixin, models.Model):
+class AbstractPricing(BaseMixin, models.Model):
     """
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
     """
@@ -504,7 +504,7 @@ class AbstractPricing(AbstractMixin, models.Model):
         return "%s (%d " % (self.name, self.period) + "%s)" % _("days")
 
 
-class AbstractQuota(AbstractMixin, OrderedModel):
+class AbstractQuota(BaseMixin, OrderedModel):
     """
     Single countable or boolean property of system (limitation).
     """
@@ -532,7 +532,7 @@ class PlanPricingManager(models.Manager):
         return super(PlanPricingManager, self).get_queryset().select_related('plan', 'pricing')
 
 
-class AbstractPlanPricing(AbstractMixin, models.Model):
+class AbstractPlanPricing(BaseMixin, models.Model):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
@@ -560,7 +560,7 @@ class PlanQuotaManager(models.Manager):
         return super(PlanQuotaManager, self).get_queryset().select_related('plan', 'quota')
 
 
-class AbstractPlanQuota(AbstractMixin, models.Model):
+class AbstractPlanQuota(BaseMixin, models.Model):
     plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
     quota = models.ForeignKey('Quota', on_delete=models.CASCADE)
     value = models.BigIntegerField(default=1, null=True, blank=True)
@@ -573,7 +573,7 @@ class AbstractPlanQuota(AbstractMixin, models.Model):
         verbose_name_plural = _("Plans quotas")
 
 
-class AbstractOrder(AbstractMixin, models.Model):
+class AbstractOrder(BaseMixin, models.Model):
     """
     Order in this app supports only one item per order. This item is defined by
     plan and pricing attributes. If both are defined the order represents buying
@@ -597,7 +597,6 @@ class AbstractOrder(AbstractMixin, models.Model):
         'plan'), related_name="plan_order", on_delete=models.CASCADE)
     pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_(
         'pricing'), on_delete=models.CASCADE)  # if pricing is None the order is upgrade plan, not buy new pricing
-    created = models.DateTimeField(_('created'), db_index=True)
     completed = models.DateTimeField(
         _('completed'), null=True, blank=True, db_index=True)
     plan_extended_from = models.DateField(
@@ -619,11 +618,6 @@ class AbstractOrder(AbstractMixin, models.Model):
     currency = models.CharField(_('currency'), max_length=3, default='EUR')
     status = models.IntegerField(
         _('status'), choices=STATUS, default=STATUS.NEW)
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if self.created is None:
-            self.created = now()
-        return super(AbstractOrder, self).save(force_insert, force_update, using)
 
     def __str__(self):
         return _("Order #%(id)d") % {'id': self.id}
@@ -694,6 +688,42 @@ class AbstractOrder(AbstractMixin, models.Model):
     def get_absolute_url(self):
         return reverse('order', kwargs={'pk': self.pk})
 
+    def recalculate(self, amount, billing_info, request=None):
+        """
+        Calculates and return pre-filled Order
+        """
+        self.amount = amount
+        self.currency = get_currency()
+        country = getattr(billing_info, 'country', None)
+        if country is None:
+            country = get_country_code(request)
+        else:
+            country = country.code
+        if hasattr(billing_info, 'tax_number') and billing_info.tax_number:
+            tax_number = AbstractBillingInfo.get_full_tax_number(billing_info.tax_number, country)
+        else:
+            tax_number = None
+        # Calculating tax can be complex task (e.g. VIES webservice call)
+        # To ensure that tax calculated on order preview will be the same on final order
+        # tax rate is cached for a given billing data (as this value only depends on it)
+        tax_session_key = "tax_%s_%s" % (tax_number, country)
+        if request:
+            tax = request.session.get(tax_session_key)
+        else:
+            tax = None
+        if tax is None:
+            taxation_policy = getattr(settings, 'PLANS_TAXATION_POLICY', None)
+            if not taxation_policy:
+                raise ImproperlyConfigured('PLANS_TAXATION_POLICY is not set')
+            taxation_policy = import_name(taxation_policy)
+            tax, save_to_cache = taxation_policy.get_tax_rate(tax_number, country, request)
+            tax = str(tax)
+            # Because taxation policy could return None which clutters with saving this value
+            # into cache, we use str() representation of this value
+            if request and save_to_cache:
+                request.session[tax_session_key] = tax
+        self.tax = Decimal(tax) if tax != 'None' else None
+
     class Meta:
         ordering = ('-created', )
         abstract = True
@@ -713,14 +743,16 @@ class InvoiceProformaManager(models.Manager):
 
 class InvoiceDuplicateManager(models.Manager):
     def get_queryset(self):
-        return super(InvoiceDuplicateManager, self).get_queryset().filter(type=AbstractInvoice.INVOICE_TYPES['DUPLICATE'])
+        return super(InvoiceDuplicateManager, self).get_queryset().filter(
+            type=AbstractInvoice.INVOICE_TYPES['DUPLICATE']
+        )
 
 
 def get_initial_number(older_invoices):
     return getattr(older_invoices.order_by("number").last(), 'number', 0) + 1
 
 
-class AbstractInvoice(AbstractMixin, models.Model):
+class AbstractInvoice(BaseMixin, models.Model):
     """
     Single invoice document.
     """

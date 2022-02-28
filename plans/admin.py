@@ -8,7 +8,12 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 
 from .signals import account_automatic_renewal
-from plans.base.models import AbstractInvoice, AbstractUserPlan, AbstractPlan, AbstractPlanQuota, AbstractQuota, AbstractPlanPricing, AbstractPricing, AbstractRecurringUserPlan, AbstractOrder, AbstractBillingInfo
+from plans.base.models import (
+    AbstractInvoice, AbstractUserPlan, AbstractPlan,
+    AbstractPlanQuota, AbstractQuota, AbstractPlanPricing,
+    AbstractPricing, AbstractRecurringUserPlan, AbstractOrder,
+    AbstractBillingInfo
+)
 
 
 Invoice = AbstractInvoice.get_concrete_model()

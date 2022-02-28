@@ -20,7 +20,7 @@ from plans.mixins import LoginRequired
 from plans.base.models import (AbstractUserPlan, AbstractPlanPricing, AbstractPlan,
                                AbstractOrder, AbstractBillingInfo, AbstractQuota,
                                AbstractInvoice)
-from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm, get_country_code
+from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm
 from plans.signals import order_started
 from plans.utils import get_currency
 from plans.validators import plan_validation

@@ -26,7 +26,10 @@ from freezegun import freeze_time
 from model_bakery import baker
 
 from plans import tasks
-from plans.base.models import AbstractBillingInfo, AbstractPlanPricing, AbstractInvoice, AbstractOrder, AbstractPlan, AbstractUserPlan
+from plans.base.models import (
+    AbstractBillingInfo, AbstractPlanPricing, AbstractInvoice,
+    AbstractOrder, AbstractPlan, AbstractUserPlan
+)
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
 from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
@@ -43,6 +46,7 @@ Invoice = AbstractInvoice.get_concrete_model()
 Order = AbstractOrder.get_concrete_model()
 Plan = AbstractPlan.get_concrete_model()
 UserPlan = AbstractUserPlan.get_concrete_model()
+
 
 class PlansTestCase(TestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']

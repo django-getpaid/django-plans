@@ -1,19 +1,10 @@
 from swapper import swappable_setting
 
-from decimal import Decimal
-from datetime import date, timedelta
-
-from django.db import models, transaction
-from django.template import Context
-from django.template.base import Template
-from django.utils import translation
-from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _, pgettext_lazy
-
 from plans.base.models import (AbstractPlan, AbstractBillingInfo, AbstractUserPlan,
                                AbstractPricing, AbstractPlanPricing, AbstractQuota,
                                AbstractPlanQuota, AbstractOrder, AbstractInvoice,
                                AbstractRecurringUserPlan)
+
 
 class Plan(AbstractPlan):
     class Meta(AbstractPlan.Meta):
@@ -31,7 +22,6 @@ class UserPlan(AbstractUserPlan):
     class Meta(AbstractUserPlan.Meta):
         abstract = False
         swappable = swappable_setting('plans', 'UserPlan')
-
 
 
 class Pricing(AbstractPricing):
