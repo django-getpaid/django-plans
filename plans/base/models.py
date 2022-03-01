@@ -414,6 +414,10 @@ class AbstractUserPlan(BaseMixin, models.Model):
             AbstractUserPlan.get_concrete_model().create_for_user(user)
         return userplans
 
+    def get_current_plan(self):
+        """ Tiny helper, very usefull in templates """
+        return AbstractPlan.get_concrete_model().get_current_plan(self.user)
+
 
 class AbstractRecurringUserPlan(BaseMixin, models.Model):
     """
@@ -476,7 +480,6 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
             plan=userplan.plan,
             pricing=userplan.recurring.pricing,
             amount=userplan.recurring.amount,
-            tax=userplan.recurring.tax,
             currency=userplan.recurring.currency,
         )
         order.recalculate(userplan.recurring.amount, userplan.user.billinginfo)
@@ -672,6 +675,9 @@ class AbstractOrder(BaseMixin, models.Model):
 
     def get_all_invoices(self):
         return self.invoice_set.order_by('issued', 'issued_duplicate', 'pk')
+
+    def get_plan_pricing(self):
+        return AbstractPlanPricing.get_concrete_model().objects.get(plan=self.plan, pricing=self.pricing)
 
     def tax_total(self):
         if self.tax is None:
