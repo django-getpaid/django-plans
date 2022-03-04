@@ -7,6 +7,9 @@ omit=
     *test*
     venv/*
     demo/*
+include = plans*
+plugins =
+    django_coverage_plugin
 
 [report]
 # Regexes for lines to exclude from consideration

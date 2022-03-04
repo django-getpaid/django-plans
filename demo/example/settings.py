@@ -171,6 +171,8 @@ PLANS_VALIDATORS = {
     'MAX_FOO_COUNT': 'example.foo.validators.max_foos_validator',
 }
 
+MANAGE_PY_PATH = os.environ.get("MANAGE_PY_PATH")
+
 PLANS_CURRENCY = 'EUR'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

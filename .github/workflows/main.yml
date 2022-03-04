@@ -73,13 +73,13 @@ jobs:
 
       - name: Testing
         run: |
-          cd demo
+          pip install .
           case "${{ matrix.DJANGO_VERSION }}" in
             2.2.*|3.0.*|3.1.*)  # Django runs with warnings in this python version
-              python -m coverage run manage.py test plans
+              PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" coverage run demo/manage.py test plans
               ;;
             *)
-              python -W error::DeprecationWarning -m coverage run manage.py test plans
+              PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" PYTHONWARNINGS="error::DeprecationWarning" coverage run demo/manage.py test plans
               ;;
           esac
           coverage xml && codecov
