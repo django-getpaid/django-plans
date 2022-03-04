@@ -41,10 +41,7 @@ There are four class-based views to manage deleting and adding billing data:
 .. autoclass:: plans.views.BillingInfoRedirectView
 
 
-.. autoclass:: plans.views.BillingInfoCreateView
-
-
-.. autoclass:: plans.views.BillingInfoUpdateView
+.. autoclass:: plans.views.BillingInfoCreateOrUpdateView
 
 
 .. autoclass:: plans.views.BillingInfoDeleteView
@@ -57,8 +54,7 @@ Described views are pointed by following urls name patterns:
 
 Described views require creating following templates:
    * ``billing_info``,
-   * ``plans/billing_info_create.html``,
-   * ``plans/billing_info_update.html``,
+   * ``plans/billing_info_create_or_update.html``,
    * ``plans/billing_info_delete.html``.
 
 

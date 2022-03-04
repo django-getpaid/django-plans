@@ -923,7 +923,7 @@ class BillingInfoViewTestCase(TestCase):
         """
         Test, that default country is PL
         """
-        response = self.client.get(reverse('billing_info_create'))
+        response = self.client.get(reverse('billing_info'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="PL" selected>Poland</option>', html=True)
 
@@ -934,7 +934,7 @@ class BillingInfoViewTestCase(TestCase):
         """
         Test, that default country is PL
         """
-        response = self.client.get(reverse('billing_info_create'))
+        response = self.client.get(reverse('billing_info'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="PL" selected>Poland</option>', html=True)
 
@@ -943,7 +943,7 @@ class BillingInfoViewTestCase(TestCase):
         """
         Test, that default country is None
         """
-        response = self.client.get(reverse('billing_info_create'))
+        response = self.client.get(reverse('billing_info'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="" selected>---------</option>', html=True)
 
@@ -953,11 +953,11 @@ class BillingInfoViewTestCase(TestCase):
         Test, that default country is determined by German IP
         """
 
-        response = self.client.get(reverse('billing_info_create'), HTTP_X_FORWARDED_FOR='85.214.132.117')
+        response = self.client.get(reverse('billing_info'), HTTP_X_FORWARDED_FOR='85.214.132.117')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="DE" selected>Germany</option>', html=True)
 
-        response = self.client.get(reverse('billing_info_create'), REMOTE_ADDR='85.214.132.117')
+        response = self.client.get(reverse('billing_info'), REMOTE_ADDR='85.214.132.117')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="DE" selected>Germany</option>', html=True)
 
@@ -966,32 +966,50 @@ class BillingInfoViewTestCase(TestCase):
         Test, that default country is not determined
         """
 
-        response = self.client.get(reverse('billing_info_create'), HTTP_X_FORWARDED_FOR='85.214.132.117')
+        response = self.client.get(reverse('billing_info'), HTTP_X_FORWARDED_FOR='85.214.132.117')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<option value="" selected>---------</option>', html=True)
 
-    def test_redirect_view_create(self):
+    def test_billing_info(self):
         """
-        Test, BillingInfoRedirectView
+        Test, BillingInfoCreateOrUpdateView and BillingInfoDeleteView views
         """
-
+        # Test get does not contain delete button
         response = self.client.get(reverse('billing_info'))
+        self.assertNotContains(response, '<a class="btn btn-danger" href="/plan/billing/delete/">Delete</a>', html=True)
+
+        # Test create
+        parameters = {
+            "country": "GR",
+            "tax_number": "GR104594676",
+            "name": "bar",
+            "street": "baz",
+            "city": "bay",
+            "zipcode": "bax",
+        }
+        response = self.client.post(reverse('billing_info') + "?next=/plan/pricing/", parameters)
         self.assertRedirects(
-            response, '/plan/billing/create/', status_code=302,
+            response, '/plan/pricing/', status_code=302,
             target_status_code=200, fetch_redirect_response=True,
         )
+        self.assertEqual(self.user.billinginfo.tax_number, "EL104594676")
 
-    def test_redirect_view_update_next(self):
-        """
-        Test, BillingInfoRedirectView redirects to next url, BillingInfo already exists
-        """
+        # Test get contains delete button
+        response = self.client.get(reverse('billing_info'))
+        self.assertContains(response, '<a class="btn btn-danger" href="/plan/billing/delete/">Delete</a>', html=True)
 
-        baker.make('BillingInfo', user=self.user)
-        response = self.client.get(reverse('billing_info') + "?next=foo")
-        self.assertRedirects(
-            response, '/plan/billing/update/?next=foo', status_code=302,
-            target_status_code=200, fetch_redirect_response=True,
-        )
+        # Test update
+        del parameters["tax_number"]
+        parameters["name"] = "foo"
+        response = self.client.post(reverse('billing_info') + "?next=/plan/pricing/", parameters)
+        self.user.billinginfo.refresh_from_db()
+        self.assertEqual(self.user.billinginfo.name, "foo")
+        self.assertEqual(self.user.billinginfo.tax_number, "")
+
+        # Test delete
+        response = self.client.post(reverse('billing_info_delete'))
+        with self.assertRaises(BillingInfo.DoesNotExist):
+            self.user.billinginfo.refresh_from_db()
 
 
 class RecurringPlansTestCase(TestCase):

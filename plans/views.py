@@ -1,3 +1,4 @@
+import warnings
 from decimal import Decimal
 from itertools import chain
 
@@ -7,12 +8,13 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Q
 from django.http import Http404, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import (CreateView, RedirectView, TemplateView,
-                                  UpdateView, View)
-from django.views.generic.detail import DetailView, SingleObjectMixin
-from django.views.generic.edit import DeleteView, FormView, ModelFormMixin
+from django.views.generic import CreateView, RedirectView, TemplateView, View
+from django.views.generic.detail import (DetailView, SingleObjectMixin,
+                                         SingleObjectTemplateResponseMixin)
+from django.views.generic.edit import (DeleteView, FormView, ModelFormMixin,
+                                       ProcessFormView)
 from django.views.generic.list import ListView
 from next_url_mixin.mixin import NextUrlMixin
 
@@ -358,38 +360,33 @@ class OrderPaymentReturnView(LoginRequired, DetailView):
         return super(OrderPaymentReturnView, self).get_queryset().filter(user=self.request.user)
 
 
-class BillingInfoRedirectView(LoginRequired, RedirectView):
-    """
-    Checks if billing data for user exists and redirects to create or update view.
-    """
-    permanent = False
-
-    def get_redirect_url(self, **kwargs):
-        try:
-            BillingInfo.objects.get(user=self.request.user)
-        except BillingInfo.DoesNotExist:
-            redirect_url = reverse('billing_info_create')
-        else:
-            redirect_url = reverse('billing_info_update')
-
-        next_url = self.request.GET.get('next', None)
-        if next_url:
-            return redirect_url + "?next=" + next_url
-        return redirect_url
-
-
 class SuccessUrlMixin():
     def get_success_url(self):
         messages.success(self.request, _('Billing info has been updated successfuly.'))
-        return reverse('billing_info_update')
+        return reverse('billing_info')
 
 
-class BillingInfoCreateView(NextUrlMixin, SuccessUrlMixin, LoginRequired, CreateView):
-    """
-    Creates billing data for user
-    """
+class CreateOrUpdateView(
+    SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView
+):
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().post(request, *args, **kwargs)
+
+
+class BillingInfoCreateOrUpdateView(NextUrlMixin, SuccessUrlMixin, LoginRequired, CreateOrUpdateView):
     form_class = BillingInfoForm
-    template_name = 'plans/billing_info_create.html'
+    template_name = 'plans/billing_info_create_or_update.html'
+
+    def get_object(self):
+        try:
+            return self.request.user.billinginfo
+        except (AttributeError, BillingInfo.DoesNotExist):
+            return None
 
     def form_valid(self, form):
         form.instance.user = self.request.user
@@ -401,24 +398,17 @@ class BillingInfoCreateView(NextUrlMixin, SuccessUrlMixin, LoginRequired, Create
         return kwargs
 
 
-class BillingInfoUpdateView(NextUrlMixin, SuccessUrlMixin, LoginRequired, UpdateView):
-    """
-    Updates billing data for user
-    """
-    model = BillingInfo
-    form_class = BillingInfoForm
-    template_name = 'plans/billing_info_update.html'
+class RedirectToBilling(RedirectView):
+    url = reverse_lazy('billing_info')
+    permanent = False
+    query_string = True
 
-    def get_object(self):
-        try:
-            return self.request.user.billinginfo
-        except BillingInfo.DoesNotExist:
-            raise Http404
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update(request=self.request)
-        return kwargs
+    def get_redirect_url(self, *args, **kwargs):
+        warnings.warn(
+            "This view URL is deprecated. Use plain billing_info instead.",
+            DeprecationWarning,
+        )
+        return super().get_redirect_url(*args, **kwargs)
 
 
 class BillingInfoDeleteView(LoginRequired, DeleteView):
@@ -435,7 +425,7 @@ class BillingInfoDeleteView(LoginRequired, DeleteView):
 
     def get_success_url(self):
         messages.success(self.request, _('Billing info has been deleted.'))
-        return reverse('billing_info_create')
+        return reverse('billing_info')
 
 
 class InvoiceDetailView(LoginRequired, DetailView):

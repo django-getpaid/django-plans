@@ -1,13 +1,12 @@
 from django.conf import settings
 from django.urls import path
 
-from plans.views import (AccountActivationView, BillingInfoCreateView,
-                         BillingInfoDeleteView, BillingInfoRedirectView,
-                         BillingInfoUpdateView, ChangePlanView,
+from plans.views import (AccountActivationView, BillingInfoCreateOrUpdateView,
+                         BillingInfoDeleteView, ChangePlanView,
                          CreateOrderPlanChangeView, CreateOrderView,
                          CurrentPlanView, FakePaymentsView, InvoiceDetailView,
                          OrderListView, OrderPaymentReturnView, OrderView,
-                         PricingView, UpgradePlanView)
+                         PricingView, RedirectToBilling, UpgradePlanView)
 
 urlpatterns = [
     path('pricing/', PricingView.as_view(), name='pricing'),
@@ -23,9 +22,11 @@ urlpatterns = [
          name='order_payment_success'),
     path('order/<int:pk>/payment/failure/', OrderPaymentReturnView.as_view(status='failure'),
          name='order_payment_failure'),
-    path('billing/', BillingInfoRedirectView.as_view(), name='billing_info'),
-    path('billing/create/', BillingInfoCreateView.as_view(), name='billing_info_create'),
-    path('billing/update/', BillingInfoUpdateView.as_view(), name='billing_info_update'),
+    # Redirect for backward compatibility:
+    path('billing/create/', RedirectToBilling.as_view(), name='billing_info_create'),
+    # Redirect for backward compatibility:
+    path('billing/update/', RedirectToBilling.as_view(), name='billing_info_update'),
+    path('billing/', BillingInfoCreateOrUpdateView.as_view(), name='billing_info'),
     path('billing/delete/', BillingInfoDeleteView.as_view(), name='billing_info_delete'),
     path('invoice/<int:pk>/preview/html/', InvoiceDetailView.as_view(), name='invoice_preview_html'),
 ]

@@ -4,12 +4,14 @@
 {% block body %}
     <div class="row">
         <div class="col-sm-6">
-            <form action="{% url 'billing_info_create' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" method="post" class="form">
+            <form action="{% block "action_url" %}{% url 'billing_info' %}{% endblock %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" method="post" class="form">
                 {% block "form-content" %}
                 <legend>{% trans "Provide billing data" %}</legend>
-
                 {% csrf_token %}
                 {{ form.as_p }}
+                {% if object %}
+                <a class="btn btn-danger" href="{% url 'billing_info_delete' %}">Delete</a>
+                {% endif %}
                 <button type="submit" class="btn btn-primary">
                     Save
                 </button>

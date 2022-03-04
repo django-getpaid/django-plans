@@ -1,6 +1,10 @@
 django-plans changelog
 ======================
 
+x.x.x
+-----
+* Transform BillingInfo create and update view into one BillingInfoCreateOrUpdateView. This will require implementors to change these views if they were overriden. Also if one of the `billing_info_create.html` or `billing_info_update.html` templates has been overriden, he has to transform the code into the new `billing_info_create_or_update.html` template.
+
 1.0.0
 -----
 * Celery dependency was removed. Now the implementor has to connect the `plans.tasks.autorenew_account` `plans.tasks.expire_account` tasks by himself or use management command.
