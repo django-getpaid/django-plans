@@ -27,7 +27,7 @@ urlpatterns = [
     path('invoice/<int:pk>/preview/html/', InvoiceDetailView.as_view(), name='invoice_preview_html'),
 ]
 
-if getattr(settings, 'DEBUG', False):
+if getattr(settings, 'DEBUG', False) or getattr(settings, 'ENABLE_FAKE_PAYMENTS', True):
     urlpatterns += [
         path('fakepayments/<int:pk>/', FakePaymentsView.as_view(), name='fake_payments'),
     ]

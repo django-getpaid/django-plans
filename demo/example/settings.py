@@ -176,3 +176,5 @@ PLANS_CURRENCY = 'EUR'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 LOGIN_REDIRECT_URL = '/foo/list/'
+
+ENABLE_FAKE_PAYMENTS = True
