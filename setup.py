@@ -35,7 +35,7 @@ setup(
         'django-next-url-mixin>=0.1.0',
         'suds',
         'django-sequences',
-        'swapper~=1.1.0',
+        'swapper~=1.3.0',
         'six',
     ],
     extras_require={
