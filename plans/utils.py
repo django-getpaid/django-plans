@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from geolite2 import geolite2
 
 
 def get_client_ip(request):
@@ -15,6 +14,8 @@ def get_client_ip(request):
 def get_country_code(request):
     if getattr(settings, 'PLANS_GET_COUNTRY_FROM_IP', False):
         try:
+            from geolite2 import geolite2
+
             reader = geolite2.reader()
             ip_address = get_client_ip(request)
             ip_info = reader.get(ip_address)
