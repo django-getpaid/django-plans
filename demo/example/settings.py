@@ -171,7 +171,7 @@ PLANS_VALIDATORS = {
     'MAX_FOO_COUNT': 'example.foo.validators.max_foos_validator',
 }
 
-MANAGE_PY_PATH = os.environ.get("MANAGE_PY_PATH")
+MANAGE_PY_PATH = os.environ.get("MANAGE_PY_PATH", './manage.py')
 
 PLANS_CURRENCY = 'EUR'
 
