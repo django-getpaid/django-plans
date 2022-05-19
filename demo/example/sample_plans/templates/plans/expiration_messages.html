@@ -1,0 +1,31 @@
+{% load i18n %}
+
+{% block expiration_messages %}
+{% if ACCOUNT_EXPIRED %}
+
+    <div class="alert alert-danger">
+        {% blocktrans with url=EXTEND_URL %}Your account has expired.
+            Please <a href="{{ url }}">extend your account</a>.{% endblocktrans %}
+    </div>
+{% else %}
+
+    {% if ACCOUNT_NOT_ACTIVE %}
+        <div class="alert alert-danger">
+            {% blocktrans with url=ACTIVATE_URL %}
+                Your account is not active. Possibly you are over some limits.
+                Try to <a href="{{ url }}">activate your account</a>.
+            {% endblocktrans %}
+        </div>
+    {% endif %}
+
+    {% if EXPIRE_IN_DAYS >= 0 and EXPIRE_IN_DAYS <= 14 %}
+        <div class="alert alert-warning">
+            {% blocktrans with extend_url=EXTEND_URL days_to_expire=EXPIRE_IN_DAYS %}
+                Your account will expire soon (in {{ days_to_expire }} days).
+                We recommend to <a href="{{ extend_url }}">extend your account now.</a>
+            {% endblocktrans %}
+        </div>
+    {% endif %}
+
+{% endif %}
+{% endblock %}

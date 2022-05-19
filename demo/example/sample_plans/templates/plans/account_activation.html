@@ -1,0 +1,22 @@
+{% extends "plans/base.html" %}
+{% load i18n %}
+
+
+{% block body %}
+    <h1>{% if SUCCESSFUL %}{% trans "Activation successful" %}{% else %}{% trans "Activation failed" %}{% endif %}</h1>
+
+    {% if SUCCESSFUL %}
+{#        {%  include "messages.html" %}#}
+        {% blocktrans %}
+            Your panels will be available again soon.
+        {% endblocktrans %}
+    {% else %}
+        {% blocktrans %}
+            Your account cannot by activated because your account exceeds plan limits. Please adjust usage of limits and then try to activate your account again.
+        {% endblocktrans %}
+{#        {%  include "messages.html" %}#}
+    {% endif %}
+
+
+
+{% endblock %}

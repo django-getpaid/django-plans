@@ -1,0 +1,1 @@
+{% load i18n %}{% trans 'Order' %} {{ order }} - {% blocktrans with invoice_type=invoice_type invoice_number=invoice_number user=user %}{{ invoice_type }} {{ invoice_number }} has been issued for {{ user }}{% endblocktrans %}

@@ -2,9 +2,13 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import HiddenInput
 from django.utils.translation import gettext
-
-from .models import BillingInfo, Order, PlanPricing
 from .utils import get_country_code
+from plans.base.models import AbstractOrder, AbstractPlanPricing, AbstractBillingInfo
+
+
+Order = AbstractOrder.get_concrete_model()
+PlanPricing = AbstractPlanPricing.get_concrete_model()
+BillingInfo = AbstractBillingInfo.get_concrete_model()
 
 
 class OrderForm(forms.Form):

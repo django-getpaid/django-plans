@@ -1,0 +1,53 @@
+{% extends 'plans/base.html' %}
+{% load i18n %}
+
+
+{% block body %}
+    {% block order_header %}
+    <h1>{% trans "List of orders" %}</h1>
+    {% endblock %}
+
+    {% if object_list %}
+    {% block pagination_first %}
+    {% include "plans/pagination.html" %}
+    {% endblock %}
+
+    {% block order_table %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>{% trans 'Name' %}</th>
+                <th>{% trans 'Created' context 'order created' %}</th>
+                <th>{% trans 'Status' context 'order status' %}</th>
+                <th>{% trans 'Completed' context 'order completed' %}</th>
+                <th>{% trans 'Total' context 'total amount, value' %}</th>
+                <th>{% trans 'Plan valid from' %}</th>
+                <th>{% trans 'Plan valid until' %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in object_list %}
+            <tr class="{% if order.status == 2 %}success{% elif order.status == 3 %}danger{% elif order.status == 4 %}warning{% elif order.status == 5 %}info{% endif %}">
+                <td><a href="{{ order.get_absolute_url }}">{{ order.pk }}</a></td>
+                <td><a href="{{ order.get_absolute_url }}">{{ order.name }}</a></td>
+                <td class="date">{{ order.created|date }}</td>
+                <td class="status">{{ order.get_status_display }}</td>
+                <td class="date">{{ order.completed|date|default:"-" }}</td>
+                <td class="number">{{ order.total }}&nbsp;{{ CURRENCY }}</td>
+                <td class="date">{{ order.plan_extended_from|date|default:"-" }}</td>
+                <td class="date">{{ order.plan_extended_until|date|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endblock %}
+
+    {% block pagination_second %}
+    {% include "plans/pagination.html" %}
+    {% endblock %}
+
+    {% else %}
+        {% blocktrans %}You do not have any orders so far.{% endblocktrans %}
+    {% endif %}
+{% endblock %}

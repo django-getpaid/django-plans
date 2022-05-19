@@ -14,6 +14,7 @@ sdist
 develop-eggs
 .installed.cfg
 *.sqlite
+.vscode
 
 # Installer logs
 pip-log.txt

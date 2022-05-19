@@ -1,0 +1,171 @@
+    {% if logo_url %}
+        <img src="{{ logo_url }}" alt="company logo">
+    {% endif %}
+
+    <div style="float:right; text-align: right;">
+        <h1>
+            <label><span class="pl invoice_header">{% if invoice.type == invoice.INVOICE_TYPES.INVOICE %}Faktura VAT nr{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}Faktura PROFORMA nr{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.DUPLICATE %}Faktura VAT DUPLIKAT nr{% endif %}</span> <span class="en">{% if invoice.type == invoice.INVOICE_TYPES.INVOICE %}Invoice ID{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}Order confirmation ID{% endif %}{% if invoice.type == invoice.INVOICE_TYPES.DUPLICATE %}Invoice (duplicate) ID{% endif %}</span></label> <span id="full_number">{{ invoice.full_number }}</span>
+        </h1>
+        <h2>{% if not copy %}ORYGINAŁ{% else %}KOPIA{% endif %}</h2>
+        <p> <label><span class="pl">Data wystawienia:</span> <span class="en">Issued</span></label> {{ invoice.issued|date:"Y-m-d" }}</p>
+        {% if invoice.type != invoice.INVOICE_TYPES.PROFORMA %}{# Not a PROFORMA #}
+            <p> <label><span class="pl">Data sprzedaży:</span> <span class="en">Date of order</span></label> {{ invoice.selling_date|date:"Y-m-d" }}</p>
+        {% else %}
+            <p>&nbsp;</p>
+        {% endif %}
+    </div>
+
+    <table style="width: 100%; margin-bottom: 40px; font-size: 12px;" >
+        <tr>
+            <td style="width: 50%;">
+            </td>
+            <td style="width: 50%; padding-right: 4em; font-weight: bold; font-size: 15px;" id="shipping">
+                <strong> <label><span class="pl">Adres wysyłki:</span> <span class="en">Shipping address</span></label></strong><br><br>
+
+                {{ invoice.shipping_name }}<br>
+                {{ invoice.shipping_street }}<br>
+                {{ invoice.shipping_zipcode }} {{ invoice.shipping_city }}<br>
+                {{ invoice.buyer_country.code }} - {{ invoice.buyer_country.name }}
+
+
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 50%; 	vertical-align: top;">
+
+                <strong> <label><span class="pl">Sprzedawca:</span> <span class="en">Seller</span></label></strong><br><br>
+                {{ invoice.issuer_name }}<br>
+                {{ invoice.issuer_street }}<br>
+                {{ invoice.issuer_zipcode }} {{ invoice.issuer_city}}<br>
+                {{ invoice.issuer_country.code }} - {{ invoice.issuer_country.name }}<p>
+            <label><span class="pl">Numer NIP:</span><span class="en">VAT ID</span></label> {{ invoice.issuer_tax_number }}<br>
+            </td>
+            <td style="width: 50%; 	vertical-align: top;">
+
+                <strong> <label><span class="pl">Nabywca:</span> <span class="en">Buyer</span></label></strong><br><br>
+                {{ invoice.buyer_name }}<br>
+                {{ invoice.buyer_street }}<br>
+                {{ invoice.buyer_zipcode }} {{ invoice.buyer_city }}<br>
+                {{ invoice.buyer_country.code }} - {{ invoice.buyer_country.name }}
+
+                {%  if invoice.buyer_tax_number %}
+                    <p>
+
+                        <label><span class="pl">Numer NIP:</span><span class="en">VAT ID</span></label> {{ invoice.buyer_tax_number }}
+
+                    </p>
+                {% endif %}
+                <br>
+            </td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom: 40px; width: 100%;" id="items">
+        <thead>
+        <tr>
+            <td>
+                <span class="pl">L.p.</span>
+            </td>
+            <td>
+                <span class="pl">Nazwa&nbsp;usługi</span><br>
+                <span class="en">Description</span>
+
+            </td>
+
+            <td>
+                <span class="pl">Cena&nbsp;j.&nbsp;netto</span><br>
+                <span class="en">Unit&nbsp;price</span>
+
+            </td>
+            <td>
+
+                <span class="pl">Ilość</span><br>
+                <span class="en">Qty.</span>
+            </td>
+            <td>
+                <span class="pl">J.m.</span>
+            </td>
+            {% if invoice.rebate %}
+
+                <td>
+                    <span class="pl">Rabat</span><br><span class="en">Rebate</span>
+
+                </td>
+            {%  endif %}
+            <td>
+                <span class="pl">Wartość&nbsp;netto</span><br>
+                <span class="en">Subtotal</span>
+            </td>
+            <td style="width: 3%;">
+                <span class="pl">VAT</span><br> <span class="en">TAX</span>
+            </td>
+            <td>
+
+                <span class="pl">Kwota&nbsp;VAT</span><br><span class="en">TAX/VAT&nbsp;Amount</span>
+            </td>
+            <td style="width: 8%;">
+
+                <span class="pl">Wartość&nbsp;brutto</span><br>
+                <span class="en">Subtotal&nbsp;with&nbsp;TAX/VAT</span>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                1
+            </td>
+            <td class="center">{{ invoice.item_description }}</td>
+            <td class="number">{{ invoice.unit_price_net|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
+            <td class="center">{{ invoice.quantity }}</td>
+            <td class="center"><span class="pl">sztuk</span><br><span class="en">units</span></td>
+
+            {% if invoice.rebate %}
+                <td class="number">{{ invoice.rebate|floatformat:2 }}&nbsp;%</td>
+            {%  endif %}
+            <td class="number">{{ invoice.total_net|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
+            <td class="number">{% if invoice.tax != None %}{{ invoice.tax|floatformat:2 }}&nbsp;%{% else %}<span class="pl">n.p.</span><br><span class="en">n/a</span>{% endif %}</td>
+            <td class="number">{% if invoice.tax_total != None %}{{ invoice.tax_total|floatformat:2 }}&nbsp;{{ invoice.currency }}{% else %}<span class="pl">n.p.</span><br><span class="en">n/a</span>{% endif %}</td>
+            <td class="number">{{ invoice.total|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="{% if invoice.rebate %}6{% else %}5{%  endif %}" style="background-color: #EEE;"><label><span class="pl">Razem:</span><span class="en">Total</span></label>  </td>
+            <td>{{ invoice.total_net|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
+            <td>{% if invoice.tax != None %}{{ invoice.tax|floatformat:2 }}&nbsp;%{% else %}<span class="pl">n.p.</span><br><span class="en">n/a</span>{% endif %}</td>
+            <td>{% if invoice.tax_total != None %}{{ invoice.tax_total|floatformat:2 }}&nbsp;{{ invoice.currency }}{% else %}<span class="pl">n.p.</span><br><span class="en">n/a</span>{% endif %}</td>
+            <td>{{ invoice.total|floatformat:2 }}&nbsp;{{ invoice.currency }}</td>
+        </tr>
+        </tfoot>
+    </table>
+    <div style="width: 100%;">
+
+        {% if invoice.type != invoice.INVOICE_TYPES.PROFORMA %}
+            <strong><label><span class="pl">Sposób zapłaty:</span><span class="en">Payment</span></label></strong>  <label><span class="pl">płatność elektroniczna</span>  <span class="en">electronic payment</span></label><br><br>
+        {% endif %}
+
+
+        <strong><label><span class="pl">Termin zapłaty:</span><span class="en">Payment till</span></label></strong>
+
+        {% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}
+
+
+        {% else %}
+            <label> <span class="pl">zapłacono dnia</span> <span class="en"> paid</span></label>
+        {% endif %}
+
+        {{ invoice.payment_date|date:"Y-m-d" }}
+        <br><br>
+        <hr>
+
+        {% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}<p><span class="pl">Ten dokument <strong>nie jest</strong> fakturą VAT (nie jest dokumentem księgowym).</span><span class="en">This document <strong>is not</strong> an invoice.</span></p> {% endif %}
+
+        {% if invoice.tax == None and invoice.is_UE_customer %}
+            <p>
+                <span class="pl">Odwrotne obciążenie.</span><span class="en">-Reverse charge.</span>
+            </p>
+        {% endif %}
+
+
+    </div>

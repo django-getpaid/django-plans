@@ -1,7 +1,11 @@
 from django.contrib import admin
 from modeltranslation.admin import TranslationAdmin
 from plans.admin import PlanAdmin, QuotaAdmin
-from plans.models import Plan, Quota, Pricing
+from plans.base.models import AbstractPlan, AbstractQuota, AbstractPricing
+
+Plan = AbstractPlan.get_concrete_model()
+Quota = AbstractQuota.get_concrete_model()
+Pricing = AbstractPricing.get_concrete_model()
 
 # Admin translation for django-plans
 

@@ -16,6 +16,7 @@ Contents:
    integration
    settings
    plans
+   customize_models
    quota_validators
    plans_change
    plans_expiration

@@ -1,0 +1,94 @@
+{% extends "plans/base.html" %}
+{% load i18n %}
+
+
+{% block head %}
+    <script>
+        $(function () {
+            $('a.invoice').click(function () {
+                event.preventDefault();
+                window.open($(this).attr('href'), 'plans_invoice_{{ invoice.id }}', 'width=860,resizable=1,location=0,status=0,titlebar=1');
+            });
+        });
+    </script>
+{% endblock %}
+
+
+{% block body %}
+    <h1>{% blocktrans with object.id as order_id and object.get_status_display as order_status %}Order #{{ order_id }}
+        (status: {{ order_status }}){% endblocktrans %}</h1>
+
+    {# You should provide displaying django messages in this template #}
+
+    {% with object as order %}
+        {% include "plans/order_detail_table.html" %}
+    {% endwith %}
+
+    {% if object.get_all_invoices.count %}
+        <h2>{% trans "Printable documents" %}</h2>
+        <ul id="order_printable_documents">
+            {% for invoice in object.get_all_invoices %}
+                <li><a href="{{ invoice.get_absolute_url }}"
+                       class="invoice">{{ invoice.get_type_display }} {{ invoice }}</a>
+
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+
+
+    <h2>{% trans "Payment" %}</h2>
+    {% if object.completed %}
+
+        <p class="alert alert-success">
+            {% blocktrans with  object.completed as completed %}
+                Payment completed on: {{ completed }}
+            {% endblocktrans %}
+        </p>
+    {% else %}
+
+        {% if object.is_ready_for_payment %}
+            {% block payment_method %}
+
+                <p>
+                    Here should go bindings to your payment. We recommend using <a
+                        href="https://github.com/cypreess/django-getpaid">django-getpaid</a> for payment processing.
+                    Use a fake payment below to simulate paying for an order:
+                </p>
+
+                <a class="btn btn-success" role="button" href="{% url "fake_payments" pk=object.id %}">Pay using
+                    FakePayments™ ;)</a>
+
+                {#  An example code snippet for accepting payments using django-getpaid #}
+
+                {#            <form action="{% url "getpaid-new-payment" currency=object.currency %}" method="post"#}
+                {#                  class="standard_form payment_form">#}
+                {#                {% csrf_token %}#}
+                {#                <ul>{{ payment_form.as_ul }}</ul>#}
+                {#                <p><label>&nbsp;</label><input type="submit" value="{% trans "Pay the order" %}" class="submit_button">#}
+                {#                </p>#}
+                {#            </form>#}
+
+            {% endblock %}
+        {% else %}
+
+            <p class="alert alert-warning">
+                {% blocktrans %}
+                    This order is expired. It will accept an incoming payment made earlier, but new payment cannot be
+                    initialized. Please make a new order if necessary.
+                {% endblocktrans %}
+            </p>
+
+        {% endif %}
+
+    {% endif %}
+
+    {% if object.status == object.STATUS.NOT_VALID %}
+        <p class="alert alert-danger">
+            {% blocktrans %}
+                This order could not be processed as it is not valid. Please contact with customer service.
+            {% endblocktrans %}
+        </p>
+    {% endif %}
+
+{% endblock %}

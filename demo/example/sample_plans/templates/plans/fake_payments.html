@@ -1,0 +1,17 @@
+{% extends "plans/base.html" %}
+{% load i18n %}
+
+
+{% block body %}
+
+    <h1>FakePayments™</h1>
+    <p> Please select desired status after performing payment for an <strong>{{ object }}</strong>. </p>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">
+            Pay now
+        </button>
+    </form>
+
+{% endblock %}

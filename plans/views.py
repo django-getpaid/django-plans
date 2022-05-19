@@ -17,12 +17,22 @@ from next_url_mixin.mixin import NextUrlMixin
 from itertools import chain
 from plans.importer import import_name
 from plans.mixins import LoginRequired
-from plans.models import UserPlan, PlanPricing, Plan, Order, BillingInfo
+from plans.base.models import (AbstractUserPlan, AbstractPlanPricing, AbstractPlan,
+                               AbstractOrder, AbstractBillingInfo, AbstractQuota,
+                               AbstractInvoice)
 from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm
-from plans.models import Quota, Invoice
 from plans.signals import order_started
 from plans.utils import get_currency
 from plans.validators import plan_validation
+
+
+UserPlan = AbstractUserPlan.get_concrete_model()
+PlanPricing = AbstractPlanPricing.get_concrete_model()
+Plan = AbstractPlan.get_concrete_model()
+Order = AbstractOrder.get_concrete_model()
+BillingInfo = AbstractBillingInfo.get_concrete_model()
+Quota = AbstractQuota.get_concrete_model()
+Invoice = AbstractInvoice.get_concrete_model()
 
 
 class AccountActivationView(LoginRequired, TemplateView):

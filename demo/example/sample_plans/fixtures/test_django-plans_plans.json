@@ -1,0 +1,564 @@
+[
+  {
+    "pk": 3,
+    "model": "sample_plans.plan",
+    "fields": {
+      "default": null,
+      "available": true,
+      "visible": true,
+      "created": "2012-05-05T15:24:44.966Z",
+      "customized": null,
+      "description": "Plan for small company",
+      "name": "Standard",
+      "order": 0
+    }
+  },
+  {
+    "pk": 4,
+    "model": "sample_plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "created": "2012-05-05T15:36:31.671Z",
+      "customized": null,
+      "description": "For better use",
+      "name": "Premium",
+      "order": 1
+    }
+  },
+  {
+    "pk": 5,
+    "model": "sample_plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "created": "2012-07-12T13:07:23.038Z",
+      "customized": null,
+      "description": "Professional plan",
+      "name": "PRO",
+      "order": 2
+    }
+  },
+  {
+    "pk": 6,
+    "model": "sample_plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "created": "2012-07-12T17:33:30.112Z",
+      "customized": [
+        "test1"
+      ],
+      "description": "Custom for test1",
+      "name": "Custom",
+      "order": 4
+    }
+  },
+  {
+    "pk": 8,
+    "model": "sample_plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "created": "2012-07-24T12:51:57.438Z",
+      "customized": [
+        "test2"
+      ],
+      "description": "Custom test 2",
+      "name": "Custom 2",
+      "order": 5
+    }
+  },
+  {
+    "pk": 9,
+    "model": "sample_plans.plan",
+    "fields": {
+      "available": true,
+      "visible": true,
+      "created": "2014-03-30T10:41:52.428Z",
+      "description": "Free Test",
+      "name": "Free",
+      "order": 6
+    }
+  },
+  {
+    "pk": 6,
+    "model": "sample_plans.billinginfo",
+    "fields": {
+      "city": "Kraków",
+      "name": "Spolka Sp z o.o.",
+      "country": "PL",
+      "zipcode": "12-234",
+      "street": "Sloneczna 15",
+      "user": [
+        "test1"
+      ],
+      "tax_number": "PL5521465632"
+    }
+  },
+  {
+    "pk": 1,
+    "model": "sample_plans.pricing",
+    "fields": {
+      "period": 30,
+      "name": "monthly"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "sample_plans.pricing",
+    "fields": {
+      "period": 180,
+      "name": "half a year"
+    }
+  },
+  {
+    "pk": 3,
+    "model": "sample_plans.pricing",
+    "fields": {
+      "period": 365,
+      "name": "year"
+    }
+  },
+  {
+    "pk": 3,
+    "model": "sample_plans.quota",
+    "fields": {
+      "unit": "",
+      "description": "Allows to customize watermark text",
+      "order": 0,
+      "name": "Custom watermark",
+      "codename": "CUSTOM_WATERMARK",
+      "is_boolean": true
+    }
+  },
+  {
+    "pk": 4,
+    "model": "sample_plans.quota",
+    "fields": {
+      "unit": "MB",
+      "description": "Total storage space for photos",
+      "order": 1,
+      "name": "Storage space",
+      "codename": "MAX_STORAGE",
+      "is_boolean": false
+    }
+  },
+  {
+    "pk": 1,
+    "model": "sample_plans.quota",
+    "fields": {
+      "unit": "",
+      "description": "Number of separate galleries you can have on your account.",
+      "order": 2,
+      "name": "Galleries count",
+      "codename": "MAX_GALLERIES_COUNT",
+      "is_boolean": false
+    }
+  },
+  {
+    "pk": 5,
+    "model": "sample_plans.quota",
+    "fields": {
+      "unit": "",
+      "description": "Should not be visible",
+      "order": 3,
+      "name": "Should not be visible",
+      "codename": "NOT_USED_QUOTA",
+      "is_boolean": false
+    }
+  },
+  {
+    "pk": 2,
+    "model": "sample_plans.quota",
+    "fields": {
+      "unit": "",
+      "description": "Total count of photos in each gallery.",
+      "order": 4,
+      "name": "Photos number in gallery",
+      "codename": "MAX_PHOTOS_PER_GALLERY",
+      "is_boolean": false
+    }
+  },
+  {
+    "pk": 1,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "10.00",
+      "plan": 3,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 13,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "10.00",
+      "plan": 1,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 4,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "20.00",
+      "plan": 4,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 7,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "200.00",
+      "plan": 5,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 10,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "11.00",
+      "plan": 6,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 16,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "1.00",
+      "plan": 8,
+      "pricing": 1
+    }
+  },
+  {
+    "pk": 2,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "50.00",
+      "plan": 3,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 5,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "100.00",
+      "plan": 4,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 8,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "400.00",
+      "plan": 5,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 11,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "22.00",
+      "plan": 6,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 17,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "2.00",
+      "plan": 8,
+      "pricing": 2
+    }
+  },
+  {
+    "pk": 6,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "180.00",
+      "plan": 4,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 9,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "800.00",
+      "plan": 5,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 12,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "33.00",
+      "plan": 6,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 3,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "90.00",
+      "plan": 3,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 18,
+    "model": "sample_plans.planpricing",
+    "fields": {
+      "price": "3.00",
+      "plan": 8,
+      "pricing": 3
+    }
+  },
+  {
+    "pk": 1,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 3,
+      "value": 3,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 3,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 4,
+      "value": 15,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 4,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 4,
+      "value": 10,
+      "quota": 2
+    }
+  },
+  {
+    "pk": 5,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 4,
+      "value": 200,
+      "quota": 4
+    }
+  },
+  {
+    "pk": 6,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 3,
+      "value": 1,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 7,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 5,
+      "value": 1000,
+      "quota": 4
+    }
+  },
+  {
+    "pk": 2,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 3,
+      "value": null,
+      "quota": 2
+    }
+  },
+  {
+    "pk": 8,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 6,
+      "value": 1,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 9,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 6,
+      "value": 2,
+      "quota": 2
+    }
+  },
+  {
+    "pk": 10,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 6,
+      "value": 3,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 11,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 6,
+      "value": 4,
+      "quota": 4
+    }
+  },
+  {
+    "pk": 13,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 4,
+      "value": 1,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 14,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 5,
+      "value": 1,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 15,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 5,
+      "value": 15,
+      "quota": 2
+    }
+  },
+  {
+    "pk": 16,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 8,
+      "value": 1,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 17,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 8,
+      "value": 123,
+      "quota": 4
+    }
+  },
+  {
+    "pk": 18,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 8,
+      "value": 13,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 19,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 8,
+      "value": 12,
+      "quota": 2
+    }
+  },
+  {
+    "pk": 20,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 1,
+      "value": 3,
+      "quota": 1
+    }
+  },
+  {
+    "pk": 21,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 1,
+      "value": 1,
+      "quota": 3
+    }
+  },
+  {
+    "pk": 22,
+    "model": "sample_plans.planquota",
+    "fields": {
+      "plan": 1,
+      "value": null,
+      "quota": 2
+    }
+  },
+  {
+    "pk": 3,
+    "model": "sample_plans.order",
+    "fields": {
+      "created": "2012-07-14T18:58:23.710Z",
+      "completed": null,
+      "tax": "23.00",
+      "currency": "PLN",
+      "amount": "10.00",
+      "pricing": 1,
+      "plan": 3,
+      "user": [
+        "test1"
+      ]
+    }
+  },
+  {
+    "pk": 2,
+    "model": "sample_plans.order",
+    "fields": {
+      "created": "2012-07-14T18:28:19.836Z",
+      "completed": null,
+      "tax": "23.00",
+      "currency": "PLN",
+      "amount": "200.00",
+      "pricing": 1,
+      "plan": 5,
+      "user": [
+        "test1"
+      ]
+    }
+  },
+  {
+    "pk": 1,
+    "model": "sample_plans.order",
+    "fields": {
+      "created": "2012-07-14T18:27:20.492Z",
+      "completed": null,
+      "tax": "23.00",
+      "currency": "PLN",
+      "amount": "200.00",
+      "pricing": 1,
+      "plan": 5,
+      "user": [
+        "test1"
+      ]
+    }
+  }
+]

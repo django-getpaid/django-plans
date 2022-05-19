@@ -1,0 +1,60 @@
+{% load i18n %}
+
+{% block seo_title %}user_plan{% endblock %}
+
+{% block extra_js %}
+    <script>
+            $(function(){
+                  $('.pricing').click(function(){
+                            $('#pricing_form input#id_plan_pricing').val($(this).attr('pricing_pk'));
+                            $('#pricing_form').submit();
+                  });
+            });
+    </script>
+{% endblock %}
+
+{% block body %}
+<form method="post" action="{% url 'order_plan' %}" id="pricing_form">
+  {% csrf_token %}
+  {{ form.as_p }}
+</form>
+
+{% if userplan.plan.available %}
+<ul>
+        <li>{% trans "Plan" %}: {{ userplan.plan.name }}
+        <li>{% trans "Quotas" %}:
+                <ul>
+                        {% for quota in quotas %}
+                        <li> {{ quota.quota.name }} ({{ quota.quota.description }}) -
+
+                        {% if quota.quota.is_boolean %}
+
+                                {% if quota.value %} {% trans "yes" %} {% else %} {% trans "no" %} {% endif %}
+
+                        {% else %}
+                                {{ quota.value }} {{ quota.quota.unit }}
+                        {% endif %}
+                        {% endfor %}
+                </ul>
+
+        <li>{% trans "Pricings" %}:
+                <ul>
+                        {% for pricing in pricings %}
+                                <li>
+                                        <a class="pricing" href="#" pricing_pk="{{ pricing.pk }}"> {{ pricing.pricing.name }} ({{ pricing.pricing.period }} {% trans "days" %} ):
+                                                {{ pricing.price}}
+                                        </a>
+                        {% endfor %}
+                </ul>
+        </li>
+</ul>
+{% else %}
+
+        {% url 'upgrade_plan' as upgrade_url %}
+        {% blocktrans  %}
+                Unfortunately your current plan is not available any more. You need to <a href="{{ upgrade_url }}">upgrade your plan</a>.
+        {% endblocktrans %}
+
+{% endif %}
+
+{% endblock %}

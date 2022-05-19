@@ -73,7 +73,8 @@ jobs:
 
       - name: Testing
         run: |
-          pip install .
+          # Run tests for sample app used for testing extensibility
+          PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" SAMPLE_APP=1 demo/manage.py test example
           case "${{ matrix.DJANGO_VERSION }}" in
             2.2.*|3.0.*|3.1.*)  # Django runs with warnings in this python version
               PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" coverage run demo/manage.py test plans
