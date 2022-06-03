@@ -14,6 +14,7 @@ flake8
 psycopg2<2.9
 internet-sabotage3>=0.1.6
 django_coverage_plugin
+swapper
 
 
 # Not supported in py3
