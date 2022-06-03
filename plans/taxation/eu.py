@@ -78,6 +78,9 @@ class EUTaxationPolicy(TaxationPolicy):
 
     @classmethod
     def get_tax_rate(cls, tax_id, country_code, request=None):
+        """
+        returns tax rate and if the request was successful.
+        """
         country_code = country_code_transform(country_code)
         issuer_country_code = cls.get_issuer_country_code()
         if not cls.is_in_EU(issuer_country_code):
