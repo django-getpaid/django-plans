@@ -1,9 +1,10 @@
 import datetime
 import logging
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from .signals import account_automatic_renewal
 
+from .signals import account_automatic_renewal
 
 User = get_user_model()
 logger = logging.getLogger('plans.tasks')

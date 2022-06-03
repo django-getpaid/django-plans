@@ -1,8 +1,8 @@
-import sys
 import os
+import sys
 from decimal import Decimal
-from django.conf import settings
 
+from django.conf import settings
 
 sys.path[:0] = [os.path.join(os.getcwd(), 'demo')]
 

@@ -2,7 +2,6 @@ from django.urls import reverse
 
 from plans.base.models import AbstractUserPlan
 
-
 UserPlan = AbstractUserPlan.get_concrete_model()
 
 

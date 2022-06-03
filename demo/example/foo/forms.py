@@ -1,4 +1,4 @@
-from django.forms import ModelForm, HiddenInput
+from django.forms import HiddenInput, ModelForm
 
 from .models import Foo
 from .validators import max_foos_validator

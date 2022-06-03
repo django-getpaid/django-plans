@@ -1,9 +1,7 @@
+from django.contrib.auth.decorators import login_required
 from django.urls import path
 
-from django.contrib.auth.decorators import login_required
-
-from .views import FooListView, FooCreateView, FooDeleteView
-
+from .views import FooCreateView, FooDeleteView, FooListView
 
 urlpatterns = [
     path('list/', login_required(FooListView.as_view()), name='foo_list'),

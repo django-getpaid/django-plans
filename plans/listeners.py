@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
-from plans.base.models import AbstractOrder, AbstractInvoice, AbstractUserPlan, AbstractPlan
-from plans.signals import order_completed, activate_user_plan
 
+from plans.base.models import (AbstractInvoice, AbstractOrder, AbstractPlan,
+                               AbstractUserPlan)
+from plans.signals import activate_user_plan, order_completed
 
 User = get_user_model()
 Order = AbstractOrder.get_concrete_model()

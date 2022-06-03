@@ -1,4 +1,5 @@
-from modeltranslation.translator import translator, TranslationOptions
+from modeltranslation.translator import TranslationOptions, translator
+
 from plans.base.models import AbstractPlan, AbstractPricing, AbstractQuota
 
 Plan = AbstractPlan.get_concrete_model()

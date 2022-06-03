@@ -1,9 +1,10 @@
 from swapper import swappable_setting
 
-from plans.base.models import (AbstractPlan, AbstractBillingInfo, AbstractUserPlan,
-                               AbstractPricing, AbstractPlanPricing, AbstractQuota,
-                               AbstractPlanQuota, AbstractOrder, AbstractInvoice,
-                               AbstractRecurringUserPlan)
+from plans.base.models import (AbstractBillingInfo, AbstractInvoice,
+                               AbstractOrder, AbstractPlan,
+                               AbstractPlanPricing, AbstractPlanQuota,
+                               AbstractPricing, AbstractQuota,
+                               AbstractRecurringUserPlan, AbstractUserPlan)
 
 
 class Plan(AbstractPlan):

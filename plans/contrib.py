@@ -1,13 +1,14 @@
 import logging
 
-from django.core import mail
-from django.conf import settings
 from django.apps import apps
-from django.template import loader
-from django.utils import translation
-from plans.signals import user_language
+from django.conf import settings
+from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
+from django.template import loader
 from django.template.exceptions import TemplateDoesNotExist
+from django.utils import translation
+
+from plans.signals import user_language
 
 email_logger = logging.getLogger('emails')
 
