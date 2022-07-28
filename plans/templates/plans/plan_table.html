@@ -73,14 +73,16 @@
                     <ul>
                     {% if not plan.is_free %}
                         {% for plan_pricing in plan.planpricing_set.all %}
-                            <li>
-                            {% if plan_pricing.pricing.url %}<a href="{{ plan_pricing.pricing.url }}" class="info_link pricing">{% endif %}
-                            <span class="plan_pricing_name">{{ plan_pricing.pricing.name }}</span>
-                            <span class="plan_pricing_period">({{ plan_pricing.pricing.period }} {% trans "days" %})</span>
-                            {% if plan_pricing.pricing.url %}</a>{% endif %}
-                            <span class="plan_pricing_price">{{ plan_pricing.price }}&nbsp;{{ CURRENCY }}</span>
-                            {% if plan_pricing.plan == userplan.plan or userplan.is_expired or userplan.plan.is_free %}
-                            <a href="{% url 'create_order_plan' pk=plan_pricing.pk %}" class="buy">{% trans "Buy" %}</a>
+                            {% if plan_pricing.visible %}
+                                <li>
+                                {% if plan_pricing.pricing.url %}<a href="{{ plan_pricing.pricing.url }}" class="info_link pricing">{% endif %}
+                                <span class="plan_pricing_name">{{ plan_pricing.pricing.name }}</span>
+                                <span class="plan_pricing_period">({{ plan_pricing.pricing.period }} {% trans "days" %})</span>
+                                {% if plan_pricing.pricing.url %}</a>{% endif %}
+                                <span class="plan_pricing_price">{{ plan_pricing.price }}&nbsp;{{ CURRENCY }}</span>
+                                {% if plan_pricing.plan == userplan.plan or userplan.is_expired or userplan.plan.is_free %}
+                                <a href="{% url 'create_order_plan' pk=plan_pricing.pk %}" class="buy">{% trans "Buy" %}</a>
+                                {% endif %}
                             {% endif %}
                         {% endfor %}
                     {% else %}

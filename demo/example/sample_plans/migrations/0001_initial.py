@@ -463,6 +463,14 @@ class Migration(migrations.Migration):
                         to='sample_plans.pricing',
                     ),
                 ),
+                (
+                    'visible',
+                    models.BooleanField(
+                        default=True,
+                        help_text='Is visible in current offer',
+                        verbose_name='is visible by default',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Plan pricing',
