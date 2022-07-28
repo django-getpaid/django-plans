@@ -555,7 +555,7 @@ class AbstractPlanPricing(BaseMixin, models.Model):
         verbose_name_plural = _("Plans pricings")
 
     def __str__(self):
-        return "%s %s" % (self.plan.name, self.pricing)
+        return f"{self.plan.name} {self.pricing} {'recurring' if self.has_automatic_renewal else ''}"
 
 
 class PlanQuotaManager(models.Manager):
