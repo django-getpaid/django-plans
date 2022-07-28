@@ -6,11 +6,12 @@ import stdnum.eu.vat
 from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
-from plans.taxation import TaxationPolicy
-from plans.utils import country_code_transform
 from requests.exceptions import ConnectionError
 from suds import WebFault
 from suds.transport import TransportError
+
+from plans.taxation import TaxationPolicy
+from plans.utils import country_code_transform
 
 logger = logging.getLogger('plans.taxation.eu.vies')
 

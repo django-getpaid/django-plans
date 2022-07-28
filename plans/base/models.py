@@ -1,46 +1,41 @@
 from __future__ import unicode_literals
 
-import re
 import logging
-import stdnum.eu.vat
-
-from decimal import Decimal
+import re
 from datetime import date, timedelta
+from decimal import Decimal
 
-from django.db import models, transaction
-
+import stdnum.eu.vat
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import models, transaction
+
 try:
     from django.contrib.sites.models import Site
 except RuntimeError:
     Site = None
-from django.urls import reverse
-
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.template import Context
 from django.template.base import Template
+from django.urls import reverse
 from django.utils import translation
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _, pgettext_lazy
-
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext_lazy
 from django_countries.fields import CountryField
 from ordered_model.models import OrderedModel
-from django.core.exceptions import ImproperlyConfigured, ValidationError
-
+from sequences import get_next_value
 from swapper import load_model
 
+from plans.contrib import get_user_language, send_template_email
 from plans.enumeration import Enumeration
-from plans.validators import plan_validation
-from plans.taxation.eu import EUTaxationPolicy
-from plans.contrib import send_template_email, get_user_language
-from plans.signals import (order_completed, account_activated,
-                           account_expired, account_change_plan,
-                           account_deactivated)
-from plans.utils import country_code_transform, get_country_code, get_currency
 from plans.importer import import_name
-
-from sequences import get_next_value
-
+from plans.signals import (account_activated, account_change_plan,
+                           account_deactivated, account_expired,
+                           order_completed)
+from plans.taxation.eu import EUTaxationPolicy
+from plans.utils import country_code_transform, get_country_code, get_currency
+from plans.validators import plan_validation
 
 accounts_logger = logging.getLogger('accounts')
 

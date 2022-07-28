@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import find_packages, setup
+
 from plans import __version__ as VERSION
 
 with open('README.rst') as file:

@@ -1,10 +1,13 @@
 from django.conf import settings
 from django.urls import path
 
-from plans.views import CreateOrderView, OrderListView, InvoiceDetailView, AccountActivationView, \
-    OrderPaymentReturnView, CurrentPlanView, UpgradePlanView, OrderView, BillingInfoRedirectView, \
-    BillingInfoCreateView, BillingInfoUpdateView, BillingInfoDeleteView, CreateOrderPlanChangeView, ChangePlanView, \
-    PricingView, FakePaymentsView
+from plans.views import (AccountActivationView, BillingInfoCreateView,
+                         BillingInfoDeleteView, BillingInfoRedirectView,
+                         BillingInfoUpdateView, ChangePlanView,
+                         CreateOrderPlanChangeView, CreateOrderView,
+                         CurrentPlanView, FakePaymentsView, InvoiceDetailView,
+                         OrderListView, OrderPaymentReturnView, OrderView,
+                         PricingView, UpgradePlanView)
 
 urlpatterns = [
     path('pricing/', PricingView.as_view(), name='pricing'),

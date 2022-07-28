@@ -3,18 +3,17 @@ from copy import deepcopy
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from ordered_model.admin import OrderedModelAdmin
-from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+from ordered_model.admin import OrderedModelAdmin
+
+from plans.base.models import (AbstractBillingInfo, AbstractInvoice,
+                               AbstractOrder, AbstractPlan,
+                               AbstractPlanPricing, AbstractPlanQuota,
+                               AbstractPricing, AbstractQuota,
+                               AbstractRecurringUserPlan, AbstractUserPlan)
 
 from .signals import account_automatic_renewal
-from plans.base.models import (
-    AbstractInvoice, AbstractUserPlan, AbstractPlan,
-    AbstractPlanQuota, AbstractQuota, AbstractPlanPricing,
-    AbstractPricing, AbstractRecurringUserPlan, AbstractOrder,
-    AbstractBillingInfo
-)
-
 
 Invoice = AbstractInvoice.get_concrete_model()
 UserPlan = AbstractUserPlan.get_concrete_model()

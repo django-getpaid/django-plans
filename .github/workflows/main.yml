@@ -102,6 +102,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install
-        run: pip install flake8
+        run: pip install flake8 isort
       - name: Running Flake8
         run: flake8
+      - name: Running isort
+        run: isort

@@ -5,9 +5,10 @@ from decimal import Decimal
 import django.db.models.deletion
 import django_countries.fields
 import example.sample_plans.models
-import plans.base.models
 from django.conf import settings
 from django.db import migrations, models
+
+import plans.base.models
 
 
 class Migration(migrations.Migration):

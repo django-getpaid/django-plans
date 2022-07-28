@@ -1,12 +1,11 @@
-from decimal import Decimal
-import requests
 import random
-from datetime import date
-from datetime import timedelta
+from datetime import date, timedelta
+from decimal import Decimal
 from io import StringIO
-
-from internet_sabotage import no_connection
+from unittest import mock
 from unittest.mock import patch
+
+import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
@@ -16,28 +15,23 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.management import call_command
 from django.db import transaction
 from django.db.models import Q
-from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
+from django.test import (RequestFactory, TestCase, TransactionTestCase,
+                         override_settings)
 from django.urls import reverse
-
 from django_concurrent_tests.helpers import call_concurrently
-
 from freezegun import freeze_time
-
+from internet_sabotage import no_connection
 from model_bakery import baker
 
 from plans import tasks
-from plans.base.models import (
-    AbstractBillingInfo, AbstractPlanPricing, AbstractInvoice,
-    AbstractOrder, AbstractPlan, AbstractUserPlan
-)
+from plans.base.models import (AbstractBillingInfo, AbstractInvoice,
+                               AbstractOrder, AbstractPlan,
+                               AbstractPlanPricing, AbstractUserPlan)
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
-from plans.taxation.eu import EUTaxationPolicy
 from plans.quota import get_user_quota
+from plans.taxation.eu import EUTaxationPolicy
 from plans.validators import ModelCountValidator
 from plans.views import CreateOrderView
-
-from unittest import mock
-
 
 User = get_user_model()
 BillingInfo = AbstractBillingInfo.get_concrete_model()

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 # Django settings for example project.
 import os
 from decimal import Decimal
-
 
 EMAIL_FROM = "Test <test@server.com>"
 

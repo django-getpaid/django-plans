@@ -1,6 +1,7 @@
 # This import is required for importing admin class from plans.admin
-import plans.admin  # noqa
 from django.contrib import admin
+
+import plans.admin  # noqa
 
 from .models import TestApp
 

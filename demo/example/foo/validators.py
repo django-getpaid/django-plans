@@ -1,5 +1,6 @@
-from .models import Foo
 from plans.validators import ModelCountValidator
+
+from .models import Foo
 
 
 class MaxFoosValidator(ModelCountValidator):

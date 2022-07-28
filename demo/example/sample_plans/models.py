@@ -1,16 +1,10 @@
 from django.db import models
-from plans.base.models import (
-    AbstractBillingInfo,
-    AbstractInvoice,
-    AbstractOrder,
-    AbstractPlan,
-    AbstractPlanPricing,
-    AbstractPlanQuota,
-    AbstractPricing,
-    AbstractQuota,
-    AbstractRecurringUserPlan,
-    AbstractUserPlan,
-)
+
+from plans.base.models import (AbstractBillingInfo, AbstractInvoice,
+                               AbstractOrder, AbstractPlan,
+                               AbstractPlanPricing, AbstractPlanQuota,
+                               AbstractPricing, AbstractQuota,
+                               AbstractRecurringUserPlan, AbstractUserPlan)
 
 
 class DetailFieldMixin:
