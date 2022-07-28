@@ -480,10 +480,15 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
             plan=userplan.plan,
             pricing=userplan.recurring.pricing,
             amount=userplan.recurring.amount,
+            tax=userplan.recurring.tax,  # Fallback value in case of VIES fault
             currency=userplan.recurring.currency,
         )
-        order.recalculate(userplan.recurring.amount, userplan.user.billinginfo)
+        order.recalculate(userplan.recurring.amount, userplan.user.billinginfo, use_default=False)
         order.save()
+
+        # Save new value of tax
+        userplan.recurring.tax = order.tax
+        userplan.recurring.save()
         return order
 
 
@@ -687,14 +692,14 @@ class AbstractOrder(BaseMixin, models.Model):
 
     def total(self):
         if self.tax is not None:
-            return (self.amount * (self.tax + 100) / 100).quantize(Decimal('1.00'))
+            return (Decimal(self.amount) * (Decimal(self.tax) + 100) / 100).quantize(Decimal('1.00'))
         else:
             return self.amount
 
     def get_absolute_url(self):
         return reverse('order', kwargs={'pk': self.pk})
 
-    def recalculate(self, amount, billing_info, request=None):
+    def recalculate(self, amount, billing_info, request=None, use_default=True):
         """
         Calculates and return pre-filled Order
         """
@@ -713,6 +718,7 @@ class AbstractOrder(BaseMixin, models.Model):
         # To ensure that tax calculated on order preview will be the same on final order
         # tax rate is cached for a given billing data (as this value only depends on it)
         tax_session_key = "tax_%s_%s" % (tax_number, country)
+        request_successful = True
         if request:
             tax = request.session.get(tax_session_key)
         else:
@@ -722,13 +728,14 @@ class AbstractOrder(BaseMixin, models.Model):
             if not taxation_policy:
                 raise ImproperlyConfigured('PLANS_TAXATION_POLICY is not set')
             taxation_policy = import_name(taxation_policy)
-            tax, save_to_cache = taxation_policy.get_tax_rate(tax_number, country, request)
+            tax, request_successful = taxation_policy.get_tax_rate(tax_number, country, request)
             tax = str(tax)
             # Because taxation policy could return None which clutters with saving this value
             # into cache, we use str() representation of this value
-            if request and save_to_cache:
+            if request and request_successful:
                 request.session[tax_session_key] = tax
-        self.tax = Decimal(tax) if tax != 'None' else None
+        if use_default or request_successful:  # Don't change the tax, if the request was not successful
+            self.tax = Decimal(tax) if tax != 'None' else None
 
     class Meta:
         ordering = ('-created', )

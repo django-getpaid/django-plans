@@ -1052,6 +1052,20 @@ class RecurringPlansTestCase(TestCase):
         )
         order = rup.create_renew_order()
         self.assertEqual(order.tax, 21)
+        self.assertEqual(rup.tax, 21)
+
+    def test_create_new_order_VIES_fault(self):
+        """ If VIES fails, we use last available TAX value """
+        rup = baker.make(
+            'RecurringUserPlan',
+            user_plan__user__billinginfo__country='CZ',
+            user_plan__user__billinginfo__tax_number="CZ0123",
+            amount=10,
+            tax=11,
+        )
+        with no_connection():
+            order = rup.create_renew_order()
+        self.assertEqual(order.tax, 11)
 
 
 class TasksTestCase(TestCase):
