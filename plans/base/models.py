@@ -545,6 +545,11 @@ class AbstractPlanPricing(BaseMixin, models.Model):
         help_text=_('Use automatic renewal if possible?'),
         default=False,
     )
+    visible = models.BooleanField(
+        _('is visible by default'),
+        help_text=_('Is visible in current offer'),
+        default=True,
+    )
 
     objects = PlanPricingManager()
 
