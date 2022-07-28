@@ -2,7 +2,7 @@ django-ordered-model
 django-bootstrap3
 Sphinx
 django-debug-toolbar
-django-extensions
+django-extensions<3.2.0  # The version requirement can be removed once https://github.com/django-extensions/django-extensions/issues/1743 is fixed
 mock
 coverage
 tox
