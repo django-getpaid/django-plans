@@ -6,6 +6,7 @@ from unittest import mock
 from unittest.mock import patch
 
 import requests
+import stdnum.eu.vat
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
@@ -40,6 +41,8 @@ Invoice = AbstractInvoice.get_concrete_model()
 Order = AbstractOrder.get_concrete_model()
 Plan = AbstractPlan.get_concrete_model()
 UserPlan = AbstractUserPlan.get_concrete_model()
+
+stdnum.eu.vat.vies_wsdl = 'https://ec.europa.eu/taxation_customs/vies/checkVatTestService.wsdl'
 
 
 class PlansTestCase(TestCase):
@@ -778,7 +781,7 @@ class EUTaxationPolicyTestCase(TestCase):
         Test, that greece has VAT OK. Greece has code GR in django-countries, but EL in VIES
         Tax ID is valid VAT ID, so no tax is counted
         """
-        self.assertEqual(self.policy.get_tax_rate('EL090145420', 'GR'), (None, True))
+        self.assertEqual(self.policy.get_tax_rate('EL100', 'GR'), (None, True))
 
     @mock.patch("stdnum.eu.vat.check_vies")
     def test_company_EU_notsame_vies_ok(self, mock_check):
@@ -858,10 +861,10 @@ class CreateOrderViewTestCase(TestCase):
         # BE 0203.201.340 is VAT ID of Belgium national bank.
         # It is used, because national provider for VIES seems to be stable enough
         c = self.create_view
-        o = c.recalculate(10, BillingInfo(tax_number='BE 0203 201 340', country='BE'))
+        o = c.recalculate(10, BillingInfo(tax_number='BE 1 0 0', country='BE'))
         self.assertEqual(o.tax, None)
 
-        o = c.recalculate(10, BillingInfo(tax_number='0203 201 340', country='BE'))
+        o = c.recalculate(10, BillingInfo(tax_number='1 00', country='BE'))
         self.assertEqual(o.tax, None)
 
         o = c.recalculate(10, BillingInfo(tax_number='1234565', country='BE'))
@@ -870,7 +873,7 @@ class CreateOrderViewTestCase(TestCase):
         o = c.recalculate(10, BillingInfo(tax_number='1234567', country='GR'))
         self.assertEqual(o.tax, 24)
 
-        o = c.recalculate(10, BillingInfo(tax_number='090145420', country='GR'))
+        o = c.recalculate(10, BillingInfo(tax_number='100', country='GR'))
         self.assertEqual(o.tax, None)
 
 
