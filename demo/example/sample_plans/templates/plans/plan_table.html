@@ -32,13 +32,13 @@
             {% for plan_quota in quota_row.1 %}
 
                 <td class="{% if forloop.counter0 == current_userplan_index %}current{% endif %}">
-                    {% ifnotequal plan_quota None %}
+                    {% if plan_quota != None %}
                         {% if quota_row.0.is_boolean %}
                             {% if plan_quota.value %} + {% else %} - {% endif %}
                         {% else %}
                             {% if plan_quota.value == None %}{% trans 'no limit' %}{% else %}{{ plan_quota.value }} {{ quota_row.0.unit }}{% endif %}
                         {% endif %}
-                    {% endifnotequal %}
+                    {% endif %}
                 </td>
             {% endfor %}
 
