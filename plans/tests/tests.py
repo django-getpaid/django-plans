@@ -773,11 +773,13 @@ class EUTaxationPolicyTestCase(TestCase):
         """
         self.assertEqual(self.policy.get_tax_rate('123456', 'GR'), (24, False))
 
-    def test_company_EU_GR_vies_zero(self):
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_company_EU_GR_vies_zero(self, mock_check):
         """
         Test, that greece has VAT OK. Greece has code GR in django-countries, but EL in VIES
         Tax ID is valid VAT ID, so no tax is counted
         """
+        mock_check.return_value = {'valid': True}
         self.assertEqual(self.policy.get_tax_rate('EL090145420', 'GR'), (None, True))
 
     @mock.patch("stdnum.eu.vat.check_vies")
@@ -854,7 +856,9 @@ class CreateOrderViewTestCase(TestCase):
             '&lt;urlopen error Internet is disabled&gt;',
         )
 
-    def test_recalculate_order(self):
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_recalculate_order(self, mock_check):
+        mock_check.return_value = {'valid': True}
         # BE 0203.201.340 is VAT ID of Belgium national bank.
         # It is used, because national provider for VIES seems to be stable enough
         c = self.create_view
@@ -864,12 +868,14 @@ class CreateOrderViewTestCase(TestCase):
         o = c.recalculate(10, BillingInfo(tax_number='0203 201 340', country='BE'))
         self.assertEqual(o.tax, None)
 
+        mock_check.return_value = {'valid': False}
         o = c.recalculate(10, BillingInfo(tax_number='1234565', country='BE'))
         self.assertEqual(o.tax, 21)
 
         o = c.recalculate(10, BillingInfo(tax_number='1234567', country='GR'))
         self.assertEqual(o.tax, 24)
 
+        mock_check.return_value = {'valid': True}
         o = c.recalculate(10, BillingInfo(tax_number='090145420', country='GR'))
         self.assertEqual(o.tax, None)
 
