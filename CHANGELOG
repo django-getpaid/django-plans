@@ -1,17 +1,10 @@
 django-plans changelog
 ======================
 
-x.x.x
------
-* Transform BillingInfo create and update view into one BillingInfoCreateOrUpdateView. This will require implementors to change these views if they were overriden. Also if one of the `billing_info_create.html` or `billing_info_update.html` templates has been overriden, he has to transform the code into the new `billing_info_create_or_update.html` template.
-
 1.0.0
 -----
+* Transform BillingInfo create and update view into one BillingInfoCreateOrUpdateView. This will require implementors to change these views if they were overriden. Also if one of the `billing_info_create.html` or `billing_info_update.html` templates has been overriden, he has to transform the code into the new `billing_info_create_or_update.html` template.
 * Celery dependency was removed. Now the implementor has to connect the `plans.tasks.autorenew_account` `plans.tasks.expire_account` tasks by himself or use management command.
-
-0.9.0
-------
-
 * Disable particular e-mails from system through configuration: `PLANS_SEND_EMAILS_NO_SEND_TYPES`, `PLANS_SEND_EMAILS_PLAN_CHANGED`, `PLANS_SEND_EMAILS_PLAN_EXTENDED`
 * If e-mail template with `.html` appendix, send HTML e-mail.
 * Add basic recurring payments support
