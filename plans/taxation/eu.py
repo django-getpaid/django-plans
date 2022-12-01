@@ -1,6 +1,7 @@
 import logging
 from decimal import Decimal
 from urllib.error import URLError
+from xml.sax import SAXParseException
 
 import stdnum.eu.vat
 from django.contrib import messages
@@ -122,7 +123,10 @@ class EUTaxationPolicy(TaxationPolicy):
                         return None, True
                     else:
                         return cls.EU_COUNTRIES_VAT[country_code], True
-                except (WebFault, TransportError, stdnum.exceptions.InvalidComponent, ConnectionError, URLError) as e:
+                except (
+                    WebFault, TransportError, stdnum.exceptions.InvalidComponent, ConnectionError, URLError,
+                    SAXParseException,
+                ) as e:
                     # If we could not connect to VIES or the VAT ID is incorrect
                     if request:
                         messages.warning(
