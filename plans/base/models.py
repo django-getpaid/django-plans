@@ -656,12 +656,16 @@ class AbstractOrder(BaseMixin, models.Model):
     def get_plan_extended_until(self):
         return self.user.userplan.get_plan_extended_until(self.plan, self.pricing)
 
+    @transaction.atomic()
     def complete_order(self):
-        if self.completed is None:
+        # Get locked order to ensure only one completed order is processed at a time
+        order = AbstractOrder.get_concrete_model().objects.filter(id=self.id).select_for_update().get()
+
+        if order.completed is None:
             self.plan_extended_from = self.get_plan_extended_from()
             status = self.user.userplan.extend_account(self.plan, self.pricing)
             self.plan_extended_until = self.user.userplan.expire
-            self.completed = now()
+            order.completed = self.completed = now()
             if status:
                 self.status = self.STATUS.COMPLETED
             else:

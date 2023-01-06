@@ -596,6 +596,11 @@ def complete_order():
         o1.complete_order()
 
 
+def complete_concrete_order(order_id):
+    order = Order.objects.get(id=order_id)
+    order.complete_order()
+
+
 class ConcurrentTestInvoice(TransactionTestCase):
     fixtures = ['initial_plan', 'test_django-plans_auth', 'test_django-plans_plans']
 
@@ -614,6 +619,17 @@ class ConcurrentTestInvoice(TransactionTestCase):
             invoice_number = i - first_december_number
             self.assertEqual(invoice.number, invoice_number)
             self.assertEqual(invoice.full_number, f"{invoice_number}/FV/0{1 if first_december_number == 0 else 2}/2012")
+
+    def test_duplicate_invoices(self):
+        """
+        Order.complete_order should not create duplicate invoice if called concurrently
+        """
+        biling_info = baker.make(BillingInfo)
+        for i in range(20):  # Try this more times to increase chance of failure
+            order = baker.make(Order, user=biling_info.user)
+            Invoice.objects.all().delete()
+            call_concurrently(3, complete_concrete_order, order_id=order.id)
+            self.assertEqual(Invoice.objects.count(), 1)
 
 
 class OrderTestCase(TestCase):
