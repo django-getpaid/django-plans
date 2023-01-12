@@ -78,9 +78,9 @@ jobs:
            pip install -q Django==${{ matrix.DJANGO_VERSION }}
            pip install codecov
 
-      - name: Install django-jsonfield for older Django versions
+      - name: Install django-sequences and psycopg2 for older Django versions
         if: ${{ matrix.DJANGO_VERSION == '2.2.*' || matrix.DJANGO_VERSION == '3.0.*' }}
-        run: pip install "django-sequences<2.7"
+        run: pip install "django-sequences<2.7" "psycopg2<2.9"
 
       - name: Run migration check
         run: |
