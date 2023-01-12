@@ -1,11 +1,14 @@
 django-plans changelog
 ======================
 
-1.0.2
+1.0.3
 -----
 * Prevent duplicated invoice creation when concurrent Order.complete_order() are callled
 * Test in Python 3.11
 
+1.0.2
+-----
+* Accidentaly same as 1.0.1
 
 1.0.1
 -----
