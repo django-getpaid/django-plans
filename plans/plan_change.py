@@ -83,7 +83,7 @@ class StandardPlanChangePolicy(PlanChangePolicy):
     def _calculate_final_price(self, period, day_cost_diff):
         if day_cost_diff is None:
             return self.DOWNGRADE_CHARGE
-        cost = (period * day_cost_diff * (self.UPGRADE_PERCENT_RATE/100 + 1) +
+        cost = (period * day_cost_diff * (self.UPGRADE_PERCENT_RATE / 100 + 1) +
                 self.UPGRADE_CHARGE).quantize(Decimal('1.00'))
         if cost is None or cost < self.FREE_UPGRADE:
             return None
