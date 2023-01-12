@@ -7,7 +7,7 @@ omit=
     *test*
     venv/*
     demo/*
-include = plans*
+include = plans/*
 plugins =
     django_coverage_plugin
 
