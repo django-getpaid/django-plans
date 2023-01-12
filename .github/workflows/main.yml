@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         DJANGO_VERSION: [ '2.2.*', '3.0.*', '3.1.*', '3.2.*', '4.0.*', '4.1.*' ]
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         exclude:
           - DJANGO_VERSION: '4.1.*'
             python-version: '3.7'
@@ -35,6 +35,16 @@ jobs:
             python-version: '3.10'
           - DJANGO_VERSION: '2.2.*'
             python-version: '3.10'
+          - DJANGO_VERSION: '4.0.*'
+            python-version: '3.11'
+          - DJANGO_VERSION: '3.2.*'
+            python-version: '3.11'
+          - DJANGO_VERSION: '3.1.*'
+            python-version: '3.11'
+          - DJANGO_VERSION: '3.0.*'
+            python-version: '3.11'
+          - DJANGO_VERSION: '2.2.*'
+            python-version: '3.11'
       fail-fast: false
     services:
       postgres:
@@ -68,9 +78,9 @@ jobs:
            pip install -q Django==${{ matrix.DJANGO_VERSION }}
            pip install codecov
 
-      - name: Install django-jsonfield for older Django versions
+      - name: Install django-sequences and psycopg2 for older Django versions
         if: ${{ matrix.DJANGO_VERSION == '2.2.*' || matrix.DJANGO_VERSION == '3.0.*' }}
-        run: pip install "django-sequences<2.7"
+        run: pip install "django-sequences<2.7" "psycopg2<2.9"
 
       - name: Run migration check
         run: |
