@@ -38,7 +38,7 @@ django-plans changelog
 0.8.13
 ------
 * Supporting Django 2.0.6.
-1.0.2 (unreleased)
+1.0.3 (unreleased)
 * New VAT standard rates 2017
 * Remove dependency on `django.contrib.sites`.
 * Feature #53: Cleaner and more explicit exception handling on `Plan.get_default_plan `.
