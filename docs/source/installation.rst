@@ -65,10 +65,7 @@ Initialize example project database:
 .. code-block:: bash
 
     $ cd ..
-    $ python manage.py syncdb
-    [...]
-    Would you like to create one now? (yes/no): no
-    [...]
+    $ python manage.py migrate
 
 
 Initial example data will be loaded automatically.
