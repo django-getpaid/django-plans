@@ -14,7 +14,7 @@ def get_active_plans():
     return User.objects.select_related('userplan').filter(userplan__active=True).exclude(userplan__expire=None)
 
 
-def autorenew_account():
+def autorenew_account(providers=None):
     logger.info('Started automatic account renewal')
     PLANS_AUTORENEW_BEFORE_DAYS = getattr(settings, 'PLANS_AUTORENEW_BEFORE_DAYS', 0)
     PLANS_AUTORENEW_BEFORE_HOURS = getattr(settings, 'PLANS_AUTORENEW_BEFORE_HOURS', 0)
@@ -25,6 +25,9 @@ def autorenew_account():
         userplan__expire__lt=datetime.date.today() + datetime.timedelta(days=PLANS_AUTORENEW_BEFORE_DAYS,
                                                                         hours=PLANS_AUTORENEW_BEFORE_HOURS),
     )
+
+    if providers:
+        accounts_for_renewal = accounts_for_renewal.filter(userplan__recurring__payment_provider__in=providers)
 
     logger.info(f"{len(accounts_for_renewal)} accounts to be renewed.")
 
