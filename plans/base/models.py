@@ -284,20 +284,24 @@ class AbstractUserPlan(BaseMixin, models.Model):
         """
         Creates or updates plan renewal information for this userplan with given order
         """
-        if hasattr(self, 'recurring'):
-            # Delete the plan to populate with default values
-            # We don't want to mix the old and new values
-            self.recurring.delete()
-        recurring = AbstractRecurringUserPlan.get_concrete_model().objects.create(
-            user_plan=self,
-            pricing=order.pricing,
-            amount=order.amount,
-            tax=order.tax,
-            currency=order.currency,
-            has_automatic_renewal=has_automatic_renewal,
-            **kwargs,
-        )
-        return recurring
+        if not hasattr(self, 'recurring'):
+            self.recurring = AbstractRecurringUserPlan.get_concrete_model()()
+
+        # Erase values of all fields
+        # We don't want to mix the old and new values
+        self.recurring.set_all_fields_default()
+
+        # Set new values
+        self.recurring.user_plan = self
+        self.recurring.pricing = order.pricing
+        self.recurring.amount = order.amount
+        self.recurring.tax = order.tax
+        self.recurring.currency = order.currency
+        self.recurring.has_automatic_renewal = has_automatic_renewal
+        for k, v in kwargs.items():
+            setattr(self.recurring, k, v)
+        self.recurring.save()
+        return self.recurring
 
     def extend_account(self, plan, pricing):
         """
@@ -485,6 +489,22 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
         userplan.recurring.tax = order.tax
         userplan.recurring.save()
         return order
+
+    def set_all_fields_default(self):
+        """
+        Set all fields to default values
+        """
+        self.token = None
+        self.payment_provider = None
+        self.pricing = None
+        self.amount = None
+        self.tax = None
+        self.currency = None
+        self.has_automatic_renewal = False
+        self.token_verified = False
+        self.card_expire_year = None
+        self.card_expire_month = None
+        self.card_masked_number = None
 
 
 class AbstractPricing(BaseMixin, models.Model):
