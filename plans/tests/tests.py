@@ -1105,9 +1105,12 @@ class RecurringPlansTestCase(TestCase):
 
 
 class TasksTestCase(TestCase):
+    def setUp(self):
+        self.user = baker.make('User', email="foo@bar.cz", username="foo bar")
+
     def test_expire_account_task(self):
         order = baker.make('Order', amount=10)
-        userplan = baker.make('UserPlan', user=baker.make('User'))
+        userplan = baker.make('UserPlan', user=self.user)
         userplan.expire = date.today() - timedelta(days=1)
         userplan.active = True
 
@@ -1119,4 +1122,26 @@ class TasksTestCase(TestCase):
 
         userplan.refresh_from_db()
         self.assertEqual(userplan.active, False)
-        # self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "Your account foo bar has just expired")
+
+    @override_settings(PLANS_EXPIRATION_REMIND=[3])
+    def test_expire_account_task_notify(self):
+        order = baker.make('Order', amount=10)
+        userplan = baker.make('UserPlan', user=self.user)
+        userplan.expire = date.today() + timedelta(days=3)
+        userplan.active = True
+
+        # If the automatic renewal didn't go through, even automatic renewal plans has to go
+        userplan.set_plan_renewal(order=order, card_masked_number="1234")
+
+        userplan.save()
+        tasks.expire_account()
+
+        userplan.refresh_from_db()
+        self.assertEqual(userplan.active, True)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            "Your account foo bar will expire in 3 days",
+        )
