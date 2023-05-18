@@ -116,8 +116,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install
-        run: pip install flake8 isort
+        run: pip install flake8 isort black
       - name: Running Flake8
         run: flake8
       - name: Running isort
         run: isort
+      - name: Running black
+        run: black --check .
