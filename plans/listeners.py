@@ -2,8 +2,12 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
 
-from plans.base.models import (AbstractInvoice, AbstractOrder, AbstractPlan,
-                               AbstractUserPlan)
+from plans.base.models import (
+    AbstractInvoice,
+    AbstractOrder,
+    AbstractPlan,
+    AbstractUserPlan,
+)
 from plans.signals import activate_user_plan, order_completed
 
 User = get_user_model()
@@ -20,12 +24,12 @@ def create_proforma_invoice(sender, instance, created, **kwargs):
     which is an order confirmation document
     """
     if created:
-        Invoice.create(instance, Invoice.INVOICE_TYPES['PROFORMA'])
+        Invoice.create(instance, Invoice.INVOICE_TYPES["PROFORMA"])
 
 
 @receiver(order_completed)
 def create_invoice(sender, **kwargs):
-    Invoice.create(sender, Invoice.INVOICE_TYPES['INVOICE'])
+    Invoice.create(sender, Invoice.INVOICE_TYPES["INVOICE"])
 
 
 @receiver(post_save, sender=Invoice)
@@ -46,6 +50,7 @@ def set_default_user_plan(sender, instance, created, **kwargs):
 
 # Hook to django-registration to initialize plan automatically after user has confirm account
 
+
 @receiver(activate_user_plan)
 def initialize_plan_generic(sender, user, **kwargs):
     try:
@@ -64,7 +69,6 @@ try:
         except UserPlan.DoesNotExist:
             return
 
-
 except ImportError:
     pass
 
@@ -75,6 +79,7 @@ try:
 
     @receiver(user_data_query)
     def set_user_email_for_getpaid(sender, order, user_data, **kwargs):
-        user_data['email'] = order.user.email
+        user_data["email"] = order.user.email
+
 except ImportError:
     pass

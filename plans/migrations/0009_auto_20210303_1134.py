@@ -5,15 +5,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('plans', '0008_recurringuserplan_token_verified'),
+        ("plans", "0008_recurringuserplan_token_verified"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='planquota',
-            name='value',
+            model_name="planquota",
+            name="value",
             field=models.BigIntegerField(blank=True, default=1, null=True),
         ),
     ]

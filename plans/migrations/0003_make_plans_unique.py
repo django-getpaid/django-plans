@@ -21,21 +21,25 @@ def set_default_false(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('plans', '0002_auto_20180901_1744'),
+        ("plans", "0002_auto_20180901_1744"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='plan',
-            name='default',
+            model_name="plan",
+            name="default",
             field=models.NullBooleanField(db_index=True, default=None),
         ),
         migrations.RunPython(set_default_null, reverse_code=set_default_false),
         migrations.AlterField(
-            model_name='plan',
-            name='default',
-            field=models.NullBooleanField(db_index=True, default=None, help_text='Both "Unknown" and "No" means that the plan is not default', unique=True),
+            model_name="plan",
+            name="default",
+            field=models.NullBooleanField(
+                db_index=True,
+                default=None,
+                help_text='Both "Unknown" and "No" means that the plan is not default',
+                unique=True,
+            ),
         ),
     ]

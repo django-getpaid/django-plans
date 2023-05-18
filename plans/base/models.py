@@ -30,18 +30,24 @@ from swapper import load_model
 from plans.contrib import get_user_language, send_template_email
 from plans.enumeration import Enumeration
 from plans.importer import import_name
-from plans.signals import (account_activated, account_change_plan,
-                           account_deactivated, account_expired,
-                           order_completed)
+from plans.signals import (
+    account_activated,
+    account_change_plan,
+    account_deactivated,
+    account_expired,
+    order_completed,
+)
 from plans.taxation.eu import EUTaxationPolicy
 from plans.utils import country_code_transform, get_country_code, get_currency
 from plans.validators import plan_validation
 
-accounts_logger = logging.getLogger('accounts')
+accounts_logger = logging.getLogger("accounts")
 
 
 class BaseMixin(models.Model):
-    created = models.DateTimeField(_('created'), db_index=True, auto_now_add=True, null=True)
+    created = models.DateTimeField(
+        _("created"), db_index=True, auto_now_add=True, null=True
+    )
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
     class Meta:
@@ -49,7 +55,7 @@ class BaseMixin(models.Model):
 
     @classmethod
     def get_concrete_model(cls):
-        return load_model('plans', cls.__name__.replace('Abstract', ''))
+        return load_model("plans", cls.__name__.replace("Abstract", ""))
 
 
 class AbstractPlan(BaseMixin, OrderedModel):
@@ -63,8 +69,9 @@ class AbstractPlan(BaseMixin, OrderedModel):
     is using this plan already will be able to extend this plan again. If plan is not visible and not
     available, he will be forced then to change plan next time he extends an account.
     """
-    name = models.CharField(_('name'), max_length=100)
-    description = models.TextField(_('description'), blank=True)
+
+    name = models.CharField(_("name"), max_length=100)
+    description = models.TextField(_("description"), blank=True)
     default = models.BooleanField(
         help_text=_('Both "Unknown" and "No" means that the plan is not default'),
         default=None,
@@ -73,25 +80,36 @@ class AbstractPlan(BaseMixin, OrderedModel):
         null=True,
     )
     available = models.BooleanField(
-        _('available'), default=False, db_index=True,
-        help_text=_('Is still available for purchase')
+        _("available"),
+        default=False,
+        db_index=True,
+        help_text=_("Is still available for purchase"),
     )
     visible = models.BooleanField(
-        _('visible'), default=True, db_index=True,
-        help_text=_('Is visible in current offer')
+        _("visible"),
+        default=True,
+        db_index=True,
+        help_text=_("Is visible in current offer"),
     )
     customized = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True,
-        verbose_name=_('customized'),
-        on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        verbose_name=_("customized"),
+        on_delete=models.CASCADE,
     )
-    quotas = models.ManyToManyField('Quota', through='PlanQuota')
-    url = models.URLField(max_length=200, blank=True, help_text=_(
-        'Optional link to page with more information (for clickable pricing table headers)'))
+    quotas = models.ManyToManyField("Quota", through="PlanQuota")
+    url = models.URLField(
+        max_length=200,
+        blank=True,
+        help_text=_(
+            "Optional link to page with more information (for clickable pricing table headers)"
+        ),
+    )
 
     class Meta:
         abstract = True
-        ordering = ('order',)
+        ordering = ("order",)
         verbose_name = _("Plan")
         verbose_name_plural = _("Plans")
 
@@ -105,11 +123,16 @@ class AbstractPlan(BaseMixin, OrderedModel):
 
     @classmethod
     def get_current_plan(cls, user):
-        """ Get current plan for user. If userplan is expired, get default plan """
-        if not user or user.is_anonymous or not hasattr(user, 'userplan') or user.userplan.is_expired():
+        """Get current plan for user. If userplan is expired, get default plan"""
+        if (
+            not user
+            or user.is_anonymous
+            or not hasattr(user, "userplan")
+            or user.userplan.is_expired()
+        ):
             default_plan = cls.get_default_plan()
             if default_plan is None or not default_plan.is_free():
-                raise ValidationError(_('User plan has expired'))
+                raise ValidationError(_("User plan has expired"))
             return default_plan
         return user.userplan.plan
 
@@ -117,10 +140,11 @@ class AbstractPlan(BaseMixin, OrderedModel):
         return self.name
 
     def get_quota_dict(self):
-        return dict(self.planquota_set.values_list('quota__codename', 'value'))
+        return dict(self.planquota_set.values_list("quota__codename", "value"))
 
     def is_free(self):
         return self.planpricing_set.count() == 0
+
     is_free.boolean = True
 
 
@@ -128,26 +152,30 @@ class AbstractBillingInfo(BaseMixin, models.Model):
     """
     Stores customer billing data needed to issue an invoice
     """
+
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_('user'),
-        on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL, verbose_name=_("user"), on_delete=models.CASCADE
     )
     tax_number = models.CharField(
-        _('VAT ID'), max_length=200, blank=True, db_index=True
+        _("VAT ID"), max_length=200, blank=True, db_index=True
     )
-    name = models.CharField(_('name'), max_length=200, db_index=True)
-    street = models.CharField(_('street'), max_length=200)
-    zipcode = models.CharField(_('zip code'), max_length=200)
-    city = models.CharField(_('city'), max_length=200)
+    name = models.CharField(_("name"), max_length=200, db_index=True)
+    street = models.CharField(_("street"), max_length=200)
+    zipcode = models.CharField(_("zip code"), max_length=200)
+    city = models.CharField(_("city"), max_length=200)
     country = CountryField(_("country"))
     shipping_name = models.CharField(
-        _('name (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+        _("name (shipping)"), max_length=200, blank=True, help_text=_("optional")
+    )
     shipping_street = models.CharField(
-        _('street (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+        _("street (shipping)"), max_length=200, blank=True, help_text=_("optional")
+    )
     shipping_zipcode = models.CharField(
-        _('zip code (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+        _("zip code (shipping)"), max_length=200, blank=True, help_text=_("optional")
+    )
     shipping_city = models.CharField(
-        _('city (shipping)'), max_length=200, blank=True, help_text=_('optional'))
+        _("city (shipping)"), max_length=200, blank=True, help_text=_("optional")
+    )
 
     class Meta:
         abstract = True
@@ -158,46 +186,52 @@ class AbstractBillingInfo(BaseMixin, models.Model):
     def get_full_tax_number(tax_number, country):
         number = tax_number
         if tax_number.startswith(country):
-            number = tax_number[len(country):]
+            number = tax_number[len(country) :]
         return country_code_transform(country) + number
 
     @staticmethod
     def clean_tax_number(tax_number, country):
-        tax_number = re.sub(r'[^A-Z0-9]', '', tax_number.upper())
+        tax_number = re.sub(r"[^A-Z0-9]", "", tax_number.upper())
 
-        country_str = tax_number[:len(country)]
+        country_str = tax_number[: len(country)]
         if country_str == country_code_transform(country):
             country = country_code_transform(country)
 
         if country_str.isalpha() and country_str != country:
-            raise ValidationError(_('VAT ID country code doesn\'t corespond with country'))
+            raise ValidationError(
+                _("VAT ID country code doesn't corespond with country")
+            )
 
         if tax_number and country:
-
             if country.lower() in stdnum.eu.vat.MEMBER_STATES:
-                full_number = AbstractBillingInfo.get_concrete_model().get_full_tax_number(tax_number, country)
+                full_number = (
+                    AbstractBillingInfo.get_concrete_model().get_full_tax_number(
+                        tax_number, country
+                    )
+                )
                 try:
                     return stdnum.eu.vat.validate(full_number)
                 except stdnum.exceptions.ValidationError as e:
-                    raise ValidationError(_(f'VAT ID is not correct: {e.message}'))
+                    raise ValidationError(_(f"VAT ID is not correct: {e.message}"))
 
             return tax_number
         else:
-            return ''
+            return ""
 
 
 class AbstractUserPlan(BaseMixin, models.Model):
     """
     Currently selected plan for user account.
     """
+
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_('user'),
-        on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL, verbose_name=_("user"), on_delete=models.CASCADE
     )
-    plan = models.ForeignKey('Plan', verbose_name=_('plan'), on_delete=models.CASCADE)
+    plan = models.ForeignKey("Plan", verbose_name=_("plan"), on_delete=models.CASCADE)
     expire = models.DateField(
-        _('expire'), default=None, blank=True, null=True, db_index=True)
-    active = models.BooleanField(_('active'), default=True, db_index=True)
+        _("expire"), default=None, blank=True, null=True, db_index=True
+    )
+    active = models.BooleanField(_("active"), default=True, db_index=True)
 
     class Meta:
         abstract = True
@@ -224,7 +258,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
 
     def clean_activation(self):
         errors = plan_validation(self.user)
-        if not errors['required_to_activate']:
+        if not errors["required_to_activate"]:
             plan_validation(self.user, on_activation=True)
             self.activate()
         else:
@@ -251,7 +285,8 @@ class AbstractUserPlan(BaseMixin, models.Model):
             # Plans without pricings don't need to expire
             if self.expire is None and self.plan.planpricing_set.count():
                 self.expire = now() + timedelta(
-                    days=getattr(settings, 'PLANS_DEFAULT_GRACE_PERIOD', 30))
+                    days=getattr(settings, "PLANS_DEFAULT_GRACE_PERIOD", 30)
+                )
             self.activate()  # this will call self.save()
 
     def get_plan_extended_from(self, plan):
@@ -262,7 +297,11 @@ class AbstractUserPlan(BaseMixin, models.Model):
         return date.today()
 
     def has_automatic_renewal(self):
-        return hasattr(self, 'recurring') and self.recurring.has_automatic_renewal and self.recurring.token_verified
+        return (
+            hasattr(self, "recurring")
+            and self.recurring.has_automatic_renewal
+            and self.recurring.token_verified
+        )
 
     def get_plan_extended_until(self, plan, pricing):
         if plan.is_free():
@@ -276,15 +315,21 @@ class AbstractUserPlan(BaseMixin, models.Model):
         Helper function which calculates when the plan autorenewal will occur
         """
         if self.expire:
-            plans_autorenew_before_days = getattr(settings, 'PLANS_AUTORENEW_BEFORE_DAYS', 0)
-            plans_autorenew_before_hours = getattr(settings, 'PLANS_AUTORENEW_BEFORE_HOURS', 0)
-            return self.expire - timedelta(days=plans_autorenew_before_days, hours=plans_autorenew_before_hours)
+            plans_autorenew_before_days = getattr(
+                settings, "PLANS_AUTORENEW_BEFORE_DAYS", 0
+            )
+            plans_autorenew_before_hours = getattr(
+                settings, "PLANS_AUTORENEW_BEFORE_HOURS", 0
+            )
+            return self.expire - timedelta(
+                days=plans_autorenew_before_days, hours=plans_autorenew_before_hours
+            )
 
     def set_plan_renewal(self, order, has_automatic_renewal=True, **kwargs):
         """
         Creates or updates plan renewal information for this userplan with given order
         """
-        if not hasattr(self, 'recurring'):
+        if not hasattr(self, "recurring"):
             self.recurring = AbstractRecurringUserPlan.get_concrete_model()()
 
         # Erase values of all fields
@@ -324,12 +369,19 @@ class AbstractUserPlan(BaseMixin, models.Model):
 
             self.save()
             account_change_plan.send(sender=self, user=self.user)
-            if getattr(settings, 'PLANS_SEND_EMAILS_PLAN_CHANGED', True):
-                mail_context = {'user': self.user, 'userplan': self, 'plan': plan}
-                send_template_email([self.user.email], 'mail/change_plan_title.txt', 'mail/change_plan_body.txt',
-                                    mail_context, get_user_language(self.user))
+            if getattr(settings, "PLANS_SEND_EMAILS_PLAN_CHANGED", True):
+                mail_context = {"user": self.user, "userplan": self, "plan": plan}
+                send_template_email(
+                    [self.user.email],
+                    "mail/change_plan_title.txt",
+                    "mail/change_plan_body.txt",
+                    mail_context,
+                    get_user_language(self.user),
+                )
             accounts_logger.info(
-                "Account '%s' [id=%d] plan changed to '%s' [id=%d]" % (self.user, self.user.pk, plan, plan.pk))
+                "Account '%s' [id=%d] plan changed to '%s' [id=%d]"
+                % (self.user, self.user.pk, plan, plan.pk)
+            )
             status = True
         else:
             # Processing standard account extending procedure
@@ -342,8 +394,10 @@ class AbstractUserPlan(BaseMixin, models.Model):
                     status = True
                 elif not self.plan.is_free() and self.expire > date.today():
                     status = False
-                    accounts_logger.warning("Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]" % (
-                        self.user, self.user.pk, plan, plan.pk))
+                    accounts_logger.warning(
+                        "Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]"
+                        % (self.user, self.user.pk, plan, plan.pk)
+                    )
                 else:
                     status = True
                     account_change_plan.send(sender=self, user=self.user)
@@ -352,16 +406,24 @@ class AbstractUserPlan(BaseMixin, models.Model):
             if status:
                 self.expire = expire
                 self.save()
-                accounts_logger.info("Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]" % (
-                    self.user, self.user.pk, pricing.period, plan, plan.pk))
-                if getattr(settings, 'PLANS_SEND_EMAILS_PLAN_EXTENDED', True):
-                    mail_context = {'user': self.user,
-                                    'userplan': self,
-                                    'plan': plan,
-                                    'pricing': pricing}
-                    send_template_email([self.user.email], 'mail/extend_account_title.txt',
-                                        'mail/extend_account_body.txt',
-                                        mail_context, get_user_language(self.user))
+                accounts_logger.info(
+                    "Account '%s' [id=%d] has been extended by %d days using plan '%s' [id=%d]"
+                    % (self.user, self.user.pk, pricing.period, plan, plan.pk)
+                )
+                if getattr(settings, "PLANS_SEND_EMAILS_PLAN_EXTENDED", True):
+                    mail_context = {
+                        "user": self.user,
+                        "userplan": self,
+                        "plan": plan,
+                        "pricing": pricing,
+                    }
+                    send_template_email(
+                        [self.user.email],
+                        "mail/extend_account_title.txt",
+                        "mail/extend_account_body.txt",
+                        mail_context,
+                        get_user_language(self.user),
+                    )
 
         if status:
             self.clean_activation()
@@ -374,29 +436,35 @@ class AbstractUserPlan(BaseMixin, models.Model):
         self.deactivate()
 
         accounts_logger.info(
-            "Account '%s' [id=%d] has expired" % (self.user, self.user.pk))
+            "Account '%s' [id=%d] has expired" % (self.user, self.user.pk)
+        )
 
-        mail_context = {'user': self.user, 'userplan': self}
-        send_template_email([self.user.email], 'mail/expired_account_title.txt', 'mail/expired_account_body.txt',
-                            mail_context, get_user_language(self.user))
+        mail_context = {"user": self.user, "userplan": self}
+        send_template_email(
+            [self.user.email],
+            "mail/expired_account_title.txt",
+            "mail/expired_account_body.txt",
+            mail_context,
+            get_user_language(self.user),
+        )
 
         account_expired.send(sender=self, user=self.user)
 
     def remind_expire_soon(self):
         """reminds about soon account expiration"""
 
-        mail_context = {
-            'user': self.user,
-            'userplan': self,
-            'days': self.days_left()
-        }
-        send_template_email([self.user.email], 'mail/remind_expire_title.txt', 'mail/remind_expire_body.txt',
-                            mail_context, get_user_language(self.user))
+        mail_context = {"user": self.user, "userplan": self, "days": self.days_left()}
+        send_template_email(
+            [self.user.email],
+            "mail/remind_expire_title.txt",
+            "mail/remind_expire_body.txt",
+            mail_context,
+            get_user_language(self.user),
+        )
 
     @classmethod
     def create_for_user(cls, user):
-        default_plan = AbstractPlan.get_concrete_model() \
-                                   .get_default_plan()
+        default_plan = AbstractPlan.get_concrete_model().get_default_plan()
         if default_plan is not None:
             UserPlan = AbstractUserPlan.get_concrete_model()
             return UserPlan.objects.create(
@@ -414,7 +482,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
         return userplans
 
     def get_current_plan(self):
-        """ Tiny helper, very usefull in templates """
+        """Tiny helper, very usefull in templates"""
         return AbstractPlan.get_concrete_model().get_current_plan(self.user)
 
 
@@ -423,42 +491,60 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
     OneToOne model associated with UserPlan that stores information about the plan recurrence.
     More about recurring payments in docs.
     """
-    user_plan = models.OneToOneField('UserPlan', on_delete=models.CASCADE, related_name='recurring')
+
+    user_plan = models.OneToOneField(
+        "UserPlan", on_delete=models.CASCADE, related_name="recurring"
+    )
     token = models.CharField(
-        _('recurring token'),
-        help_text=_('Token, that will be used for payment renewal. Depends on used payment provider'),
+        _("recurring token"),
+        help_text=_(
+            "Token, that will be used for payment renewal. Depends on used payment provider"
+        ),
         max_length=255,
         default=None,
         null=True,
         blank=True,
     )
     payment_provider = models.CharField(
-        _('payment provider'),
-        help_text=_('Provider, that will be used for payment renewal'),
+        _("payment provider"),
+        help_text=_("Provider, that will be used for payment renewal"),
         max_length=255,
         default=None,
         null=True,
         blank=True,
     )
-    pricing = models.ForeignKey('Pricing', help_text=_('Recurring pricing'), default=None,
-                                null=True, blank=True, on_delete=models.CASCADE)
+    pricing = models.ForeignKey(
+        "Pricing",
+        help_text=_("Recurring pricing"),
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
     amount = models.DecimalField(
-        _('amount'), max_digits=7, decimal_places=2, db_index=True, null=True, blank=True)
-    tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
-                              blank=True)  # Tax=None is when tax is not applicable
-    currency = models.CharField(_('currency'), max_length=3)
+        _("amount"),
+        max_digits=7,
+        decimal_places=2,
+        db_index=True,
+        null=True,
+        blank=True,
+    )
+    tax = models.DecimalField(
+        _("tax"), max_digits=4, decimal_places=2, db_index=True, null=True, blank=True
+    )  # Tax=None is when tax is not applicable
+    currency = models.CharField(_("currency"), max_length=3)
     has_automatic_renewal = models.BooleanField(
-        _('has automatic plan renewal'),
+        _("has automatic plan renewal"),
         help_text=_(
-            'Automatic renewal is enabled for associated plan. '
-            'If False, the plan renewal can be still initiated by user.',
+            "Automatic renewal is enabled for associated plan. "
+            "If False, the plan renewal can be still initiated by user.",
         ),
         default=False,
     )
     token_verified = models.BooleanField(
-        _('token has been verified by payment'),
+        _("token has been verified by payment"),
         help_text=_(
-            'The recurring token has been verified by at least one payment to be working.',
+            "The recurring token has been verified by at least one payment to be working.",
         ),
         default=False,
     )
@@ -482,7 +568,9 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
             tax=userplan.recurring.tax,  # Fallback value in case of VIES fault
             currency=userplan.recurring.currency,
         )
-        order.recalculate(userplan.recurring.amount, userplan.user.billinginfo, use_default=False)
+        order.recalculate(
+            userplan.recurring.amount, userplan.user.billinginfo, use_default=False
+        )
         order.save()
 
         # Save new value of tax
@@ -511,15 +599,22 @@ class AbstractPricing(BaseMixin, models.Model):
     """
     Type of plan period that could be purchased (e.g. 10 days, month, year, etc)
     """
-    name = models.CharField(_('name'), max_length=100)
+
+    name = models.CharField(_("name"), max_length=100)
     period = models.PositiveIntegerField(
-        _('period'), default=30, null=True, blank=True, db_index=True)
-    url = models.URLField(max_length=200, blank=True, help_text=_(
-        'Optional link to page with more information (for clickable pricing table headers)'))
+        _("period"), default=30, null=True, blank=True, db_index=True
+    )
+    url = models.URLField(
+        max_length=200,
+        blank=True,
+        help_text=_(
+            "Optional link to page with more information (for clickable pricing table headers)"
+        ),
+    )
 
     class Meta:
         abstract = True
-        ordering = ('period',)
+        ordering = ("period",)
         verbose_name = _("Pricing")
         verbose_name_plural = _("Pricings")
 
@@ -531,43 +626,54 @@ class AbstractQuota(BaseMixin, OrderedModel):
     """
     Single countable or boolean property of system (limitation).
     """
+
     codename = models.CharField(
-        _('codename'), max_length=50, unique=True, db_index=True)
-    name = models.CharField(_('name'), max_length=100)
-    unit = models.CharField(_('unit'), max_length=100, blank=True)
-    description = models.TextField(_('description'), blank=True)
-    is_boolean = models.BooleanField(_('is boolean'), default=False)
-    url = models.CharField(max_length=200, blank=True, help_text=_(
-        'Optional link to page with more information (for clickable pricing table headers)'))
+        _("codename"), max_length=50, unique=True, db_index=True
+    )
+    name = models.CharField(_("name"), max_length=100)
+    unit = models.CharField(_("unit"), max_length=100, blank=True)
+    description = models.TextField(_("description"), blank=True)
+    is_boolean = models.BooleanField(_("is boolean"), default=False)
+    url = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=_(
+            "Optional link to page with more information (for clickable pricing table headers)"
+        ),
+    )
 
     class Meta:
         abstract = True
-        ordering = ('order',)
+        ordering = ("order",)
         verbose_name = _("Quota")
         verbose_name_plural = _("Quotas")
 
     def __str__(self):
-        return "%s" % (self.codename, )
+        return "%s" % (self.codename,)
 
 
 class PlanPricingManager(models.Manager):
     def get_queryset(self):
-        return super(PlanPricingManager, self).get_queryset().select_related('plan', 'pricing')
+        return (
+            super(PlanPricingManager, self)
+            .get_queryset()
+            .select_related("plan", "pricing")
+        )
 
 
 class AbstractPlanPricing(BaseMixin, models.Model):
-    plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
-    pricing = models.ForeignKey('Pricing', on_delete=models.CASCADE)
+    plan = models.ForeignKey("Plan", on_delete=models.CASCADE)
+    pricing = models.ForeignKey("Pricing", on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=7, decimal_places=2, db_index=True)
     order = models.IntegerField(default=0, null=False, blank=False)
     has_automatic_renewal = models.BooleanField(
-        _('has automatic renewal'),
-        help_text=_('Use automatic renewal if possible?'),
+        _("has automatic renewal"),
+        help_text=_("Use automatic renewal if possible?"),
         default=False,
     )
     visible = models.BooleanField(
-        _('is visible by default'),
-        help_text=_('Is visible in current offer'),
+        _("is visible by default"),
+        help_text=_("Is visible in current offer"),
         default=True,
     )
 
@@ -575,7 +681,10 @@ class AbstractPlanPricing(BaseMixin, models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('order', 'pricing__period', )
+        ordering = (
+            "order",
+            "pricing__period",
+        )
         verbose_name = _("Plan pricing")
         verbose_name_plural = _("Plans pricings")
 
@@ -585,12 +694,14 @@ class AbstractPlanPricing(BaseMixin, models.Model):
 
 class PlanQuotaManager(models.Manager):
     def get_queryset(self):
-        return super(PlanQuotaManager, self).get_queryset().select_related('plan', 'quota')
+        return (
+            super(PlanQuotaManager, self).get_queryset().select_related("plan", "quota")
+        )
 
 
 class AbstractPlanQuota(BaseMixin, models.Model):
-    plan = models.ForeignKey('Plan', on_delete=models.CASCADE)
-    quota = models.ForeignKey('Quota', on_delete=models.CASCADE)
+    plan = models.ForeignKey("Plan", on_delete=models.CASCADE)
+    quota = models.ForeignKey("Quota", on_delete=models.CASCADE)
     value = models.BigIntegerField(default=1, null=True, blank=True)
 
     objects = PlanQuotaManager()
@@ -610,45 +721,60 @@ class AbstractOrder(BaseMixin, models.Model):
     If only plan is provided (with pricing set to None) this means that user purchased
     a plan upgrade.
     """
-    STATUS = Enumeration([
-        (1, 'NEW', pgettext_lazy('Order status', 'new')),
-        (2, 'COMPLETED', pgettext_lazy('Order status', 'completed')),
-        (3, 'NOT_VALID', pgettext_lazy('Order status', 'not valid')),
-        (4, 'CANCELED', pgettext_lazy('Order status', 'canceled')),
-        (5, 'RETURNED', pgettext_lazy('Order status', 'returned')),
 
-    ])
+    STATUS = Enumeration(
+        [
+            (1, "NEW", pgettext_lazy("Order status", "new")),
+            (2, "COMPLETED", pgettext_lazy("Order status", "completed")),
+            (3, "NOT_VALID", pgettext_lazy("Order status", "not valid")),
+            (4, "CANCELED", pgettext_lazy("Order status", "canceled")),
+            (5, "RETURNED", pgettext_lazy("Order status", "returned")),
+        ]
+    )
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name=_("user"), on_delete=models.CASCADE
+    )
     flat_name = models.CharField(max_length=200, blank=True, null=True)
-    plan = models.ForeignKey('Plan', verbose_name=_(
-        'plan'), related_name="plan_order", on_delete=models.CASCADE)
-    pricing = models.ForeignKey('Pricing', blank=True, null=True, verbose_name=_(
-        'pricing'), on_delete=models.CASCADE)  # if pricing is None the order is upgrade plan, not buy new pricing
+    plan = models.ForeignKey(
+        "Plan",
+        verbose_name=_("plan"),
+        related_name="plan_order",
+        on_delete=models.CASCADE,
+    )
+    pricing = models.ForeignKey(
+        "Pricing",
+        blank=True,
+        null=True,
+        verbose_name=_("pricing"),
+        on_delete=models.CASCADE,
+    )  # if pricing is None the order is upgrade plan, not buy new pricing
     completed = models.DateTimeField(
-        _('completed'), null=True, blank=True, db_index=True)
+        _("completed"), null=True, blank=True, db_index=True
+    )
     plan_extended_from = models.DateField(
-        _('plan extended from'),
-        help_text=_('The plan was extended from this date'),
+        _("plan extended from"),
+        help_text=_("The plan was extended from this date"),
         null=True,
         blank=True,
     )
     plan_extended_until = models.DateField(
-        _('plan extended until'),
-        help_text=('The plan was extended until this date'),
+        _("plan extended until"),
+        help_text=("The plan was extended until this date"),
         null=True,
         blank=True,
     )
     amount = models.DecimalField(
-        _('amount'), max_digits=7, decimal_places=2, db_index=True)
-    tax = models.DecimalField(_('tax'), max_digits=4, decimal_places=2, db_index=True, null=True,
-                              blank=True)  # Tax=None is when tax is not applicable
-    currency = models.CharField(_('currency'), max_length=3, default='EUR')
-    status = models.IntegerField(
-        _('status'), choices=STATUS, default=STATUS.NEW)
+        _("amount"), max_digits=7, decimal_places=2, db_index=True
+    )
+    tax = models.DecimalField(
+        _("tax"), max_digits=4, decimal_places=2, db_index=True, null=True, blank=True
+    )  # Tax=None is when tax is not applicable
+    currency = models.CharField(_("currency"), max_length=3, default="EUR")
+    status = models.IntegerField(_("status"), choices=STATUS, default=STATUS.NEW)
 
     def __str__(self):
-        return _("Order #%(id)d") % {'id': self.id}
+        return _("Order #%(id)d") % {"id": self.id}
 
     @property
     def name(self):
@@ -664,11 +790,15 @@ class AbstractOrder(BaseMixin, models.Model):
             return self.flat_name
         else:
             return "%s %s %s " % (
-                _('Plan'), self.plan.name, "(upgrade)" if self.pricing is None else '- %s' % self.pricing)
+                _("Plan"),
+                self.plan.name,
+                "(upgrade)" if self.pricing is None else "- %s" % self.pricing,
+            )
 
     def is_ready_for_payment(self):
         return self.status == self.STATUS.NEW and (now() - self.created).days < getattr(
-            settings, 'PLANS_ORDER_EXPIRATION', 14)
+            settings, "PLANS_ORDER_EXPIRATION", 14
+        )
 
     def get_plan_extended_from(self):
         return self.user.userplan.get_plan_extended_from(self.plan)
@@ -679,7 +809,12 @@ class AbstractOrder(BaseMixin, models.Model):
     @transaction.atomic()
     def complete_order(self):
         # Get locked order to ensure only one completed order is processed at a time
-        order = AbstractOrder.get_concrete_model().objects.filter(id=self.id).select_for_update().get()
+        order = (
+            AbstractOrder.get_concrete_model()
+            .objects.filter(id=self.id)
+            .select_for_update()
+            .get()
+        )
 
         if order.completed is None:
             self.plan_extended_from = self.get_plan_extended_from()
@@ -703,25 +838,29 @@ class AbstractOrder(BaseMixin, models.Model):
         return AbstractInvoice.get_concrete_model().invoices.filter(order=self)
 
     def get_all_invoices(self):
-        return self.invoice_set.order_by('issued', 'issued_duplicate', 'pk')
+        return self.invoice_set.order_by("issued", "issued_duplicate", "pk")
 
     def get_plan_pricing(self):
-        return AbstractPlanPricing.get_concrete_model().objects.get(plan=self.plan, pricing=self.pricing)
+        return AbstractPlanPricing.get_concrete_model().objects.get(
+            plan=self.plan, pricing=self.pricing
+        )
 
     def tax_total(self):
         if self.tax is None:
-            return Decimal('0.00')
+            return Decimal("0.00")
         else:
             return self.total() - self.amount
 
     def total(self):
         if self.tax is not None:
-            return (Decimal(self.amount) * (Decimal(self.tax) + 100) / 100).quantize(Decimal('1.00'))
+            return (Decimal(self.amount) * (Decimal(self.tax) + 100) / 100).quantize(
+                Decimal("1.00")
+            )
         else:
             return self.amount
 
     def get_absolute_url(self):
-        return reverse('order', kwargs={'pk': self.pk})
+        return reverse("order", kwargs={"pk": self.pk})
 
     def recalculate(self, amount, billing_info, request=None, use_default=True):
         """
@@ -729,13 +868,15 @@ class AbstractOrder(BaseMixin, models.Model):
         """
         self.amount = amount
         self.currency = get_currency()
-        country = getattr(billing_info, 'country', None)
+        country = getattr(billing_info, "country", None)
         if country is None:
             country = get_country_code(request)
         else:
             country = country.code
-        if hasattr(billing_info, 'tax_number') and billing_info.tax_number:
-            tax_number = AbstractBillingInfo.get_full_tax_number(billing_info.tax_number, country)
+        if hasattr(billing_info, "tax_number") and billing_info.tax_number:
+            tax_number = AbstractBillingInfo.get_full_tax_number(
+                billing_info.tax_number, country
+            )
         else:
             tax_number = None
         # Calculating tax can be complex task (e.g. VIES webservice call)
@@ -748,21 +889,25 @@ class AbstractOrder(BaseMixin, models.Model):
         else:
             tax = None
         if tax is None:
-            taxation_policy = getattr(settings, 'PLANS_TAXATION_POLICY', None)
+            taxation_policy = getattr(settings, "PLANS_TAXATION_POLICY", None)
             if not taxation_policy:
-                raise ImproperlyConfigured('PLANS_TAXATION_POLICY is not set')
+                raise ImproperlyConfigured("PLANS_TAXATION_POLICY is not set")
             taxation_policy = import_name(taxation_policy)
-            tax, request_successful = taxation_policy.get_tax_rate(tax_number, country, request)
+            tax, request_successful = taxation_policy.get_tax_rate(
+                tax_number, country, request
+            )
             tax = str(tax)
             # Because taxation policy could return None which clutters with saving this value
             # into cache, we use str() representation of this value
             if request and request_successful:
                 request.session[tax_session_key] = tax
-        if use_default or request_successful:  # Don't change the tax, if the request was not successful
-            self.tax = Decimal(tax) if tax != 'None' else None
+        if (
+            use_default or request_successful
+        ):  # Don't change the tax, if the request was not successful
+            self.tax = Decimal(tax) if tax != "None" else None
 
     class Meta:
-        ordering = ('-created', )
+        ordering = ("-created",)
         abstract = True
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
@@ -770,23 +915,33 @@ class AbstractOrder(BaseMixin, models.Model):
 
 class InvoiceManager(models.Manager):
     def get_queryset(self):
-        return super(InvoiceManager, self).get_queryset().filter(type=AbstractInvoice.INVOICE_TYPES['INVOICE'])
+        return (
+            super(InvoiceManager, self)
+            .get_queryset()
+            .filter(type=AbstractInvoice.INVOICE_TYPES["INVOICE"])
+        )
 
 
 class InvoiceProformaManager(models.Manager):
     def get_queryset(self):
-        return super(InvoiceProformaManager, self).get_queryset().filter(type=AbstractInvoice.INVOICE_TYPES['PROFORMA'])
+        return (
+            super(InvoiceProformaManager, self)
+            .get_queryset()
+            .filter(type=AbstractInvoice.INVOICE_TYPES["PROFORMA"])
+        )
 
 
 class InvoiceDuplicateManager(models.Manager):
     def get_queryset(self):
-        return super(InvoiceDuplicateManager, self).get_queryset().filter(
-            type=AbstractInvoice.INVOICE_TYPES['DUPLICATE']
+        return (
+            super(InvoiceDuplicateManager, self)
+            .get_queryset()
+            .filter(type=AbstractInvoice.INVOICE_TYPES["DUPLICATE"])
         )
 
 
 def get_initial_number(older_invoices):
-    return getattr(older_invoices.order_by("number").last(), 'number', 0) + 1
+    return getattr(older_invoices.order_by("number").last(), "number", 0) + 1
 
 
 class AbstractInvoice(BaseMixin, models.Model):
@@ -794,11 +949,13 @@ class AbstractInvoice(BaseMixin, models.Model):
     Single invoice document.
     """
 
-    INVOICE_TYPES = Enumeration([
-        (1, 'INVOICE', _('Invoice')),
-        (2, 'DUPLICATE', _('Invoice Duplicate')),
-        (3, 'PROFORMA', pgettext_lazy('proforma', 'Order confirmation')),
-    ])
+    INVOICE_TYPES = Enumeration(
+        [
+            (1, "INVOICE", _("Invoice")),
+            (2, "DUPLICATE", _("Invoice Duplicate")),
+            (3, "PROFORMA", pgettext_lazy("proforma", "Order confirmation")),
+        ]
+    )
 
     objects = models.Manager()
     invoices = InvoiceManager()
@@ -812,12 +969,17 @@ class AbstractInvoice(BaseMixin, models.Model):
         MONTHLY = 2
         ANNUALLY = 3
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
-    order = models.ForeignKey('Order', verbose_name=_('order'), on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name=_("user"), on_delete=models.CASCADE
+    )
+    order = models.ForeignKey(
+        "Order", verbose_name=_("order"), on_delete=models.CASCADE
+    )
     number = models.IntegerField(db_index=True)
     full_number = models.CharField(max_length=200)
     type = models.IntegerField(
-        choices=INVOICE_TYPES, default=INVOICE_TYPES.INVOICE, db_index=True)
+        choices=INVOICE_TYPES, default=INVOICE_TYPES.INVOICE, db_index=True
+    )
     issued = models.DateField(db_index=True)
     issued_duplicate = models.DateField(db_index=True, null=True, blank=True)
     selling_date = models.DateField(db_index=True, null=True, blank=True)
@@ -827,36 +989,42 @@ class AbstractInvoice(BaseMixin, models.Model):
     total_net = models.DecimalField(max_digits=7, decimal_places=2)
     total = models.DecimalField(max_digits=7, decimal_places=2)
     tax_total = models.DecimalField(max_digits=7, decimal_places=2)
-    tax = models.DecimalField(max_digits=4, decimal_places=2, db_index=True, null=True,
-                              blank=True)  # Tax=None is whet tax is not applicable
-    rebate = models.DecimalField(
-        max_digits=4, decimal_places=2, default=Decimal(0))
-    currency = models.CharField(max_length=3, default='EUR')
+    tax = models.DecimalField(
+        max_digits=4, decimal_places=2, db_index=True, null=True, blank=True
+    )  # Tax=None is whet tax is not applicable
+    rebate = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal(0))
+    currency = models.CharField(max_length=3, default="EUR")
     item_description = models.CharField(max_length=200)
     buyer_name = models.CharField(max_length=200, verbose_name=_("Name"), blank=True)
-    buyer_street = models.CharField(max_length=200, verbose_name=_("Street"), blank=True)
+    buyer_street = models.CharField(
+        max_length=200, verbose_name=_("Street"), blank=True
+    )
     buyer_zipcode = models.CharField(
-        max_length=200, verbose_name=_("Zip code"), blank=True)
+        max_length=200, verbose_name=_("Zip code"), blank=True
+    )
     buyer_city = models.CharField(max_length=200, verbose_name=_("City"), blank=True)
-    buyer_country = CountryField(verbose_name=_("Country"), default='PL', blank=True)
+    buyer_country = CountryField(verbose_name=_("Country"), default="PL", blank=True)
     buyer_tax_number = models.CharField(
-        max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
+        max_length=200, blank=True, verbose_name=_("TAX/VAT number")
+    )
     shipping_name = models.CharField(max_length=200, verbose_name=_("Name"), blank=True)
     shipping_street = models.CharField(
-        max_length=200, verbose_name=_("Street"), blank=True)
+        max_length=200, verbose_name=_("Street"), blank=True
+    )
     shipping_zipcode = models.CharField(
-        max_length=200, verbose_name=_("Zip code"), blank=True)
+        max_length=200, verbose_name=_("Zip code"), blank=True
+    )
     shipping_city = models.CharField(max_length=200, verbose_name=_("City"), blank=True)
-    shipping_country = CountryField(verbose_name=_("Country"), default='PL', blank=True)
+    shipping_country = CountryField(verbose_name=_("Country"), default="PL", blank=True)
     require_shipment = models.BooleanField(default=False, db_index=True)
     issuer_name = models.CharField(max_length=200, verbose_name=_("Name"))
     issuer_street = models.CharField(max_length=200, verbose_name=_("Street"))
-    issuer_zipcode = models.CharField(
-        max_length=200, verbose_name=_("Zip code"))
+    issuer_zipcode = models.CharField(max_length=200, verbose_name=_("Zip code"))
     issuer_city = models.CharField(max_length=200, verbose_name=_("City"))
-    issuer_country = CountryField(verbose_name=_("Country"), default='PL')
+    issuer_country = CountryField(verbose_name=_("Country"), default="PL")
     issuer_tax_number = models.CharField(
-        max_length=200, blank=True, verbose_name=_("TAX/VAT number"))
+        max_length=200, blank=True, verbose_name=_("TAX/VAT number")
+    )
 
     class Meta:
         abstract = True
@@ -867,13 +1035,14 @@ class AbstractInvoice(BaseMixin, models.Model):
         return self.full_number
 
     def get_absolute_url(self):
-        return reverse('invoice_preview_html', kwargs={'pk': self.pk})
+        return reverse("invoice_preview_html", kwargs={"pk": self.pk})
 
     def clean(self):
         if self.number is None:
             Invoice = self.get_concrete_model()
             invoice_counter_reset = getattr(
-                settings, 'PLANS_INVOICE_COUNTER_RESET', Invoice.NUMBERING.MONTHLY)
+                settings, "PLANS_INVOICE_COUNTER_RESET", Invoice.NUMBERING.MONTHLY
+            )
             invoice_counter_reset_name = invoice_counter_reset
 
             # To avoid duplicates as well as gaps in the sequence, we are using django-sequences
@@ -883,7 +1052,9 @@ class AbstractInvoice(BaseMixin, models.Model):
             older_invoices = Invoice.objects.filter(type=self.type)
             initial_number = None
             if invoice_counter_reset == Invoice.NUMBERING.DAILY:
-                invoice_counter_value = f"{self.issued.year}_{self.issued.month}_{self.issued.day}"
+                invoice_counter_value = (
+                    f"{self.issued.year}_{self.issued.month}_{self.issued.day}"
+                )
                 older_invoices = older_invoices.filter(issued=self.issued)
             elif invoice_counter_reset == Invoice.NUMBERING.MONTHLY:
                 invoice_counter_value = f"{self.issued.year}_{self.issued.month}"
@@ -896,10 +1067,11 @@ class AbstractInvoice(BaseMixin, models.Model):
                 older_invoices = older_invoices.filter(issued__year=self.issued.year)
             elif callable(invoice_counter_reset):
                 invoice_counter_value, initial_number = invoice_counter_reset(self)
-                invoice_counter_reset_name = 'call'
+                invoice_counter_reset_name = "call"
             else:
                 raise ImproperlyConfigured(
-                    "PLANS_INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly.")
+                    "PLANS_INVOICE_COUNTER_RESET can be set only to these values: daily, monthly, yearly."
+                )
 
             # get initial value for backward compatibility
             if initial_number:
@@ -911,7 +1083,9 @@ class AbstractInvoice(BaseMixin, models.Model):
     def save(self, *args, **kwargs):
         with transaction.atomic():
             if self.number is None:
-                self.number = get_next_value(self.sequence_name, initial_value=self.initial_number)
+                self.number = get_next_value(
+                    self.sequence_name, initial_value=self.initial_number
+                )
             super(AbstractInvoice, self).save(*args, **kwargs)
 
         # We need to generate full number based on what invoice sequence number actually ended up in DB
@@ -948,7 +1122,7 @@ class AbstractInvoice(BaseMixin, models.Model):
             "{% if invoice.type == invoice.INVOICE_TYPES.PROFORMA %}PF{% else %}FV{% endif %}"
             "/{{ invoice.issued|date:'m/Y' }}",
         )
-        return Template(format).render(Context({'invoice': self}))
+        return Template(format).render(Context({"invoice": self}))
 
     def set_issuer_invoice_data(self):
         """
@@ -957,16 +1131,17 @@ class AbstractInvoice(BaseMixin, models.Model):
         :raise: ImproperlyConfigured
         """
         try:
-            issuer = getattr(settings, 'PLANS_INVOICE_ISSUER')
+            issuer = getattr(settings, "PLANS_INVOICE_ISSUER")
         except Exception:
             raise ImproperlyConfigured(
-                "Please set PLANS_INVOICE_ISSUER in order to make an invoice.")
-        self.issuer_name = issuer['issuer_name']
-        self.issuer_street = issuer['issuer_street']
-        self.issuer_zipcode = issuer['issuer_zipcode']
-        self.issuer_city = issuer['issuer_city']
-        self.issuer_country = issuer['issuer_country']
-        self.issuer_tax_number = issuer['issuer_tax_number']
+                "Please set PLANS_INVOICE_ISSUER in order to make an invoice."
+            )
+        self.issuer_name = issuer["issuer_name"]
+        self.issuer_street = issuer["issuer_street"]
+        self.issuer_zipcode = issuer["issuer_zipcode"]
+        self.issuer_city = issuer["issuer_city"]
+        self.issuer_country = issuer["issuer_country"]
+        self.issuer_tax_number = issuer["issuer_tax_number"]
 
     def set_buyer_invoice_data(self, billing_info):
         """
@@ -1006,7 +1181,9 @@ class AbstractInvoice(BaseMixin, models.Model):
         self.currency = order.currency
         if Site is not None:
             self.item_description = "%s - %s" % (
-                Site.objects.get_current().name, order.name)
+                Site.objects.get_current().name,
+                order.name,
+            )
         else:
             self.item_description = order.name
 
@@ -1025,11 +1202,12 @@ class AbstractInvoice(BaseMixin, models.Model):
 
         day = date.today()
         pday = order.completed
-        if invoice_type == cls.INVOICE_TYPES['PROFORMA']:
+        if invoice_type == cls.INVOICE_TYPES["PROFORMA"]:
             pday = day + timedelta(days=14)
 
-        invoice = cls(issued=day, selling_date=order.completed,
-                      payment_date=pday)  # FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
+        invoice = cls(
+            issued=day, selling_date=order.completed, payment_date=pday
+        )  # FIXME: 14 - this should set accordingly to ORDER_TIMEOUT in days
         invoice.type = invoice_type
         invoice.copy_from_order(order)
         invoice.set_issuer_invoice_data()
@@ -1040,23 +1218,32 @@ class AbstractInvoice(BaseMixin, models.Model):
             translation.deactivate()
 
     def send_invoice_by_email(self):
-        if self.type in getattr(settings, 'PLANS_SEND_EMAILS_DISABLED_INVOICE_TYPES', []):
+        if self.type in getattr(
+            settings, "PLANS_SEND_EMAILS_DISABLED_INVOICE_TYPES", []
+        ):
             return
 
         language_code = get_user_language(self.user)
 
         if language_code is not None:
             translation.activate(language_code)
-        mail_context = {'user': self.user,
-                        'invoice_type': self.get_type_display(),
-                        'invoice_number': self.get_full_number(),
-                        'order': self.order.id,
-                        'order_object': self.order,
-                        'url': self.get_absolute_url(), }
+        mail_context = {
+            "user": self.user,
+            "invoice_type": self.get_type_display(),
+            "invoice_number": self.get_full_number(),
+            "order": self.order.id,
+            "order_object": self.order,
+            "url": self.get_absolute_url(),
+        }
         if language_code is not None:
             translation.deactivate()
-        send_template_email([self.user.email], 'mail/invoice_created_title.txt', 'mail/invoice_created_body.txt',
-                            mail_context, language_code)
+        send_template_email(
+            [self.user.email],
+            "mail/invoice_created_title.txt",
+            "mail/invoice_created_body.txt",
+            mail_context,
+            language_code,
+        )
 
     def is_UE_customer(self):
         return EUTaxationPolicy.is_in_EU(self.buyer_country.code)

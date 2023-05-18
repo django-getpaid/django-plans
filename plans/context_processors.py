@@ -18,15 +18,17 @@ def account_status(request):
 
     """
 
-    if hasattr(request, 'user') and request.user.is_authenticated:
+    if hasattr(request, "user") and request.user.is_authenticated:
         try:
             return {
-                'ACCOUNT_EXPIRED': request.user.userplan.is_expired(),
-                'ACCOUNT_NOT_ACTIVE': (
-                    not request.user.userplan.is_active() and not request.user.userplan.is_expired()),
-                'EXPIRE_IN_DAYS': request.user.userplan.days_left(),
-                'EXTEND_URL': reverse('current_plan'),
-                'ACTIVATE_URL': reverse('account_activation'),
+                "ACCOUNT_EXPIRED": request.user.userplan.is_expired(),
+                "ACCOUNT_NOT_ACTIVE": (
+                    not request.user.userplan.is_active()
+                    and not request.user.userplan.is_expired()
+                ),
+                "EXPIRE_IN_DAYS": request.user.userplan.days_left(),
+                "EXTEND_URL": reverse("current_plan"),
+                "ACTIVATE_URL": reverse("account_activation"),
             }
         except UserPlan.DoesNotExist:
             pass
