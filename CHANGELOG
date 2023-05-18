@@ -1,6 +1,13 @@
 django-plans changelog
 ======================
 
+1.0.4
+-----
+* Re-use old RecurringUserPlan in set_plan_renewal() to retain ID and history
+* `autorenew_accounts` management command: better output, --providers option
+* Blackify whole source
+
+
 1.0.3
 -----
 * Prevent duplicated invoice creation when concurrent Order.complete_order() are callled
