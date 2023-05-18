@@ -1,12 +1,11 @@
 django-plans changelog
 ======================
 
-1.0.4
+1.0.5
 -----
 * Re-use old RecurringUserPlan in set_plan_renewal() to retain ID and history
 * `autorenew_accounts` management command: better output, --providers option
 * Blackify whole source
-
 
 1.0.3
 -----
