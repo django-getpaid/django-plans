@@ -4,19 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('plans', '0005_recurring_payments'),
+        ("plans", "0005_recurring_payments"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='planpricing',
-            options={'ordering': ('order', 'pricing__period'), 'verbose_name': 'Plan pricing', 'verbose_name_plural': 'Plans pricings'},
+            name="planpricing",
+            options={
+                "ordering": ("order", "pricing__period"),
+                "verbose_name": "Plan pricing",
+                "verbose_name_plural": "Plans pricings",
+            },
         ),
         migrations.AddField(
-            model_name='planpricing',
-            name='order',
+            model_name="planpricing",
+            name="order",
             field=models.IntegerField(default=0),
         ),
     ]

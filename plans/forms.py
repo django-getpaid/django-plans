@@ -3,8 +3,7 @@ from django.core.exceptions import ValidationError
 from django.forms.widgets import HiddenInput
 from django.utils.translation import gettext
 
-from plans.base.models import (AbstractBillingInfo, AbstractOrder,
-                               AbstractPlanPricing)
+from plans.base.models import AbstractBillingInfo, AbstractOrder, AbstractPlanPricing
 
 from .utils import get_country_code
 
@@ -14,7 +13,9 @@ BillingInfo = AbstractBillingInfo.get_concrete_model()
 
 
 class OrderForm(forms.Form):
-    plan_pricing = forms.ModelChoiceField(queryset=PlanPricing.objects.all(), widget=HiddenInput, required=True)
+    plan_pricing = forms.ModelChoiceField(
+        queryset=PlanPricing.objects.all(), widget=HiddenInput, required=True
+    )
 
 
 class CreateOrderForm(forms.ModelForm):
@@ -33,22 +34,23 @@ class CreateOrderForm(forms.ModelForm):
 class BillingInfoForm(forms.ModelForm):
     class Meta:
         model = BillingInfo
-        exclude = ('user',)
+        exclude = ("user",)
 
     def __init__(self, *args, request=None, **kwargs):
         ret_val = super().__init__(*args, **kwargs)
         if not self.instance.country:
-            self.fields['country'].initial = get_country_code(request)
+            self.fields["country"].initial = get_country_code(request)
         return ret_val
 
     def clean(self):
         cleaned_data = super(BillingInfoForm, self).clean()
 
         try:
-            cleaned_data['tax_number'] = BillingInfo.clean_tax_number(cleaned_data['tax_number'],
-                                                                      cleaned_data.get('country', None))
+            cleaned_data["tax_number"] = BillingInfo.clean_tax_number(
+                cleaned_data["tax_number"], cleaned_data.get("country", None)
+            )
         except ValidationError as e:
-            self._errors['tax_number'] = e.messages
+            self._errors["tax_number"] = e.messages
 
         return cleaned_data
 
@@ -56,8 +58,16 @@ class BillingInfoForm(forms.ModelForm):
 class BillingInfoWithoutShippingForm(BillingInfoForm):
     class Meta:
         model = BillingInfo
-        exclude = ('user', 'shipping_name', 'shipping_street', 'shipping_zipcode', 'shipping_city')
+        exclude = (
+            "user",
+            "shipping_name",
+            "shipping_street",
+            "shipping_zipcode",
+            "shipping_city",
+        )
 
 
 class FakePaymentsForm(forms.Form):
-    status = forms.ChoiceField(choices=Order.STATUS, required=True, label=gettext('Change order status to'))
+    status = forms.ChoiceField(
+        choices=Order.STATUS, required=True, label=gettext("Change order status to")
+    )

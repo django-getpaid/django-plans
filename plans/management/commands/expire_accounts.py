@@ -4,7 +4,7 @@ from plans import tasks
 
 
 class Command(BaseCommand):
-    help = 'Expire accounts and send messages'
+    help = "Expire accounts and send messages"
 
     def handle(self, *args, **options):  # pragma: no cover
         tasks.expire_account()

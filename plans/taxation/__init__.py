@@ -19,7 +19,7 @@ class TaxationPolicy(object):
 
         :return: Decimal()
         """
-        return getattr(settings, 'PLANS_TAX', None)
+        return getattr(settings, "PLANS_TAX", None)
 
     @classmethod
     def get_issuer_country_code(cls):
@@ -28,7 +28,7 @@ class TaxationPolicy(object):
 
         :return: unicode
         """
-        return getattr(settings, 'PLANS_TAX_COUNTRY', None)
+        return getattr(settings, "PLANS_TAX_COUNTRY", None)
 
     @classmethod
     def get_tax_rate(cls, tax_id, country_code):
@@ -39,4 +39,4 @@ class TaxationPolicy(object):
         :param country_code:  customer country in ISO 2-letters format
         :return: Decimal()
         """
-        raise NotImplementedError('Method get_tax_rate should be implemented.')
+        raise NotImplementedError("Method get_tax_rate should be implemented.")

@@ -3,7 +3,6 @@ from decimal import Decimal
 
 
 class PlanChangePolicy(object):
-
     def _calculate_day_cost(self, plan, period):
         """
         Finds most fitted plan pricing for a given period, and calculate day cost
@@ -12,7 +11,9 @@ class PlanChangePolicy(object):
             # If plan is free then cost is always 0
             return 0
 
-        plan_pricings = plan.planpricing_set.order_by('-pricing__period').select_related('pricing')
+        plan_pricings = plan.planpricing_set.order_by(
+            "-pricing__period"
+        ).select_related("pricing")
         selected_pricing = None
         for plan_pricing in plan_pricings:
             selected_pricing = plan_pricing
@@ -20,9 +21,11 @@ class PlanChangePolicy(object):
                 break
 
         if selected_pricing:
-            return (selected_pricing.price / selected_pricing.pricing.period).quantize(Decimal('1.00'))
+            return (selected_pricing.price / selected_pricing.pricing.period).quantize(
+                Decimal("1.00")
+            )
 
-        raise ValueError('Plan %s has no pricings.' % plan)
+        raise ValueError("Plan %s has no pricings." % plan)
 
     def _calculate_final_price(self, period, day_cost_diff):
         if day_cost_diff is None:
@@ -43,7 +46,9 @@ class PlanChangePolicy(object):
         if plan_new_day_cost <= plan_old_day_cost:
             return self._calculate_final_price(period, None)
         else:
-            return self._calculate_final_price(period, plan_new_day_cost - plan_old_day_cost)
+            return self._calculate_final_price(
+                period, plan_new_day_cost - plan_old_day_cost
+            )
 
 
 class StandardPlanChangePolicy(PlanChangePolicy):
@@ -75,16 +80,18 @@ class StandardPlanChangePolicy(PlanChangePolicy):
                 days_left * cost_diff_per_day * upgrade_percent_rate + constant_upgrade_charge
     """
 
-    UPGRADE_PERCENT_RATE = Decimal('10.0')
-    UPGRADE_CHARGE = Decimal('0.0')
+    UPGRADE_PERCENT_RATE = Decimal("10.0")
+    UPGRADE_CHARGE = Decimal("0.0")
     DOWNGRADE_CHARGE = None
-    FREE_UPGRADE = Decimal('0.0')
+    FREE_UPGRADE = Decimal("0.0")
 
     def _calculate_final_price(self, period, day_cost_diff):
         if day_cost_diff is None:
             return self.DOWNGRADE_CHARGE
-        cost = (period * day_cost_diff * (self.UPGRADE_PERCENT_RATE / 100 + 1) +
-                self.UPGRADE_CHARGE).quantize(Decimal('1.00'))
+        cost = (
+            period * day_cost_diff * (self.UPGRADE_PERCENT_RATE / 100 + 1)
+            + self.UPGRADE_CHARGE
+        ).quantize(Decimal("1.00"))
         if cost is None or cost < self.FREE_UPGRADE:
             return None
         else:

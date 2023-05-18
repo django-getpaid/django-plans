@@ -11,4 +11,8 @@ class LoginRequired(View):
 
 class UserObjectsOnlyMixin(object):
     def get_queryset(self):
-        return super(UserObjectsOnlyMixin, self).get_queryset().filter(user=self.request.user)
+        return (
+            super(UserObjectsOnlyMixin, self)
+            .get_queryset()
+            .filter(user=self.request.user)
+        )

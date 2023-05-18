@@ -14,7 +14,7 @@ from suds.transport import TransportError
 from plans.taxation import TaxationPolicy
 from plans.utils import country_code_transform
 
-logger = logging.getLogger('plans.taxation.eu.vies')
+logger = logging.getLogger("plans.taxation.eu.vies")
 
 
 class EUTaxationPolicy(TaxationPolicy):
@@ -35,33 +35,33 @@ class EUTaxationPolicy(TaxationPolicy):
     # Situation at 1 Jan 2017
 
     EU_COUNTRIES_VAT = {
-        'BE': Decimal('21'),  # Belgium
-        'BG': Decimal('20'),  # Bulgaria
-        'CZ': Decimal('21'),  # Czech Republic
-        'DK': Decimal('25'),  # Denmark
-        'DE': Decimal('19'),  # Germany
-        'EE': Decimal('20'),  # Estonia
-        'EL': Decimal('24'),  # Greece
-        'ES': Decimal('21'),  # Spain
-        'FR': Decimal('20'),  # France
-        'HR': Decimal('25'),  # Croatia
-        'IE': Decimal('23'),  # Ireland
-        'IT': Decimal('22'),  # Italy
-        'CY': Decimal('19'),  # Cyprus
-        'LV': Decimal('21'),  # Latvia
-        'LT': Decimal('21'),  # Lithuania
-        'LU': Decimal('17'),  # Luxembourg
-        'HU': Decimal('27'),  # Hungary
-        'MT': Decimal('18'),  # Malta
-        'NL': Decimal('21'),  # Netherlands
-        'AT': Decimal('20'),  # Austria
-        'PL': Decimal('23'),  # Poland
-        'PT': Decimal('23'),  # Portugal
-        'RO': Decimal('19'),  # Romania
-        'SI': Decimal('22'),  # Slovenia
-        'SK': Decimal('20'),  # Slovakia
-        'FI': Decimal('24'),  # Finland
-        'SE': Decimal('25'),  # Sweden
+        "BE": Decimal("21"),  # Belgium
+        "BG": Decimal("20"),  # Bulgaria
+        "CZ": Decimal("21"),  # Czech Republic
+        "DK": Decimal("25"),  # Denmark
+        "DE": Decimal("19"),  # Germany
+        "EE": Decimal("20"),  # Estonia
+        "EL": Decimal("24"),  # Greece
+        "ES": Decimal("21"),  # Spain
+        "FR": Decimal("20"),  # France
+        "HR": Decimal("25"),  # Croatia
+        "IE": Decimal("23"),  # Ireland
+        "IT": Decimal("22"),  # Italy
+        "CY": Decimal("19"),  # Cyprus
+        "LV": Decimal("21"),  # Latvia
+        "LT": Decimal("21"),  # Lithuania
+        "LU": Decimal("17"),  # Luxembourg
+        "HU": Decimal("27"),  # Hungary
+        "MT": Decimal("18"),  # Malta
+        "NL": Decimal("21"),  # Netherlands
+        "AT": Decimal("20"),  # Austria
+        "PL": Decimal("23"),  # Poland
+        "PT": Decimal("23"),  # Portugal
+        "RO": Decimal("19"),  # Romania
+        "SI": Decimal("22"),  # Slovenia
+        "SK": Decimal("20"),  # Slovakia
+        "FI": Decimal("24"),  # Finland
+        "SE": Decimal("25"),  # Sweden
         # 'GB': Decimal('20'),  # United Kingdom (Great Britain)
     }
 
@@ -76,7 +76,9 @@ class EUTaxationPolicy(TaxationPolicy):
         try:
             return cls.EU_COUNTRIES_VAT[issuer_country_code]
         except KeyError:
-            raise ImproperlyConfigured("EUTaxationPolicy requires that issuer country is in EU")
+            raise ImproperlyConfigured(
+                "EUTaxationPolicy requires that issuer country is in EU"
+            )
 
     @classmethod
     def get_tax_rate(cls, tax_id, country_code, request=None):
@@ -86,7 +88,9 @@ class EUTaxationPolicy(TaxationPolicy):
         country_code = country_code_transform(country_code)
         issuer_country_code = cls.get_issuer_country_code()
         if not cls.is_in_EU(issuer_country_code):
-            raise ImproperlyConfigured("EUTaxationPolicy requires that issuer country is in EU")
+            raise ImproperlyConfigured(
+                "EUTaxationPolicy requires that issuer country is in EU"
+            )
 
         if not tax_id and not country_code:
             # No vat id, no country
@@ -115,7 +119,7 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(country_code):
                 # Company is from other EU country
                 try:
-                    vies_result = bool(stdnum.eu.vat.check_vies(tax_id)['valid'])
+                    vies_result = bool(stdnum.eu.vat.check_vies(tax_id)["valid"])
                     logger.info("TAX_ID=%s RESULT=%s" % (tax_id, vies_result))
                     if tax_id and vies_result:
                         # Company is registered in VIES
@@ -124,7 +128,11 @@ class EUTaxationPolicy(TaxationPolicy):
                     else:
                         return cls.EU_COUNTRIES_VAT[country_code], True
                 except (
-                    WebFault, TransportError, stdnum.exceptions.InvalidComponent, ConnectionError, URLError,
+                    WebFault,
+                    TransportError,
+                    stdnum.exceptions.InvalidComponent,
+                    ConnectionError,
+                    URLError,
                     SAXParseException,
                 ) as e:
                     # If we could not connect to VIES or the VAT ID is incorrect
@@ -132,13 +140,13 @@ class EUTaxationPolicy(TaxationPolicy):
                         messages.warning(
                             request,
                             format_html(
-                                'There was an error during determining validity of your VAT ID.<br/>'
-                                'If you think, you have european VAT ID and should not be taxed, '
-                                'please try resaving billing info later.<br/>'
-                                '<br/>'
-                                'European VAT Information Exchange System throw following error: {}',
+                                "There was an error during determining validity of your VAT ID.<br/>"
+                                "If you think, you have european VAT ID and should not be taxed, "
+                                "please try resaving billing info later.<br/>"
+                                "<br/>"
+                                "European VAT Information Exchange System throw following error: {}",
                                 e,
-                            )
+                            ),
                         )
                     logger.exception("TAX_ID=%s" % (tax_id))
                     return cls.EU_COUNTRIES_VAT[country_code], False
