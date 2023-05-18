@@ -1,20 +1,15 @@
 from plans.tests.tests import BillingInfoTestCase as BaseBillingInfoTestCase
-from plans.tests.tests import \
-    BillingInfoViewTestCase as BaseBillingInfoViewTestCase
-from plans.tests.tests import \
-    ConcurrentTestInvoice as BaseConcurrentTestInvoice
-from plans.tests.tests import \
-    CreateOrderViewTestCase as BaseCreateOrderViewTestCase
-from plans.tests.tests import \
-    EUTaxationPolicyTestCase as BaseEUTaxationPolicyTestCase
+from plans.tests.tests import BillingInfoViewTestCase as BaseBillingInfoViewTestCase
+from plans.tests.tests import ConcurrentTestInvoice as BaseConcurrentTestInvoice
+from plans.tests.tests import CreateOrderViewTestCase as BaseCreateOrderViewTestCase
+from plans.tests.tests import EUTaxationPolicyTestCase as BaseEUTaxationPolicyTestCase
 from plans.tests.tests import OrderTestCase as BaseOrderTestCase
-from plans.tests.tests import \
-    PlanChangePolicyTestCase as BasePlanChangePolicyTestCase
+from plans.tests.tests import PlanChangePolicyTestCase as BasePlanChangePolicyTestCase
 from plans.tests.tests import PlansTestCase as BasePlansTestCase
-from plans.tests.tests import \
-    RecurringPlansTestCase as BaseRecurringPlansTestCase
-from plans.tests.tests import \
-    StandardPlanChangePolicyTestCase as BaseStandardPlanChangePolicyTestCase
+from plans.tests.tests import RecurringPlansTestCase as BaseRecurringPlansTestCase
+from plans.tests.tests import (
+    StandardPlanChangePolicyTestCase as BaseStandardPlanChangePolicyTestCase,
+)
 from plans.tests.tests import TasksTestCase as BaseTasksTestCase
 from plans.tests.tests import TestInvoice as BaseTestInvoice
 from plans.tests.tests import ValidatorsTestCase as BaseValidatorsTestCase

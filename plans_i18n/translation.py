@@ -10,21 +10,24 @@ Quota = AbstractQuota.get_concrete_model()
 
 
 class PlanTranslationOptions(TranslationOptions):
-    fields = ('name', 'description', )
+    fields = (
+        "name",
+        "description",
+    )
 
 
 translator.register(Plan, PlanTranslationOptions)
 
 
 class PricingTranslationOptions(TranslationOptions):
-    fields = ('name',)
+    fields = ("name",)
 
 
 translator.register(Pricing, PricingTranslationOptions)
 
 
 class QuotaTranslationOptions(TranslationOptions):
-    fields = ('name', 'description', 'unit')
+    fields = ("name", "description", "unit")
 
 
 translator.register(Quota, QuotaTranslationOptions)

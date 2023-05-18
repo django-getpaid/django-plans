@@ -1,10 +1,17 @@
 from django.db import models
 
-from plans.base.models import (AbstractBillingInfo, AbstractInvoice,
-                               AbstractOrder, AbstractPlan,
-                               AbstractPlanPricing, AbstractPlanQuota,
-                               AbstractPricing, AbstractQuota,
-                               AbstractRecurringUserPlan, AbstractUserPlan)
+from plans.base.models import (
+    AbstractBillingInfo,
+    AbstractInvoice,
+    AbstractOrder,
+    AbstractPlan,
+    AbstractPlanPricing,
+    AbstractPlanQuota,
+    AbstractPricing,
+    AbstractQuota,
+    AbstractRecurringUserPlan,
+    AbstractUserPlan,
+)
 
 
 class DetailFieldMixin:
@@ -30,8 +37,8 @@ class Order(DetailFieldMixin, AbstractOrder):
 class Plan(AbstractPlan):
     # Test existing fields can be modified
     default = models.BooleanField(
-        help_text=AbstractPlan._meta.get_field('default').help_text,
-        default=AbstractPlan._meta.get_field('default').default,
+        help_text=AbstractPlan._meta.get_field("default").help_text,
+        default=AbstractPlan._meta.get_field("default").default,
         null=True,
         blank=True,
     )
