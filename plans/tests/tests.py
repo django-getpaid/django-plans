@@ -1043,11 +1043,13 @@ class RecurringPlansTestCase(TestCase):
         up.set_plan_renewal(order=o, card_masked_number="1234")
         self.assertEqual(up.recurring.amount, 10)
         self.assertEqual(up.recurring.card_masked_number, "1234")
+        old_id = up.recurring.id
 
         # test setting new values
         up.set_plan_renewal(order=o)
         self.assertEqual(up.recurring.amount, 10)
         self.assertEqual(up.recurring.card_masked_number, None)
+        self.assertEqual(up.recurring.id, old_id)
 
     def test_plan_autorenew_at(self):
         """ Test that UserPlan.plan_autorenew_at() method """
