@@ -11,10 +11,10 @@ model_bakery
 django-concurrent-test-helper
 freezegun
 flake8
-psycopg2
 internet-sabotage3>=0.1.6
 django_coverage_plugin
 swapper
+django-plans
 
 
 # Not supported in py3
