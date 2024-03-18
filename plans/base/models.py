@@ -310,6 +310,13 @@ class AbstractUserPlan(BaseMixin, models.Model):
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
 
+    def get_plan_reduced_until(self, pricing):
+        if self.expire is None:
+            return self.expire
+        if pricing is None:
+            return self.expire
+        return self.expire - timedelta(days=pricing.period)
+
     def plan_autorenew_at(self):
         """
         Helper function which calculates when the plan autorenewal will occur
@@ -429,6 +436,16 @@ class AbstractUserPlan(BaseMixin, models.Model):
             self.clean_activation()
 
         return status
+
+    def reduce_account(self, pricing):
+        """
+        Manages reducing account after returning an order
+        :param pricing: if pricing is None then nothing is changed
+        :return:
+        """
+        if pricing is not None:
+            self.expire = self.get_plan_reduced_until(pricing)
+            self.save()
 
     def expire_account(self):
         """manages account expiration"""

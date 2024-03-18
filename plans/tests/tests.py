@@ -29,6 +29,7 @@ from plans.base.models import (
     AbstractOrder,
     AbstractPlan,
     AbstractPlanPricing,
+    AbstractPricing,
     AbstractUserPlan,
 )
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
@@ -44,6 +45,7 @@ Invoice = AbstractInvoice.get_concrete_model()
 Order = AbstractOrder.get_concrete_model()
 Plan = AbstractPlan.get_concrete_model()
 UserPlan = AbstractUserPlan.get_concrete_model()
+Pricing = AbstractPricing.get_concrete_model()
 
 
 class PlansTestCase(TestCase):
@@ -210,6 +212,37 @@ class PlansTestCase(TestCase):
         self.assertEqual(u.userplan.plan, default_plan)
         self.assertEqual(u.userplan.active, False)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_reduce_account_future(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.save()
+        pricing = Pricing.objects.get(planpricing__plan=u.userplan.plan, period=30)
+        u.userplan.reduce_account(pricing)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=20))
+
+    def test_reduce_account_before(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() - timedelta(days=50)
+        u.save()
+        pricing = Pricing.objects.get(planpricing__plan=u.userplan.plan, period=30)
+        u.userplan.reduce_account(pricing)
+        self.assertEqual(u.userplan.expire, date.today() - timedelta(days=80))
+
+    def test_reduce_account_expire_none(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = None
+        u.save()
+        pricing = Pricing.objects.get(planpricing__plan=u.userplan.plan, period=30)
+        u.userplan.reduce_account(pricing)
+        self.assertIsNone(u.userplan.expire)
+
+    def test_reduce_account_pricing_none(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.save()
+        u.userplan.reduce_account(None)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
 
     def test_expire_account(self):
         u = User.objects.get(username="test1")

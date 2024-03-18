@@ -47,6 +47,7 @@ Contributors:
 * Victor Safronovich <vsafronovich@gmail.com>
 * Dominik Kozaczko <http://dominik.kozaczko.info>
 * Petr Dlouhý <petr.dlouhy@email.cz>
+* BlenderKit <info@blenderkit.com>
 
 Source code:
 https://github.com/cypreess/django-plans
