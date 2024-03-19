@@ -3,7 +3,7 @@ django-plans changelog
 
 1.1.0 (unreleased)
 ------------------
-* Add `AbstractUserPlan.reduce_account()`
+* Add `AbstractOrder.return_order()`
 
 1.0.6
 -----
