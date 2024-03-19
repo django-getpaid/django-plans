@@ -310,6 +310,13 @@ class AbstractUserPlan(BaseMixin, models.Model):
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
 
+    def get_plan_reduced_until(self, pricing):
+        if self.expire is None:
+            return self.expire
+        if pricing is None:
+            return self.expire
+        return self.expire - timedelta(days=pricing.period)
+
     def plan_autorenew_at(self):
         """
         Helper function which calculates when the plan autorenewal will occur
@@ -429,6 +436,16 @@ class AbstractUserPlan(BaseMixin, models.Model):
             self.clean_activation()
 
         return status
+
+    def reduce_account(self, pricing):
+        """
+        Manages reducing account after returning an order
+        :param pricing: if pricing is None then nothing is changed
+        :return:
+        """
+        if pricing is not None:
+            self.expire = self.get_plan_reduced_until(pricing)
+            self.save()
 
     def expire_account(self):
         """manages account expiration"""
@@ -830,6 +847,34 @@ class AbstractOrder(BaseMixin, models.Model):
             return True
         else:
             return False
+
+    def return_order(self):
+        if self.status != self.STATUS.RETURNED:
+            if self.status == self.STATUS.COMPLETED:
+                if self.pricing is not None:
+                    extended_from = self.plan_extended_from
+                    if extended_from is None:
+                        extended_from = self.completed
+                    # Should never happen, but make sure we reduce for the same number of days as we extended.
+                    if (
+                        self.plan_extended_until is None
+                        or extended_from is None
+                        or self.plan_extended_until - extended_from
+                        != timedelta(days=self.pricing.period)
+                    ):
+                        raise ValueError(
+                            f"Invalid order state: completed={self.completed}, "
+                            f"plan_extended_from={self.plan_extended_from}, "
+                            f"plan_extended_until={self.plan_extended_until}, "
+                            f"pricing.period={self.pricing.period}"
+                        )
+                self.user.userplan.reduce_account(self.pricing)
+            elif self.status != self.STATUS.NOT_VALID:
+                raise ValueError(
+                    f"Cannot return order with status other than COMPLETED and NOT_VALID: {self.status}"
+                )
+            self.status = self.STATUS.RETURNED
+            self.save()
 
     def get_invoices_proforma(self):
         return AbstractInvoice.get_concrete_model().proforma.filter(order=self)
