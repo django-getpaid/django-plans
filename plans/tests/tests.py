@@ -1,5 +1,6 @@
 import random
-from datetime import date, timedelta
+import re
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from io import StringIO
 from unittest import mock
@@ -14,7 +15,7 @@ from django.core import mail
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.management import call_command
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django_concurrent_tests.helpers import call_concurrently
@@ -856,6 +857,235 @@ class OrderTestCase(TestCase):
             completed=date(2010, 10, 10),
         )
         self.assertFalse(order.complete_order())
+
+    def test_return_order_new(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(
+            plan=u.userplan.plan, pricing__period__gt=0
+        ).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            rf"^Cannot return order with status other than COMPLETED and NOT_VALID: "
+            rf"{re.escape(str(Order.STATUS.NEW))}$",
+        ):
+            order.return_order()
+        self.assertEqual(order.status, Order.STATUS.NEW)
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+
+    def test_return_order_completed(self):
+        u = User.objects.get(username="test1")
+        u.userplan.plan = Plan.objects.filter(planpricing__isnull=True).first()
+        u.userplan.expire = None
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(pricing__period__gt=0).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.expire, date.today())
+
+    def test_return_order_completed_then_same_plan(self):
+        u = User.objects.get(username="test1")
+        u.userplan.plan = (
+            Plan.objects.annotate(
+                planpricing_pricing_period_eq_30_exists=Exists(
+                    PlanPricing.objects.filter(plan=OuterRef("pk"), pricing__period=30)
+                ),
+                planpricing_pricing_period_gt_30_exists=Exists(
+                    PlanPricing.objects.filter(
+                        plan=OuterRef("pk"), pricing__period__gt=30
+                    )
+                ),
+            )
+            .filter(
+                planpricing_pricing_period_eq_30_exists=True,
+                planpricing_pricing_period_gt_30_exists=True,
+            )
+            .first()
+        )
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(
+            plan=u.userplan.plan, pricing__period__gt=30
+        ).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        plan_pricing_then = PlanPricing.objects.get(
+            plan=plan_pricing.plan, pricing__period=30
+        )
+        order_then = Order.objects.create(
+            user=u,
+            pricing=plan_pricing_then.pricing,
+            amount=100,
+            plan=plan_pricing_then.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_then.complete_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_pricing_then.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50 + 30))
+
+    def test_return_order_completed_then_paid_plan(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        plan_pricing_then = (
+            PlanPricing.objects.exclude(plan=plan_pricing.plan)
+            .filter(pricing__period=365)
+            .first()
+        )
+        order_then = Order.objects.create(
+            user=u,
+            pricing=plan_pricing_then.pricing,
+            amount=100,
+            plan=plan_pricing_then.plan,
+            status=Order.STATUS.NEW,
+        )
+        with freeze_time(datetime.combine(u.userplan.expire, time())):
+            order_then.complete_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_pricing_then.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50 + 365))
+
+    def test_return_order_completed_then_free_plan(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        plan_then = (
+            Plan.objects.exclude(pk=plan_pricing.plan.pk)
+            .filter(planpricing__isnull=True)
+            .first()
+        )
+        u.userplan.extend_account(plan_then, None)
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_then)
+        self.assertIsNone(u.userplan.expire)
+
+    def test_return_order_not_valid(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_user = u.userplan.plan
+        plan_pricing = (
+            PlanPricing.objects.exclude(plan=u.userplan.plan)
+            .filter(pricing__period__gt=0)
+            .first()
+        )
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_user)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+
+    def test_return_order_canceled(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(
+            plan=u.userplan.plan, pricing__period__gt=0
+        ).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.CANCELED,
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            rf"^Cannot return order with status other than COMPLETED and NOT_VALID: "
+            rf"{re.escape(str(Order.STATUS.CANCELED))}$",
+        ):
+            order.return_order()
+        self.assertEqual(order.status, Order.STATUS.CANCELED)
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+
+    def test_return_order_returned(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(
+            plan=u.userplan.plan, pricing__period__gt=0
+        ).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        order.return_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
 
     def test_amount_taxed_none(self):
         o = Order()
