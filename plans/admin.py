@@ -313,7 +313,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     def recurring__pricing(self, obj):
         return obj.recurring.pricing
 
-    recurring__automatic_renewal.admin_order_field = "recurring__pricing"
+    recurring__pricing.admin_order_field = "recurring__pricing"
 
 
 admin.site.register(Quota, QuotaAdmin)
