@@ -261,7 +261,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         "plan__name",
         "plan__available",
         "plan__visible",
-        "recurring__has_automatic_renewal",
+        "recurring__renewal_triggered_by",
         "recurring__payment_provider",
         "recurring__token_verified",
         "recurring__pricing",
@@ -272,7 +272,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         "plan",
         "expire",
         "active",
-        "recurring__automatic_renewal",
+        "recurring__renewal_triggered_by",
         "recurring__token_verified",
         "recurring__payment_provider",
         "recurring__pricing",
@@ -290,12 +290,13 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         "plan",
     ]
 
-    def recurring__automatic_renewal(self, obj):
-        return obj.recurring.has_automatic_renewal
+    def recurring__renewal_triggered_by(self, obj):
+        return obj.recurring.renewal_triggered_by
 
-    recurring__automatic_renewal.admin_order_field = "recurring__has_automatic_renewal"
-    recurring__automatic_renewal.boolean = True
-    recurring__automatic_renewal.short_description = "Automatic renewal"
+    recurring__renewal_triggered_by.admin_order_field = (
+        "recurring__renewal_triggered_by"
+    )
+    recurring__renewal_triggered_by.short_description = "Renewal triggered by"
 
     def recurring__token_verified(self, obj):
         return obj.recurring.token_verified

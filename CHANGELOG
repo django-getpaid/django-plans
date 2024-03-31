@@ -1,6 +1,18 @@
 django-plans changelog
 ======================
 
+1.1.0 (unreleased)
+------------------
+* Add `AbstractRecurringUserPlan.renewal_triggered_by`
+* Use `AbstractRecurringUserPlan.renewal_triggered_by` instead of `has_automatic_renewal`; `has_automatic_renewal` is not used anywhere anymore; `has_automatic_renewal=True` is automatically migrated to `renewal_triggered_by=TASK` and `has_automatic_renewal=False` to `renewal_triggered_by=USER`
+* Rename `AbstractRecurringUserPlan.has_automatic_renewal` to `_has_automatic_renewal_backup_deprecated` so it can be used make your own data migration from the former `has_automatic_renewal` to `renewal_triggered_by` if the default one does not work for you
+* Add `AbstractRecurringUserPlan.has_automatic_renewal` property that issues a deprecation warning and uses `renewal_triggered_by` under the hood
+* Add `renewal_triggered_by` parameter to `AbstractUserPlan.set_plan_renewal`
+* Deprecate `AbstractRecurringUserPlan.has_automatic_renewal`; use `AbstractRecurringUserPlan.renewal_triggered_by` instead
+* Deprecate `AbstractRecurringUserPlan._has_automatic_renewal_backup_deprecated`; use `AbstractRecurringUserPlan.renewal_triggered_by` instead
+* Deprecate `has_automatic_renewal` parameter of `AbstractUserPlan.set_plan_renewal`; use `renewal_triggered_by` instead
+* Deprecate `None` value of `renewal_triggered_by` parameter of `AbstractUserPlan.set_plan_renewal`; use an `AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY` instead
+
 1.0.7
 ------------------
 * Add `AbstractOrder.return_order()`

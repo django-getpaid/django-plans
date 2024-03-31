@@ -4,6 +4,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+from .base.models import AbstractRecurringUserPlan
 from .signals import account_automatic_renewal
 
 User = get_user_model()
@@ -24,7 +25,7 @@ def autorenew_account(providers=None):
     PLANS_AUTORENEW_BEFORE_HOURS = getattr(settings, "PLANS_AUTORENEW_BEFORE_HOURS", 0)
 
     accounts_for_renewal = get_active_plans().filter(
-        userplan__recurring__has_automatic_renewal=True,
+        userplan__recurring__renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
         userplan__recurring__token_verified=True,
         userplan__expire__lt=datetime.date.today()
         + datetime.timedelta(

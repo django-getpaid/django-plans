@@ -3,13 +3,13 @@ Plans recurrence and automatic renewal
 
 To support renewal of plans, use ``RecurringUserPlan`` model to store information about the recurrence.
 
-The plans can be renewed automatically, or the ``RecurringUserPlan`` information can be used only to store information for one-click user initiated renewal (with ``automatic_renewal=False``).
+The plans can be renewed automatically using this app, the ``RecurringUserPlan`` information can be used only to store information for one-click user initiated renewal (with ``renewal_triggered_by=USER``), or the ``RecurringUserPlan`` can indicate that another mechanism is used to automatically renew the plans (``renewal_triggered_by=OTHER``).
 
-For plans, that should be renewed automatically fill in information about the recurrence::
+For plans, that should be renewed automatically using this app fill in information about the recurrence::
 
    self.order.user.userplan.set_plan_renewal(
        order=self.order,
-       automatic_renewal=True,
+       renewal_triggered_by=TASK,
        ...
        # Not required
        payment_provider='FooProvider',
@@ -19,7 +19,7 @@ For plans, that should be renewed automatically fill in information about the re
        ...
    )
 
-Then all active ``UserPlan`` with ``RecurringUserPlan.has_automatic_renewal=True`` will be picked by ``autorenew_account`` task, that will send ``account_automatic_renewal`` signal.
+Then all active ``UserPlan`` with ``RecurringUserPlan.renewal_triggered_by=TASK`` will be picked by ``autorenew_account`` task, that will send ``account_automatic_renewal`` signal.
 This signal can be used for your implementation of automatic plan renewal. You should implement following steps::
 
    @receiver(account_automatic_renewal)

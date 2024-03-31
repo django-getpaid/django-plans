@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import re
+import warnings
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -299,7 +300,8 @@ class AbstractUserPlan(BaseMixin, models.Model):
     def has_automatic_renewal(self):
         return (
             hasattr(self, "recurring")
-            and self.recurring.has_automatic_renewal
+            and self.recurring.renewal_triggered_by
+            != self.recurring.RENEWAL_TRIGGERED_BY.USER
             and self.recurring.token_verified
         )
 
@@ -332,12 +334,39 @@ class AbstractUserPlan(BaseMixin, models.Model):
                 days=plans_autorenew_before_days, hours=plans_autorenew_before_hours
             )
 
-    def set_plan_renewal(self, order, has_automatic_renewal=True, **kwargs):
+    def set_plan_renewal(
+        self,
+        order,
+        # TODO: has_automatic_renewal deprecated. Remove in the next major release.
+        has_automatic_renewal=None,
+        # TODO: renewal_triggered_by=None deprecated. Set to TASK in the next major release.
+        renewal_triggered_by=None,
+        **kwargs,
+    ):
         """
         Creates or updates plan renewal information for this userplan with given order
         """
         if not hasattr(self, "recurring"):
             self.recurring = AbstractRecurringUserPlan.get_concrete_model()()
+
+        if has_automatic_renewal is None and renewal_triggered_by is None:
+            has_automatic_renewal = True
+        if has_automatic_renewal is not None:
+            warnings.warn(
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+                DeprecationWarning,
+            )
+        if renewal_triggered_by is None:
+            warnings.warn(
+                "renewal_triggered_by=None is deprecated. "
+                "Set an AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY instead.",
+                DeprecationWarning,
+            )
+            renewal_triggered_by = (
+                self.recurring.RENEWAL_TRIGGERED_BY.TASK
+                if has_automatic_renewal
+                else self.recurring.RENEWAL_TRIGGERED_BY.USER
+            )
 
         # Erase values of all fields
         # We don't want to mix the old and new values
@@ -349,7 +378,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
         self.recurring.amount = order.amount
         self.recurring.tax = order.tax
         self.recurring.currency = order.currency
-        self.recurring.has_automatic_renewal = has_automatic_renewal
+        self.recurring.renewal_triggered_by = renewal_triggered_by
         for k, v in kwargs.items():
             setattr(self.recurring, k, v)
         self.recurring.save()
@@ -509,6 +538,14 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
     More about recurring payments in docs.
     """
 
+    RENEWAL_TRIGGERED_BY = Enumeration(
+        [
+            (1, "OTHER", pgettext_lazy("Renewal triggered by", "other")),
+            (2, "USER", pgettext_lazy("Renewal triggered by", "user")),
+            (3, "TASK", pgettext_lazy("Renewal triggered by", "task")),
+        ]
+    )
+
     user_plan = models.OneToOneField(
         "UserPlan", on_delete=models.CASCADE, related_name="recurring"
     )
@@ -550,12 +587,26 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
         _("tax"), max_digits=4, decimal_places=2, db_index=True, null=True, blank=True
     )  # Tax=None is when tax is not applicable
     currency = models.CharField(_("currency"), max_length=3)
-    has_automatic_renewal = models.BooleanField(
+    renewal_triggered_by = models.IntegerField(
+        _("renewal triggered by"),
+        choices=RENEWAL_TRIGGERED_BY,
+        help_text=_(
+            "The source of the associated plan's renewal (USER = user-initiated renewal, "
+            "TASK = autorenew_account-task-initiated renewal, OTHER = renewal is triggered using another mechanism)."
+        ),
+        default=RENEWAL_TRIGGERED_BY.USER,
+        db_index=True,
+    )
+    # A backup of the old has_automatic_renewal field to support data migration to the new renewal_triggered_by field.
+    # Do not make any other modifications to the field in order to let user's auto-migrations detect the renaming.
+    # TODO: _has_automatic_renewal_backup_deprecated deprecated. Remove in the next major release.
+    _has_automatic_renewal_backup_deprecated = models.BooleanField(
         _("has automatic plan renewal"),
         help_text=_(
             "Automatic renewal is enabled for associated plan. "
             "If False, the plan renewal can be still initiated by user.",
         ),
+        db_column="has_automatic_renewal",
         default=False,
     )
     token_verified = models.BooleanField(
@@ -571,6 +622,35 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
 
     class Meta:
         abstract = True
+
+    # TODO: has_automatic_renewal deprecated. Remove in the next major release.
+    @property
+    def has_automatic_renewal(self):
+        warnings.warn(
+            "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            DeprecationWarning,
+        )
+        return self.renewal_triggered_by != self.RENEWAL_TRIGGERED_BY.USER
+
+    # TODO: has_automatic_renewal deprecated. Remove in the next major release.
+    @has_automatic_renewal.setter
+    def has_automatic_renewal(self, value):
+        warnings.warn(
+            "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            DeprecationWarning,
+        )
+        self.renewal_triggered_by = (
+            self.RENEWAL_TRIGGERED_BY.TASK if value else self.RENEWAL_TRIGGERED_BY.USER
+        )
+
+    # TODO: has_automatic_renewal deprecated. Remove in the next major release.
+    @has_automatic_renewal.deleter
+    def has_automatic_renewal(self):
+        warnings.warn(
+            "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            DeprecationWarning,
+        )
+        del self.renewal_triggered_by
 
     def create_renew_order(self):
         """
@@ -605,7 +685,7 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
         self.amount = None
         self.tax = None
         self.currency = None
-        self.has_automatic_renewal = False
+        self.renewal_triggered_by = self.RENEWAL_TRIGGERED_BY.USER
         self.token_verified = False
         self.card_expire_year = None
         self.card_expire_month = None
