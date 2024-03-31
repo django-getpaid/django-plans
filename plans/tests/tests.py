@@ -1,5 +1,6 @@
 import random
 import re
+import warnings
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from io import StringIO
@@ -31,6 +32,7 @@ from plans.base.models import (
     AbstractPlan,
     AbstractPlanPricing,
     AbstractPricing,
+    AbstractRecurringUserPlan,
     AbstractUserPlan,
 )
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
@@ -1490,16 +1492,138 @@ class RecurringPlansTestCase(TestCase):
         """Test that UserPlan.set_plan_renewal() method"""
         up = baker.make("UserPlan")
         o = baker.make("Order", amount=10)
-        up.set_plan_renewal(order=o, card_masked_number="1234")
-        self.assertEqual(up.recurring.amount, 10)
-        self.assertEqual(up.recurring.card_masked_number, "1234")
-        old_id = up.recurring.id
 
-        # test setting new values
-        up.set_plan_renewal(order=o)
-        self.assertEqual(up.recurring.amount, 10)
-        self.assertEqual(up.recurring.card_masked_number, None)
-        self.assertEqual(up.recurring.id, old_id)
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+                card_masked_number="1234",
+            )
+            self.assertEqual(up.recurring.amount, 10)
+            self.assertEqual(up.recurring.card_masked_number, "1234")
+            self.assertFalse(caught_warnings)
+            old_id = up.recurring.id
+
+            # test setting new values
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(up.recurring.amount, 10)
+            self.assertEqual(up.recurring.card_masked_number, None)
+            self.assertEqual(up.recurring.id, old_id)
+            self.assertFalse(caught_warnings)
+
+            # test renewal_triggered_by overrides has_automatic_renewal
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+                has_automatic_renewal=False,
+            )
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+                has_automatic_renewal=True,
+            )
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.OTHER,
+                has_automatic_renewal=True,
+            )
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.OTHER,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            # test deprecated backward compatibility
+            up.set_plan_renewal(order=o)
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(len(caught_warnings), 2)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "renewal_triggered_by=None is deprecated. "
+                "Set an AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY instead.",
+            )
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+            up.set_plan_renewal(order=o, has_automatic_renewal=True)
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(len(caught_warnings), 2)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "renewal_triggered_by=None is deprecated. "
+                "Set an AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY instead.",
+            )
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+            up.set_plan_renewal(order=o, has_automatic_renewal=False)
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+            )
+            self.assertEqual(len(caught_warnings), 2)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "renewal_triggered_by=None is deprecated. "
+                "Set an AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY instead.",
+            )
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
 
     def test_plan_autorenew_at(self):
         """Test that UserPlan.plan_autorenew_at() method"""
@@ -1520,15 +1644,25 @@ class RecurringPlansTestCase(TestCase):
         up = baker.make("UserPlan", expire=date(2020, 1, 5))
         self.assertEqual(up.plan_autorenew_at(), date(2020, 1, 1))
 
-    def test_has_automatic_renewal(self):
+    def test_userplan_has_automatic_renewal(self):
         """Test UserPlan.has_automatic_renewal() method"""
         user_plan = baker.make("UserPlan")
         order = baker.make("Order", amount=10)
-        user_plan.set_plan_renewal(order=order, card_masked_number="1234")
-        self.assertEqual(user_plan.has_automatic_renewal(), False)
 
-        user_plan.recurring.token_verified = True
-        self.assertEqual(user_plan.has_automatic_renewal(), True)
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+
+            user_plan.set_plan_renewal(
+                order=order,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+                card_masked_number="1234",
+            )
+            self.assertEqual(user_plan.has_automatic_renewal(), False)
+            self.assertFalse(caught_warnings)
+
+            user_plan.recurring.token_verified = True
+            self.assertEqual(user_plan.has_automatic_renewal(), True)
+            self.assertFalse(caught_warnings)
 
     def test_create_new_order(self):
         rup = baker.make(
@@ -1553,6 +1687,87 @@ class RecurringPlansTestCase(TestCase):
             order = rup.create_renew_order()
         self.assertEqual(order.tax, 11)
 
+    def test_has_automatic_renewal(self):
+        rup = baker.make("RecurringUserPlan")
+
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+
+            rup.renewal_triggered_by = (
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER
+            )
+            self.assertFalse(rup.has_automatic_renewal)
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            rup.renewal_triggered_by = (
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK
+            )
+            self.assertTrue(rup.has_automatic_renewal)
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            rup.renewal_triggered_by = (
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.OTHER
+            )
+            self.assertTrue(rup.has_automatic_renewal)
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            rup.has_automatic_renewal = False
+            self.assertEqual(
+                rup.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            rup.has_automatic_renewal = True
+            self.assertEqual(
+                rup.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            del rup.has_automatic_renewal
+            self.assertEqual(
+                rup.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
 
 class TasksTestCase(TestCase):
     def setUp(self):
@@ -1565,7 +1780,11 @@ class TasksTestCase(TestCase):
         userplan.active = True
 
         # If the automatic renewal didn't go through, even automatic renewal plans has to go
-        userplan.set_plan_renewal(order=order, card_masked_number="1234")
+        userplan.set_plan_renewal(
+            order=order,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            card_masked_number="1234",
+        )
 
         userplan.save()
         tasks.expire_account()
@@ -1585,7 +1804,11 @@ class TasksTestCase(TestCase):
         userplan.active = True
 
         # If the automatic renewal didn't go through, even automatic renewal plans has to go
-        userplan.set_plan_renewal(order=order, card_masked_number="1234")
+        userplan.set_plan_renewal(
+            order=order,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            card_masked_number="1234",
+        )
 
         userplan.save()
         tasks.expire_account()
