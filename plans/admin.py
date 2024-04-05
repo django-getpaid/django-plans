@@ -151,6 +151,14 @@ def make_order_completed(modeladmin, request, queryset):
 make_order_completed.short_description = _("Make selected orders completed")
 
 
+def make_order_returned(modeladmin, request, queryset):
+    for order in queryset:
+        order.return_order()
+
+
+make_order_returned.short_description = _("Make selected orders returned")
+
+
 def make_order_invoice(modeladmin, request, queryset):
     for order in queryset:
         if (
@@ -192,7 +200,7 @@ class OrderAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("created", "updated_at")
     list_display_links = list_display
-    actions = [make_order_completed, make_order_invoice]
+    actions = [make_order_completed, make_order_returned, make_order_invoice]
     inlines = (InvoiceInline,)
 
     def queryset(self, request):
