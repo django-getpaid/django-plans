@@ -1,7 +1,7 @@
 django-plans changelog
 ======================
 
-1.0.7 (unreleased)
+1.0.7
 ------------------
 * Add `AbstractOrder.return_order()`
 
