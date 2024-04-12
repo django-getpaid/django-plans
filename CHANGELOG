@@ -1,7 +1,7 @@
 django-plans changelog
 ======================
 
-1.1.0 (unreleased)
+1.1.0
 ------------------
 * Add `AbstractRecurringUserPlan.renewal_triggered_by`
 * Use `AbstractRecurringUserPlan.renewal_triggered_by` instead of `has_automatic_renewal`; `has_automatic_renewal` is not used anywhere anymore; `has_automatic_renewal=True` is automatically migrated to `renewal_triggered_by=TASK` and `has_automatic_renewal=False` to `renewal_triggered_by=USER`
