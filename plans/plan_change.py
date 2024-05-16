@@ -1,5 +1,7 @@
 # coding=utf-8
 from decimal import Decimal
+from django.conf import settings
+from plans.importer import import_name
 
 
 class PlanChangePolicy(object):
@@ -96,3 +98,24 @@ class StandardPlanChangePolicy(PlanChangePolicy):
             return None
         else:
             return cost
+
+
+def get_policy():
+    policy_class = getattr(
+        settings,
+        "PLANS_CHANGE_POLICY",
+        "plans.plan_change.StandardPlanChangePolicy",
+    )
+    return import_name(policy_class)()
+
+
+def get_change_price(userplan, plan):
+    policy = get_policy()
+
+    if userplan.expire is not None:
+        period = userplan.days_left()
+    else:
+        # Use the default period of the new plan
+        period = 30
+
+    return policy.get_change_price(userplan.plan, plan, period)
