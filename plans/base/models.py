@@ -11,6 +11,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
 
+from plans import utils
+
 try:
     from django.contrib.sites.models import Site
 except RuntimeError:
@@ -30,7 +32,6 @@ from swapper import load_model
 
 from plans.contrib import get_user_language, send_template_email
 from plans.enumeration import Enumeration
-from plans.importer import import_name
 from plans.signals import (
     account_activated,
     account_change_plan,
@@ -993,43 +994,27 @@ class AbstractOrder(BaseMixin, models.Model):
         """
         self.amount = amount
         self.currency = get_currency()
+
         country = getattr(billing_info, "country", None)
         if country is None:
             country = get_country_code(request)
         else:
             country = country.code
+
         if hasattr(billing_info, "tax_number") and billing_info.tax_number:
+            from plans.base.models import AbstractBillingInfo
+
             tax_number = AbstractBillingInfo.get_full_tax_number(
                 billing_info.tax_number, country
             )
         else:
             tax_number = None
-        # Calculating tax can be complex task (e.g. VIES webservice call)
-        # To ensure that tax calculated on order preview will be the same on final order
-        # tax rate is cached for a given billing data (as this value only depends on it)
-        tax_session_key = "tax_%s_%s" % (tax_number, country)
-        request_successful = True
-        if request:
-            tax = request.session.get(tax_session_key)
-        else:
-            tax = None
-        if tax is None:
-            taxation_policy = getattr(settings, "PLANS_TAXATION_POLICY", None)
-            if not taxation_policy:
-                raise ImproperlyConfigured("PLANS_TAXATION_POLICY is not set")
-            taxation_policy = import_name(taxation_policy)
-            tax, request_successful = taxation_policy.get_tax_rate(
-                tax_number, country, request
-            )
-            tax = str(tax)
-            # Because taxation policy could return None which clutters with saving this value
-            # into cache, we use str() representation of this value
-            if request and request_successful:
-                request.session[tax_session_key] = tax
+
+        tax_rate, request_successful = utils.get_tax_rate(country, tax_number, request)
         if (
             use_default or request_successful
         ):  # Don't change the tax, if the request was not successful
-            self.tax = Decimal(tax) if tax != "None" else None
+            self.tax = tax_rate
 
     class Meta:
         ordering = ("-created",)
