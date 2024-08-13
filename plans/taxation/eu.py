@@ -134,6 +134,7 @@ class EUTaxationPolicy(TaxationPolicy):
                     ConnectionError,
                     URLError,
                     SAXParseException,
+                    TimeoutError,
                 ) as e:
                     # If we could not connect to VIES or the VAT ID is incorrect
                     if request:
