@@ -1066,10 +1066,7 @@ class InvoiceDuplicateManager(models.Manager):
 
 
 def get_initial_number(older_invoices):
-    return (
-        getattr(older_invoices.order_by("number").values("number").last(), "number", 0)
-        + 1
-    )
+    return (older_invoices.order_by("number").values_list("number", flat=True).last() or 0) + 1
 
 
 class AbstractInvoice(BaseMixin, models.Model):
