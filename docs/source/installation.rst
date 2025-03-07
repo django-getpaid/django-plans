@@ -49,7 +49,7 @@ Clone git repository to your current directory:
 
 .. code-block:: bash
 
-    $ git clone git://github.com/cypreess/django-plans.git
+    $ git clone git://github.com/django-getpaid/django-plans.git
 
 
 Optionally create virtual environment and get required packages to run example project:
