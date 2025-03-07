@@ -1,6 +1,10 @@
 django-plans changelog
 ======================
 
+2.0.0
+------------------
+* Support for Python 3.9 - 3.13
+* Remove support for Django 4.2 - 5.2
 
 1.2.0
 ------------------
