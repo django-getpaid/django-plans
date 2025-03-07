@@ -22,33 +22,15 @@ jobs:
 
     strategy:
       matrix:
-        DJANGO_VERSION: ['3.2.*', '4.0.*', '4.1.*', '4.2.*', '5.0.*']
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        DJANGO_VERSION: ['4.2.*', '5.0.*', '5.1.*', '5.2.*']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         exclude:
           - DJANGO_VERSION: '5.0.*'
             python-version: '3.9'
-          - DJANGO_VERSION: '5.0.*'
-            python-version: '3.8'
-          - DJANGO_VERSION: '5.0.*'
-            python-version: '3.7'
-
-          - DJANGO_VERSION: '4.2.*'
-            python-version: '3.7'
-
-          - DJANGO_VERSION: '4.1.*'
-            python-version: '3.7'
-
-          - DJANGO_VERSION: '4.0.*'
-            python-version: '3.12'
-          - DJANGO_VERSION: '4.0.*'
-            python-version: '3.11'
-          - DJANGO_VERSION: '4.0.*'
-            python-version: '3.7'
-
-          - DJANGO_VERSION: '3.2.*'
-            python-version: '3.12'
-          - DJANGO_VERSION: '3.2.*'
-            python-version: '3.11'
+          - DJANGO_VERSION: '5.1.*'
+            python-version: '3.9'
+          - DJANGO_VERSION: '5.2.*'
+            python-version: '3.9'
       fail-fast: false
     services:
       postgres:
@@ -79,7 +61,7 @@ jobs:
         run: |
            pip install -q -e .
            pip install -q --upgrade --upgrade-strategy eager -r demo/requirements.txt
-           pip install -q Django==${{ matrix.DJANGO_VERSION }}
+           pip install -q Django==${{ matrix.DJANGO_VERSION }} --pre
            pip install codecov
 
       - name: Run migration check
@@ -98,7 +80,7 @@ jobs:
           # Run tests for sample app used for testing extensibility
           PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" SAMPLE_APP=1 demo/manage.py test example
           case "${{ matrix.DJANGO_VERSION }},${{ matrix.python-version }}" in
-            3.2.*,3.7|4.0.*,3.8|4.0.*,3.9|4.0.*,3.10)  # Django runs with warnings in this python version
+            4.0.*,3.8|4.0.*,3.9|4.0.*,3.10)  # Django runs with warnings in this python version
               PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" coverage run demo/manage.py test plans
               ;;
             *)
