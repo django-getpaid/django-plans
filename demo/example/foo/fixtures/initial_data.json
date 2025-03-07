@@ -74,7 +74,6 @@
       "visible": true,
       "description": "Most recommended",
       "created": "2012-05-05T15:36:31Z",
-      "default": false,
       "customized": null,
       "order": 1,
       "name": "Premium"
@@ -88,7 +87,6 @@
       "visible": true,
       "description": "Professional plan",
       "created": "2012-07-12T13:07:23Z",
-      "default": false,
       "customized": null,
       "order": 2,
       "name": "PRO"
@@ -102,7 +100,6 @@
       "visible": true,
       "description": "Custom for test1",
       "created": "2012-07-12T17:33:30.112Z",
-      "default": false,
       "customized": 1,
       "order": 4,
       "name": "Custom"
@@ -116,7 +113,6 @@
       "visible": true,
       "description": "Custom test 2",
       "created": "2012-07-24T12:51:57.438Z",
-      "default": false,
       "customized": 2,
       "order": 5,
       "name": "Custom 2"
