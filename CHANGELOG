@@ -5,6 +5,7 @@ django-plans changelog
 ------------------
 * Support for Python 3.9 - 3.13
 * Remove support for Django 4.2 - 5.2
+* Add ``--throttle`` parameter to the ``autorenew_accounts`` management command
 
 1.2.0
 ------------------

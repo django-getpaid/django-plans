@@ -1,5 +1,6 @@
 import datetime
 import logging
+import time
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -19,7 +20,7 @@ def get_active_plans():
     )
 
 
-def autorenew_account(providers=None):
+def autorenew_account(providers=None, throttle_seconds=0):
     logger.info("Started automatic account renewal")
     PLANS_AUTORENEW_BEFORE_DAYS = getattr(settings, "PLANS_AUTORENEW_BEFORE_DAYS", 0)
     PLANS_AUTORENEW_BEFORE_HOURS = getattr(settings, "PLANS_AUTORENEW_BEFORE_HOURS", 0)
@@ -41,6 +42,8 @@ def autorenew_account(providers=None):
     logger.info(f"{len(accounts_for_renewal)} accounts to be renewed.")
 
     for user in accounts_for_renewal.all():
+        if throttle_seconds:
+            time.sleep(throttle_seconds)
         account_automatic_renewal.send(sender=None, user=user)
     return accounts_for_renewal
 
