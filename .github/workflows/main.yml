@@ -79,14 +79,7 @@ jobs:
         run: |
           # Run tests for sample app used for testing extensibility
           PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" SAMPLE_APP=1 demo/manage.py test example
-          case "${{ matrix.DJANGO_VERSION }},${{ matrix.python-version }}" in
-            4.0.*,3.8|4.0.*,3.9|4.0.*,3.10)  # Django runs with warnings in this python version
-              PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" coverage run demo/manage.py test plans
-              ;;
-            *)
-              PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" PYTHONWARNINGS="error::DeprecationWarning" coverage run demo/manage.py test plans
-              ;;
-          esac
+          PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" PYTHONWARNINGS="error::DeprecationWarning" coverage run demo/manage.py test plans
           coverage xml && codecov
         env:
           POSTGRES_HOST: postgres
