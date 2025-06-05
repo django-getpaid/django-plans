@@ -4,6 +4,7 @@ import time
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import mail_admins
 
 from .base.models import AbstractRecurringUserPlan
 from .signals import account_automatic_renewal
@@ -20,7 +21,7 @@ def get_active_plans():
     )
 
 
-def autorenew_account(providers=None, throttle_seconds=0):
+def autorenew_account(providers=None, throttle_seconds=0, catch_exceptions=False):
     logger.info("Started automatic account renewal")
     PLANS_AUTORENEW_BEFORE_DAYS = getattr(settings, "PLANS_AUTORENEW_BEFORE_DAYS", 0)
     PLANS_AUTORENEW_BEFORE_HOURS = getattr(settings, "PLANS_AUTORENEW_BEFORE_HOURS", 0)
@@ -44,7 +45,26 @@ def autorenew_account(providers=None, throttle_seconds=0):
     for user in accounts_for_renewal.all():
         if throttle_seconds:
             time.sleep(throttle_seconds)
-        account_automatic_renewal.send(sender=None, user=user)
+        if catch_exceptions:
+            try:
+                account_automatic_renewal.send(sender=None, user=user)
+            except Exception as e:
+                logger.error(
+                    f"Error renewing account for user {user.pk} ({user.email}): {e}",
+                    exc_info=True,
+                )
+                subject = f"Failed to renew account for user {user.pk} ({user.email})"
+                message = f"""
+                An error occurred while trying to automatically renew the account for user:
+                User ID: {user.pk}
+                User email: {user.email}
+
+                Error details:
+                {e}
+                """
+                mail_admins(subject, message, fail_silently=True)
+        else:
+            account_automatic_renewal.send(sender=None, user=user)
     return accounts_for_renewal
 
 
