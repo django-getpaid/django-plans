@@ -37,7 +37,7 @@ setup(
         "django-ordered-model>=1.4.1",
         "python-stdnum",
         "django-next-url-mixin>=0.1.0",
-        "suds",
+        "zeep",
         "django-sequences",
         "swapper~=1.3.0",
         "six",
