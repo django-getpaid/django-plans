@@ -5,6 +5,7 @@ django-plans changelog
 -----
 
 * Add an option to catch and log exceptions during automatic account renewal, with an option to notify admins by email. Configurable via ``--catch-exceptions`` in the ``autorenew_accounts`` management command.
+* Use zeed instead of suds
 
 2.0.0
 -----
