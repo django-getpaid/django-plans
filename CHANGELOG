@@ -1,6 +1,11 @@
 django-plans changelog
 ======================
 
+2.1.0
+-----
+
+* Add an option to catch and log exceptions during automatic account renewal, with an option to notify admins by email. Configurable via ``--catch-exceptions`` in the ``autorenew_accounts`` management command.
+
 2.0.0
 -----
 
