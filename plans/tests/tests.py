@@ -1277,13 +1277,19 @@ class CreateOrderViewTestCase(TestCase):
                 self.assertEqual(o.tax, 21)
                 mock_logger.exception.assert_called_with("TAX_ID=CZ48136450")
         message = self.create_view.request._messages._queued_messages[0].message
+        object_id = message.split("object at ")[1].split(";")[0]
+
         self.assertEqual(
             message,
             "There was an error during determining validity of your VAT ID.<br/>"
             "If you think, you have european VAT ID and should not be taxed, "
             "please try resaving billing info later.<br/><br/>"
             "European VAT Information Exchange System throw following error: "
-            "&lt;urlopen error Internet is disabled&gt;",
+            "HTTPSConnectionPool(host=&#x27;ec.europa.eu&#x27;, port=443): "
+            "Max retries exceeded with url: /taxation_customs/vies/checkVatService.wsdl "
+            "(Caused by NewConnectionError(&#x27;&lt;urllib3.connection.HTTPSConnection "
+            f"object at {object_id};: Failed to establish a new connection: "
+            "Internet is disabled&#x27;))",
         )
 
     @mock.patch("stdnum.eu.vat.check_vies")
