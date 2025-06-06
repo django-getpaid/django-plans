@@ -11,7 +11,7 @@ model_bakery
 django-concurrent-test-helper
 freezegun
 flake8
-psycopg2
+psycopg2-binary
 internet-sabotage3>=0.1.6
 django_coverage_plugin
 swapper
