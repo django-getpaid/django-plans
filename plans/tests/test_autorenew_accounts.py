@@ -12,7 +12,8 @@ from plans.models import AbstractRecurringUserPlan
 class ManagementCommandTests(TestCase):
     def test_command_output(self):
         out = StringIO()
-        call_command("autorenew_accounts", stdout=out)
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", stdout=out)
         self.assertEqual(out.getvalue(), "Starting renewal\nNo accounts autorenewed\n")
 
     def test_renewal(self):
@@ -22,7 +23,8 @@ class ManagementCommandTests(TestCase):
             userplan__recurring__token_verified=True,
         )
         out = StringIO()
-        call_command("autorenew_accounts", stdout=out)
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", stdout=out)
         self.assertEqual(
             out.getvalue().strip(),
             "Starting renewal\nAccounts submitted to renewal:\n\tinternal-payment-recurring\t\ttestuser",
@@ -35,7 +37,8 @@ class ManagementCommandTests(TestCase):
             userplan__recurring__token_verified=True,
         )
         out = StringIO()
-        call_command("autorenew_accounts", stdout=out)
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", stdout=out)
         self.assertEqual(out.getvalue(), "Starting renewal\nNo accounts autorenewed\n")
 
     def test_renewal_triggered_by_other(self):
@@ -45,7 +48,8 @@ class ManagementCommandTests(TestCase):
             userplan__recurring__token_verified=True,
         )
         out = StringIO()
-        call_command("autorenew_accounts", stdout=out)
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", stdout=out)
         self.assertEqual(out.getvalue(), "Starting renewal\nNo accounts autorenewed\n")
 
     def test_renewal_providers(self):
@@ -56,7 +60,8 @@ class ManagementCommandTests(TestCase):
             userplan__recurring__token_verified=True,
         )
         out = StringIO()
-        call_command("autorenew_accounts", providers="foo", stdout=out)
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", providers="foo", stdout=out)
         self.assertEqual(out.getvalue(), "Starting renewal\nNo accounts autorenewed\n")
 
 
