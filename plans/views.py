@@ -40,6 +40,7 @@ from plans.mixins import LoginRequired
 from plans.signals import order_started
 from plans.utils import get_currency
 from plans.validators import plan_validation
+from plans.plan_change import get_change_price
 
 UserPlan = AbstractUserPlan.get_concrete_model()
 PlanPricing = AbstractPlanPricing.get_concrete_model()
@@ -340,27 +341,8 @@ class CreateOrderPlanChangeView(CreateOrderView):
         )
         self.pricing = None
 
-    def get_policy(self):
-        policy_class = getattr(
-            settings,
-            "PLANS_CHANGE_POLICY",
-            "plans.plan_change.StandardPlanChangePolicy",
-        )
-        return import_name(policy_class)()
-
     def get_price(self):
-        policy = self.get_policy()
-        userplan = self.request.user.userplan
-
-        if userplan.expire is not None:
-            period = self.request.user.userplan.days_left()
-        else:
-            # Use the default period of the new plan
-            period = 30
-
-        return policy.get_change_price(
-            self.request.user.userplan.plan, self.plan, period
-        )
+        return get_change_price(self.request.user.userplan, self.plan)
 
     def get_context_data(self, **kwargs):
         context = super(CreateOrderView, self).get_context_data(**kwargs)

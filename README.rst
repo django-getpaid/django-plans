@@ -19,7 +19,7 @@ Features currently supported:
 
 Documentation: https://django-plans.readthedocs.org/
 
-Master branch: Support for Django +2.2, support for Python +3.6
+Master branch: Support for Django 4.2 - 5.2, support for Python 3.9 - 3.13
 
 .. image:: docs/source/_static/images/django-plans-1.png
 

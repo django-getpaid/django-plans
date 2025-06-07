@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import re
+import warnings
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -9,6 +10,8 @@ import stdnum.eu.vat
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
+
+from plans import utils
 
 try:
     from django.contrib.sites.models import Site
@@ -29,7 +32,6 @@ from swapper import load_model
 
 from plans.contrib import get_user_language, send_template_email
 from plans.enumeration import Enumeration
-from plans.importer import import_name
 from plans.signals import (
     account_activated,
     account_change_plan,
@@ -299,7 +301,8 @@ class AbstractUserPlan(BaseMixin, models.Model):
     def has_automatic_renewal(self):
         return (
             hasattr(self, "recurring")
-            and self.recurring.has_automatic_renewal
+            and self.recurring.renewal_triggered_by
+            != self.recurring.RENEWAL_TRIGGERED_BY.USER
             and self.recurring.token_verified
         )
 
@@ -309,6 +312,13 @@ class AbstractUserPlan(BaseMixin, models.Model):
         if pricing is None:
             return self.expire
         return self.get_plan_extended_from(plan) + timedelta(days=pricing.period)
+
+    def get_plan_reduced_until(self, pricing):
+        if self.expire is None:
+            return self.expire
+        if pricing is None:
+            return self.expire
+        return self.expire - timedelta(days=pricing.period)
 
     def plan_autorenew_at(self):
         """
@@ -325,12 +335,39 @@ class AbstractUserPlan(BaseMixin, models.Model):
                 days=plans_autorenew_before_days, hours=plans_autorenew_before_hours
             )
 
-    def set_plan_renewal(self, order, has_automatic_renewal=True, **kwargs):
+    def set_plan_renewal(
+        self,
+        order,
+        # TODO: has_automatic_renewal deprecated. Remove in the next major release.
+        has_automatic_renewal=None,
+        # TODO: renewal_triggered_by=None deprecated. Set to TASK in the next major release.
+        renewal_triggered_by=None,
+        **kwargs,
+    ):
         """
         Creates or updates plan renewal information for this userplan with given order
         """
         if not hasattr(self, "recurring"):
             self.recurring = AbstractRecurringUserPlan.get_concrete_model()()
+
+        if has_automatic_renewal is None and renewal_triggered_by is None:
+            has_automatic_renewal = True
+        if has_automatic_renewal is not None:
+            warnings.warn(
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+                DeprecationWarning,
+            )
+        if renewal_triggered_by is None:
+            warnings.warn(
+                "renewal_triggered_by=None is deprecated. "
+                "Set an AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY instead.",
+                DeprecationWarning,
+            )
+            renewal_triggered_by = (
+                self.recurring.RENEWAL_TRIGGERED_BY.TASK
+                if has_automatic_renewal
+                else self.recurring.RENEWAL_TRIGGERED_BY.USER
+            )
 
         # Erase values of all fields
         # We don't want to mix the old and new values
@@ -342,7 +379,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
         self.recurring.amount = order.amount
         self.recurring.tax = order.tax
         self.recurring.currency = order.currency
-        self.recurring.has_automatic_renewal = has_automatic_renewal
+        self.recurring.renewal_triggered_by = renewal_triggered_by
         for k, v in kwargs.items():
             setattr(self.recurring, k, v)
         self.recurring.save()
@@ -430,6 +467,16 @@ class AbstractUserPlan(BaseMixin, models.Model):
 
         return status
 
+    def reduce_account(self, pricing):
+        """
+        Manages reducing account after returning an order
+        :param pricing: if pricing is None then nothing is changed
+        :return:
+        """
+        if pricing is not None:
+            self.expire = self.get_plan_reduced_until(pricing)
+            self.save()
+
     def expire_account(self):
         """manages account expiration"""
 
@@ -492,6 +539,14 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
     More about recurring payments in docs.
     """
 
+    RENEWAL_TRIGGERED_BY = Enumeration(
+        [
+            (1, "OTHER", pgettext_lazy("Renewal triggered by", "other")),
+            (2, "USER", pgettext_lazy("Renewal triggered by", "user")),
+            (3, "TASK", pgettext_lazy("Renewal triggered by", "task")),
+        ]
+    )
+
     user_plan = models.OneToOneField(
         "UserPlan", on_delete=models.CASCADE, related_name="recurring"
     )
@@ -533,12 +588,26 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
         _("tax"), max_digits=4, decimal_places=2, db_index=True, null=True, blank=True
     )  # Tax=None is when tax is not applicable
     currency = models.CharField(_("currency"), max_length=3)
-    has_automatic_renewal = models.BooleanField(
+    renewal_triggered_by = models.IntegerField(
+        _("renewal triggered by"),
+        choices=RENEWAL_TRIGGERED_BY,
+        help_text=_(
+            "The source of the associated plan's renewal (USER = user-initiated renewal, "
+            "TASK = autorenew_account-task-initiated renewal, OTHER = renewal is triggered using another mechanism)."
+        ),
+        default=RENEWAL_TRIGGERED_BY.USER,
+        db_index=True,
+    )
+    # A backup of the old has_automatic_renewal field to support data migration to the new renewal_triggered_by field.
+    # Do not make any other modifications to the field in order to let user's auto-migrations detect the renaming.
+    # TODO: _has_automatic_renewal_backup_deprecated deprecated. Remove in the next major release.
+    _has_automatic_renewal_backup_deprecated = models.BooleanField(
         _("has automatic plan renewal"),
         help_text=_(
             "Automatic renewal is enabled for associated plan. "
             "If False, the plan renewal can be still initiated by user.",
         ),
+        db_column="has_automatic_renewal",
         default=False,
     )
     token_verified = models.BooleanField(
@@ -554,6 +623,35 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
 
     class Meta:
         abstract = True
+
+    # TODO: has_automatic_renewal deprecated. Remove in the next major release.
+    @property
+    def has_automatic_renewal(self):
+        warnings.warn(
+            "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            DeprecationWarning,
+        )
+        return self.renewal_triggered_by != self.RENEWAL_TRIGGERED_BY.USER
+
+    # TODO: has_automatic_renewal deprecated. Remove in the next major release.
+    @has_automatic_renewal.setter
+    def has_automatic_renewal(self, value):
+        warnings.warn(
+            "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            DeprecationWarning,
+        )
+        self.renewal_triggered_by = (
+            self.RENEWAL_TRIGGERED_BY.TASK if value else self.RENEWAL_TRIGGERED_BY.USER
+        )
+
+    # TODO: has_automatic_renewal deprecated. Remove in the next major release.
+    @has_automatic_renewal.deleter
+    def has_automatic_renewal(self):
+        warnings.warn(
+            "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            DeprecationWarning,
+        )
+        del self.renewal_triggered_by
 
     def create_renew_order(self):
         """
@@ -588,7 +686,7 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
         self.amount = None
         self.tax = None
         self.currency = None
-        self.has_automatic_renewal = False
+        self.renewal_triggered_by = self.RENEWAL_TRIGGERED_BY.USER
         self.token_verified = False
         self.card_expire_year = None
         self.card_expire_month = None
@@ -831,6 +929,34 @@ class AbstractOrder(BaseMixin, models.Model):
         else:
             return False
 
+    def return_order(self):
+        if self.status != self.STATUS.RETURNED:
+            if self.status == self.STATUS.COMPLETED:
+                if self.pricing is not None:
+                    extended_from = self.plan_extended_from
+                    if extended_from is None:
+                        extended_from = self.completed
+                    # Should never happen, but make sure we reduce for the same number of days as we extended.
+                    if (
+                        self.plan_extended_until is None
+                        or extended_from is None
+                        or self.plan_extended_until - extended_from
+                        != timedelta(days=self.pricing.period)
+                    ):
+                        raise ValueError(
+                            f"Invalid order state: completed={self.completed}, "
+                            f"plan_extended_from={self.plan_extended_from}, "
+                            f"plan_extended_until={self.plan_extended_until}, "
+                            f"pricing.period={self.pricing.period}"
+                        )
+                self.user.userplan.reduce_account(self.pricing)
+            elif self.status != self.STATUS.NOT_VALID:
+                raise ValueError(
+                    f"Cannot return order with status other than COMPLETED and NOT_VALID: {self.status}"
+                )
+            self.status = self.STATUS.RETURNED
+            self.save()
+
     def get_invoices_proforma(self):
         return AbstractInvoice.get_concrete_model().proforma.filter(order=self)
 
@@ -868,43 +994,27 @@ class AbstractOrder(BaseMixin, models.Model):
         """
         self.amount = amount
         self.currency = get_currency()
+
         country = getattr(billing_info, "country", None)
         if country is None:
             country = get_country_code(request)
         else:
             country = country.code
+
         if hasattr(billing_info, "tax_number") and billing_info.tax_number:
+            from plans.base.models import AbstractBillingInfo
+
             tax_number = AbstractBillingInfo.get_full_tax_number(
                 billing_info.tax_number, country
             )
         else:
             tax_number = None
-        # Calculating tax can be complex task (e.g. VIES webservice call)
-        # To ensure that tax calculated on order preview will be the same on final order
-        # tax rate is cached for a given billing data (as this value only depends on it)
-        tax_session_key = "tax_%s_%s" % (tax_number, country)
-        request_successful = True
-        if request:
-            tax = request.session.get(tax_session_key)
-        else:
-            tax = None
-        if tax is None:
-            taxation_policy = getattr(settings, "PLANS_TAXATION_POLICY", None)
-            if not taxation_policy:
-                raise ImproperlyConfigured("PLANS_TAXATION_POLICY is not set")
-            taxation_policy = import_name(taxation_policy)
-            tax, request_successful = taxation_policy.get_tax_rate(
-                tax_number, country, request
-            )
-            tax = str(tax)
-            # Because taxation policy could return None which clutters with saving this value
-            # into cache, we use str() representation of this value
-            if request and request_successful:
-                request.session[tax_session_key] = tax
+
+        tax_rate, request_successful = utils.get_tax_rate(country, tax_number, request)
         if (
             use_default or request_successful
         ):  # Don't change the tax, if the request was not successful
-            self.tax = Decimal(tax) if tax != "None" else None
+            self.tax = tax_rate
 
     class Meta:
         ordering = ("-created",)
@@ -942,9 +1052,8 @@ class InvoiceDuplicateManager(models.Manager):
 
 def get_initial_number(older_invoices):
     return (
-        getattr(older_invoices.order_by("number").values("number").last(), "number", 0)
-        + 1
-    )
+        older_invoices.order_by("number").values_list("number", flat=True).last() or 0
+    ) + 1
 
 
 class AbstractInvoice(BaseMixin, models.Model):

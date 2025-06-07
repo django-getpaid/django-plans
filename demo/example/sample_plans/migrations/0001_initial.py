@@ -335,8 +335,19 @@ class Migration(migrations.Migration):
                 ),
                 ("currency", models.CharField(max_length=3, verbose_name="currency")),
                 (
-                    "has_automatic_renewal",
+                    "renewal_triggered_by",
+                    models.IntegerField(
+                        choices=[(1, "other"), (2, "user"), (3, "task")],
+                        db_index=True,
+                        default=2,
+                        help_text="The source of the associated plan's renewal (USER = user-initiated renewal, TASK = autorenew_account-task-initiated renewal, OTHER = renewal is triggered using another mechanism).",
+                        verbose_name="renewal triggered by",
+                    ),
+                ),
+                (
+                    "_has_automatic_renewal_backup_deprecated",
                     models.BooleanField(
+                        db_column="has_automatic_renewal",
                         default=False,
                         help_text="Automatic renewal is enabled for associated plan. If False, the plan renewal can be still initiated by user.",
                         verbose_name="has automatic plan renewal",

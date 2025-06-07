@@ -151,6 +151,14 @@ def make_order_completed(modeladmin, request, queryset):
 make_order_completed.short_description = _("Make selected orders completed")
 
 
+def make_order_returned(modeladmin, request, queryset):
+    for order in queryset:
+        order.return_order()
+
+
+make_order_returned.short_description = _("Make selected orders returned")
+
+
 def make_order_invoice(modeladmin, request, queryset):
     for order in queryset:
         if (
@@ -192,7 +200,7 @@ class OrderAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("created", "updated_at")
     list_display_links = list_display
-    actions = [make_order_completed, make_order_invoice]
+    actions = [make_order_completed, make_order_returned, make_order_invoice]
     inlines = (InvoiceInline,)
 
     def queryset(self, request):
@@ -253,7 +261,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         "plan__name",
         "plan__available",
         "plan__visible",
-        "recurring__has_automatic_renewal",
+        "recurring__renewal_triggered_by",
         "recurring__payment_provider",
         "recurring__token_verified",
         "recurring__pricing",
@@ -264,7 +272,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         "plan",
         "expire",
         "active",
-        "recurring__automatic_renewal",
+        "recurring__renewal_triggered_by",
         "recurring__token_verified",
         "recurring__payment_provider",
         "recurring__pricing",
@@ -282,12 +290,13 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
         "plan",
     ]
 
-    def recurring__automatic_renewal(self, obj):
-        return obj.recurring.has_automatic_renewal
+    def recurring__renewal_triggered_by(self, obj):
+        return obj.recurring.renewal_triggered_by
 
-    recurring__automatic_renewal.admin_order_field = "recurring__has_automatic_renewal"
-    recurring__automatic_renewal.boolean = True
-    recurring__automatic_renewal.short_description = "Automatic renewal"
+    recurring__renewal_triggered_by.admin_order_field = (
+        "recurring__renewal_triggered_by"
+    )
+    recurring__renewal_triggered_by.short_description = "Renewal triggered by"
 
     def recurring__token_verified(self, obj):
         return obj.recurring.token_verified
@@ -305,7 +314,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
     def recurring__pricing(self, obj):
         return obj.recurring.pricing
 
-    recurring__automatic_renewal.admin_order_field = "recurring__pricing"
+    recurring__pricing.admin_order_field = "recurring__pricing"
 
 
 admin.site.register(Quota, QuotaAdmin)

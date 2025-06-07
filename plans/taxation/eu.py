@@ -8,8 +8,6 @@ from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
 from requests.exceptions import ConnectionError
-from suds import WebFault
-from suds.transport import TransportError
 
 from plans.taxation import TaxationPolicy
 from plans.utils import country_code_transform
@@ -128,12 +126,11 @@ class EUTaxationPolicy(TaxationPolicy):
                     else:
                         return cls.EU_COUNTRIES_VAT[country_code], True
                 except (
-                    WebFault,
-                    TransportError,
                     stdnum.exceptions.InvalidComponent,
                     ConnectionError,
                     URLError,
                     SAXParseException,
+                    TimeoutError,
                 ) as e:
                     # If we could not connect to VIES or the VAT ID is incorrect
                     if request:

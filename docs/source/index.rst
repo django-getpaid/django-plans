@@ -47,9 +47,10 @@ Contributors:
 * Victor Safronovich <vsafronovich@gmail.com>
 * Dominik Kozaczko <http://dominik.kozaczko.info>
 * Petr Dlouhý <petr.dlouhy@email.cz>
+* BlenderKit <info@blenderkit.com>
 
 Source code:
-https://github.com/cypreess/django-plans
+https://github.com/django-getpaid/django-plans
 
 You are very welcome to join the development team of django-plans.
 Contribution via github fork and pull requests. Here are some ideas what is needed:

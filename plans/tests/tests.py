@@ -1,5 +1,7 @@
 import random
-from datetime import date, timedelta
+import re
+import warnings
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from io import StringIO
 from unittest import mock
@@ -14,7 +16,7 @@ from django.core import mail
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.management import call_command
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django_concurrent_tests.helpers import call_concurrently
@@ -29,6 +31,8 @@ from plans.base.models import (
     AbstractOrder,
     AbstractPlan,
     AbstractPlanPricing,
+    AbstractPricing,
+    AbstractRecurringUserPlan,
     AbstractUserPlan,
 )
 from plans.plan_change import PlanChangePolicy, StandardPlanChangePolicy
@@ -44,6 +48,7 @@ Invoice = AbstractInvoice.get_concrete_model()
 Order = AbstractOrder.get_concrete_model()
 Plan = AbstractPlan.get_concrete_model()
 UserPlan = AbstractUserPlan.get_concrete_model()
+Pricing = AbstractPricing.get_concrete_model()
 
 
 class PlansTestCase(TestCase):
@@ -210,6 +215,37 @@ class PlansTestCase(TestCase):
         self.assertEqual(u.userplan.plan, default_plan)
         self.assertEqual(u.userplan.active, False)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_reduce_account_future(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.save()
+        pricing = Pricing.objects.get(planpricing__plan=u.userplan.plan, period=30)
+        u.userplan.reduce_account(pricing)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=20))
+
+    def test_reduce_account_before(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() - timedelta(days=50)
+        u.save()
+        pricing = Pricing.objects.get(planpricing__plan=u.userplan.plan, period=30)
+        u.userplan.reduce_account(pricing)
+        self.assertEqual(u.userplan.expire, date.today() - timedelta(days=80))
+
+    def test_reduce_account_expire_none(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = None
+        u.save()
+        pricing = Pricing.objects.get(planpricing__plan=u.userplan.plan, period=30)
+        u.userplan.reduce_account(pricing)
+        self.assertIsNone(u.userplan.expire)
+
+    def test_reduce_account_pricing_none(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.save()
+        u.userplan.reduce_account(None)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
 
     def test_expire_account(self):
         u = User.objects.get(username="test1")
@@ -824,6 +860,235 @@ class OrderTestCase(TestCase):
         )
         self.assertFalse(order.complete_order())
 
+    def test_return_order_new(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(
+            plan=u.userplan.plan, pricing__period__gt=0
+        ).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            rf"^Cannot return order with status other than COMPLETED and NOT_VALID: "
+            rf"{re.escape(str(Order.STATUS.NEW))}$",
+        ):
+            order.return_order()
+        self.assertEqual(order.status, Order.STATUS.NEW)
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+
+    def test_return_order_completed(self):
+        u = User.objects.get(username="test1")
+        u.userplan.plan = Plan.objects.filter(planpricing__isnull=True).first()
+        u.userplan.expire = None
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(pricing__period__gt=0).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.expire, date.today())
+
+    def test_return_order_completed_then_same_plan(self):
+        u = User.objects.get(username="test1")
+        u.userplan.plan = (
+            Plan.objects.annotate(
+                planpricing_pricing_period_eq_30_exists=Exists(
+                    PlanPricing.objects.filter(plan=OuterRef("pk"), pricing__period=30)
+                ),
+                planpricing_pricing_period_gt_30_exists=Exists(
+                    PlanPricing.objects.filter(
+                        plan=OuterRef("pk"), pricing__period__gt=30
+                    )
+                ),
+            )
+            .filter(
+                planpricing_pricing_period_eq_30_exists=True,
+                planpricing_pricing_period_gt_30_exists=True,
+            )
+            .first()
+        )
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(
+            plan=u.userplan.plan, pricing__period__gt=30
+        ).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        plan_pricing_then = PlanPricing.objects.get(
+            plan=plan_pricing.plan, pricing__period=30
+        )
+        order_then = Order.objects.create(
+            user=u,
+            pricing=plan_pricing_then.pricing,
+            amount=100,
+            plan=plan_pricing_then.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_then.complete_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_pricing_then.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50 + 30))
+
+    def test_return_order_completed_then_paid_plan(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        plan_pricing_then = (
+            PlanPricing.objects.exclude(plan=plan_pricing.plan)
+            .filter(pricing__period=365)
+            .first()
+        )
+        order_then = Order.objects.create(
+            user=u,
+            pricing=plan_pricing_then.pricing,
+            amount=100,
+            plan=plan_pricing_then.plan,
+            status=Order.STATUS.NEW,
+        )
+        with freeze_time(datetime.combine(u.userplan.expire, time())):
+            order_then.complete_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_pricing_then.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50 + 365))
+
+    def test_return_order_completed_then_free_plan(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        plan_then = (
+            Plan.objects.exclude(pk=plan_pricing.plan.pk)
+            .filter(planpricing__isnull=True)
+            .first()
+        )
+        u.userplan.extend_account(plan_then, None)
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_then)
+        self.assertIsNone(u.userplan.expire)
+
+    def test_return_order_not_valid(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_user = u.userplan.plan
+        plan_pricing = (
+            PlanPricing.objects.exclude(plan=u.userplan.plan)
+            .filter(pricing__period__gt=0)
+            .first()
+        )
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_user)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+
+    def test_return_order_canceled(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(
+            plan=u.userplan.plan, pricing__period__gt=0
+        ).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.CANCELED,
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            rf"^Cannot return order with status other than COMPLETED and NOT_VALID: "
+            rf"{re.escape(str(Order.STATUS.CANCELED))}$",
+        ):
+            order.return_order()
+        self.assertEqual(order.status, Order.STATUS.CANCELED)
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+
+    def test_return_order_returned(self):
+        u = User.objects.get(username="test1")
+        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(
+            plan=u.userplan.plan, pricing__period__gt=0
+        ).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        order.return_order()
+
+        order.return_order()
+
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+
     def test_amount_taxed_none(self):
         o = Order()
         o.amount = Decimal(123)
@@ -1012,13 +1277,19 @@ class CreateOrderViewTestCase(TestCase):
                 self.assertEqual(o.tax, 21)
                 mock_logger.exception.assert_called_with("TAX_ID=CZ48136450")
         message = self.create_view.request._messages._queued_messages[0].message
+        object_id = message.split("object at ")[1].split(";")[0]
+
         self.assertEqual(
             message,
             "There was an error during determining validity of your VAT ID.<br/>"
             "If you think, you have european VAT ID and should not be taxed, "
             "please try resaving billing info later.<br/><br/>"
             "European VAT Information Exchange System throw following error: "
-            "&lt;urlopen error Internet is disabled&gt;",
+            "HTTPSConnectionPool(host=&#x27;ec.europa.eu&#x27;, port=443): "
+            "Max retries exceeded with url: /taxation_customs/vies/checkVatService.wsdl "
+            "(Caused by NewConnectionError(&#x27;&lt;urllib3.connection.HTTPSConnection "
+            f"object at {object_id};: Failed to establish a new connection: "
+            "Internet is disabled&#x27;))",
         )
 
     @mock.patch("stdnum.eu.vat.check_vies")
@@ -1227,16 +1498,138 @@ class RecurringPlansTestCase(TestCase):
         """Test that UserPlan.set_plan_renewal() method"""
         up = baker.make("UserPlan")
         o = baker.make("Order", amount=10)
-        up.set_plan_renewal(order=o, card_masked_number="1234")
-        self.assertEqual(up.recurring.amount, 10)
-        self.assertEqual(up.recurring.card_masked_number, "1234")
-        old_id = up.recurring.id
 
-        # test setting new values
-        up.set_plan_renewal(order=o)
-        self.assertEqual(up.recurring.amount, 10)
-        self.assertEqual(up.recurring.card_masked_number, None)
-        self.assertEqual(up.recurring.id, old_id)
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+                card_masked_number="1234",
+            )
+            self.assertEqual(up.recurring.amount, 10)
+            self.assertEqual(up.recurring.card_masked_number, "1234")
+            self.assertFalse(caught_warnings)
+            old_id = up.recurring.id
+
+            # test setting new values
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(up.recurring.amount, 10)
+            self.assertEqual(up.recurring.card_masked_number, None)
+            self.assertEqual(up.recurring.id, old_id)
+            self.assertFalse(caught_warnings)
+
+            # test renewal_triggered_by overrides has_automatic_renewal
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+                has_automatic_renewal=False,
+            )
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+                has_automatic_renewal=True,
+            )
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+            up.set_plan_renewal(
+                order=o,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.OTHER,
+                has_automatic_renewal=True,
+            )
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.OTHER,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            # test deprecated backward compatibility
+            up.set_plan_renewal(order=o)
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(len(caught_warnings), 2)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "renewal_triggered_by=None is deprecated. "
+                "Set an AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY instead.",
+            )
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+            up.set_plan_renewal(order=o, has_automatic_renewal=True)
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(len(caught_warnings), 2)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "renewal_triggered_by=None is deprecated. "
+                "Set an AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY instead.",
+            )
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+            up.set_plan_renewal(order=o, has_automatic_renewal=False)
+            self.assertEqual(
+                up.recurring.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+            )
+            self.assertEqual(len(caught_warnings), 2)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "renewal_triggered_by=None is deprecated. "
+                "Set an AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY instead.",
+            )
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
 
     def test_plan_autorenew_at(self):
         """Test that UserPlan.plan_autorenew_at() method"""
@@ -1257,15 +1650,25 @@ class RecurringPlansTestCase(TestCase):
         up = baker.make("UserPlan", expire=date(2020, 1, 5))
         self.assertEqual(up.plan_autorenew_at(), date(2020, 1, 1))
 
-    def test_has_automatic_renewal(self):
+    def test_userplan_has_automatic_renewal(self):
         """Test UserPlan.has_automatic_renewal() method"""
         user_plan = baker.make("UserPlan")
         order = baker.make("Order", amount=10)
-        user_plan.set_plan_renewal(order=order, card_masked_number="1234")
-        self.assertEqual(user_plan.has_automatic_renewal(), False)
 
-        user_plan.recurring.token_verified = True
-        self.assertEqual(user_plan.has_automatic_renewal(), True)
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+
+            user_plan.set_plan_renewal(
+                order=order,
+                renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+                card_masked_number="1234",
+            )
+            self.assertEqual(user_plan.has_automatic_renewal(), False)
+            self.assertFalse(caught_warnings)
+
+            user_plan.recurring.token_verified = True
+            self.assertEqual(user_plan.has_automatic_renewal(), True)
+            self.assertFalse(caught_warnings)
 
     def test_create_new_order(self):
         rup = baker.make(
@@ -1290,6 +1693,87 @@ class RecurringPlansTestCase(TestCase):
             order = rup.create_renew_order()
         self.assertEqual(order.tax, 11)
 
+    def test_has_automatic_renewal(self):
+        rup = baker.make("RecurringUserPlan")
+
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+
+            rup.renewal_triggered_by = (
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER
+            )
+            self.assertFalse(rup.has_automatic_renewal)
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            rup.renewal_triggered_by = (
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK
+            )
+            self.assertTrue(rup.has_automatic_renewal)
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            rup.renewal_triggered_by = (
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.OTHER
+            )
+            self.assertTrue(rup.has_automatic_renewal)
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            rup.has_automatic_renewal = False
+            self.assertEqual(
+                rup.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            rup.has_automatic_renewal = True
+            self.assertEqual(
+                rup.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
+            del rup.has_automatic_renewal
+            self.assertEqual(
+                rup.renewal_triggered_by,
+                AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.USER,
+            )
+            self.assertEqual(len(caught_warnings), 1)
+            caught_warning = caught_warnings.pop()
+            self.assertTrue(issubclass(caught_warning.category, DeprecationWarning))
+            self.assertEqual(
+                str(caught_warning.message),
+                "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
+            )
+
 
 class TasksTestCase(TestCase):
     def setUp(self):
@@ -1302,7 +1786,11 @@ class TasksTestCase(TestCase):
         userplan.active = True
 
         # If the automatic renewal didn't go through, even automatic renewal plans has to go
-        userplan.set_plan_renewal(order=order, card_masked_number="1234")
+        userplan.set_plan_renewal(
+            order=order,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            card_masked_number="1234",
+        )
 
         userplan.save()
         tasks.expire_account()
@@ -1322,7 +1810,11 @@ class TasksTestCase(TestCase):
         userplan.active = True
 
         # If the automatic renewal didn't go through, even automatic renewal plans has to go
-        userplan.set_plan_renewal(order=order, card_masked_number="1234")
+        userplan.set_plan_renewal(
+            order=order,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            card_masked_number="1234",
+        )
 
         userplan.save()
         tasks.expire_account()
