@@ -620,6 +620,9 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
     card_expire_year = models.IntegerField(null=True, blank=True)
     card_expire_month = models.IntegerField(null=True, blank=True)
     card_masked_number = models.CharField(null=True, blank=True, max_length=255)
+    last_renewal_attempt = models.DateTimeField(
+        _("last renewal attempt"), null=True, blank=True
+    )
 
     class Meta:
         abstract = True

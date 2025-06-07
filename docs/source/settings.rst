@@ -391,4 +391,49 @@ The ``verbose_name`` of django-plans' ``AppConfig``.
 
 Default: ``0`` (for both)
 
-Time of plan automatic renewal before the plan actually expires.
+Time of plan automatic renewal before the plan actually expires. These settings are mutually exclusive with ``PLANS_AUTORENEW_SCHEDULE``.
+
+
+``PLANS_AUTORENEW_SCHEDULE``
+----------------------------
+
+**Optional**
+
+Default: ``None``
+
+A list of ``datetime.timedelta`` objects that define when an account's automatic renewal should be attempted.
+This setting provides fine-grained control over the renewal process, allowing you to schedule attempts both before and after a plan's expiration.
+
+.. note::
+    When ``PLANS_AUTORENEW_SCHEDULE`` is set, ``PLANS_AUTORENEW_BEFORE_DAYS`` and ``PLANS_AUTORENEW_BEFORE_HOURS`` are ignored.
+
+Each ``timedelta`` in the list represents a point in time relative to the plan's expiration date.
+
+- **Positive values**: Renewals are attempted *before* the plan expires. For example, a value of ``datetime.timedelta(days=3)`` will trigger a renewal attempt 3 days before the expiration date.
+- **Negative values**: Renewals are attempted *after* the plan has expired. For example, a value of ``datetime.timedelta(days=-2)`` will trigger a renewal attempt 2 days after the expiration date.
+
+The system checks for pending renewals and ensures that an attempt is made for each configured schedule. If a renewal attempt has already been made since the last calculated renewal window, another attempt will not be made until the next window.
+
+Example::
+
+    PLANS_AUTORENEW_SCHEDULE = [
+        datetime.timedelta(days=7),  # 1 week before expiry
+        datetime.timedelta(days=1),  # 1 day before expiry
+        datetime.timedelta(days=-1), # 1 day after expiry (grace period)
+    ]
+
+``PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY``
+-----------------------------------------
+
+**Optional**
+
+Default: `datetime.timedelta(days=30)`
+
+Maximum `datetime.timedelta` after a plan's expiration date that a renewal attempt will be made.
+This setting works in conjunction with ``PLANS_AUTORENEW_SCHEDULE`` and prevents renewal attempts for plans that have been expired for a long time.
+
+Example::
+
+    PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY = datetime.timedelta(days=15)
+
+In this case, no renewal attempt will be made for a plan that expired more than 15 days ago, relative to the renewal schedule.
