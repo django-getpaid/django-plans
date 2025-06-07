@@ -76,7 +76,7 @@ def autorenew_account(
                 days=PLANS_AUTORENEW_BEFORE_DAYS, hours=PLANS_AUTORENEW_BEFORE_HOURS
             ),
         )
-    
+
     if providers:
         accounts_for_renewal = accounts_for_renewal.filter(
             userplan__recurring__payment_provider__in=providers
