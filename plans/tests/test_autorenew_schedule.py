@@ -15,8 +15,8 @@ User = get_user_model()
 
 class AutorenewSchedulerTests(TestCase):
     def setUp(self):
-        self.user = baker.make(User)
-        self.plan = baker.make("Plan")
+        self.user = baker.make(User, username="test_user", email="test@example.com")
+        self.plan = baker.make("Plan", name="Test Plan")
         self.pricing = baker.make("Pricing", period=30)
         baker.make("PlanPricing", plan=self.plan, pricing=self.pricing, price=10)
         self.user_plan = baker.make(
@@ -61,8 +61,8 @@ class AutorenewSchedulerTests(TestCase):
     @freeze_time("2023-01-10 12:00:00")
     def test_autorenew_schedule_after_expiry_should_renew(self):
         """Plan expired 3 days ago, schedule is -2 days, should renew."""
-        self.user_plan.expire = (
-            timezone.now().date() - datetime.timedelta(days=3)
+        self.user_plan.expire = timezone.now().date() - datetime.timedelta(
+            days=3
         )  # expired 2023-01-07
         self.user_plan.save()
         self.user_plan.expire_account()
@@ -75,8 +75,8 @@ class AutorenewSchedulerTests(TestCase):
     @freeze_time("2023-01-10 12:00:00")
     def test_autorenew_schedule_after_expiry_should_not_renew(self):
         """Plan expired 1 day ago, schedule is -2 days, should NOT renew."""
-        self.user_plan.expire = (
-            timezone.now().date() - datetime.timedelta(days=1)
+        self.user_plan.expire = timezone.now().date() - datetime.timedelta(
+            days=1
         )  # expired 2023-01-09
         self.user_plan.save()
         self.user_plan.expire_account()
@@ -100,7 +100,9 @@ class AutorenewSchedulerTests(TestCase):
     @freeze_time("2023-01-10 12:00:00")
     def test_autorenew_schedule_should_renew_attempted_long_ago(self):
         """Plan should renew if a renewal was attempted before the renewal window."""
-        self.user_plan.expire = timezone.now().date() + datetime.timedelta(days=2)  # 2023-01-12
+        self.user_plan.expire = timezone.now().date() + datetime.timedelta(
+            days=2
+        )  # 2023-01-12
         # expire - schedule = 2023-01-09
         self.user_plan.recurring.last_renewal_attempt = timezone.make_aware(
             datetime.datetime(2023, 1, 8, 11, 59, 59)
@@ -174,4 +176,60 @@ class AutorenewSchedulerTests(TestCase):
 
         # Second run, should NOT renew
         renewed_second = autorenew_account()
-        self.assertEqual(len(renewed_second), 0) 
+        self.assertEqual(len(renewed_second), 0)
+
+    @override_settings(
+        PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=-2)],
+        PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY=datetime.timedelta(days=30),
+    )
+    @freeze_time("2023-01-31 00:00:01")
+    def test_autorenew_respects_max_days_after_expiry(self):
+        """
+        Plan expired exactly on the edge of the max_renew_after window.
+        It should be renewed. This test would fail without the `.date()`
+        conversion in the task.
+        """
+        self.user_plan.expire = datetime.date(2022, 12, 30)
+        self.user_plan.save()
+        self.user_plan.expire_account()
+
+        renewed = autorenew_account()
+        self.assertEqual(len(renewed), 1)
+        self.assertEqual(renewed[0], self.user)
+
+    @override_settings(
+        PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=-2)],
+        PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY=datetime.timedelta(days=30),
+    )
+    @freeze_time("2023-01-31 12:00:00")
+    def test_autorenew_respects_max_days_after_expiry_should_not_renew(self):
+        """
+        Plan expired one day before the max_renew_after window.
+        It should NOT be renewed.
+        """
+        # renewal window starts at 2022-12-30
+        self.user_plan.expire = datetime.date(2022, 12, 29)
+        self.user_plan.save()
+        self.user_plan.expire_account()
+
+        renewed = autorenew_account()
+        self.assertEqual(len(renewed), 0)
+
+    @override_settings(
+        PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=1)],
+        PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY=datetime.timedelta(days=5),
+    )
+    @freeze_time("2025-06-07 12:10:30")
+    def test_autorenew_date_comparison_is_correct(self):
+        """
+        Tests that comparing a DateField (expire) with a datetime object
+        works correctly by using .date() to truncate the time part.
+        Without .date(), this test should fail.
+        """
+        self.user_plan.expire = datetime.date(2025, 6, 7)
+        self.user_plan.save()
+        self.user_plan.expire_account()
+
+        renewed = autorenew_account()
+        self.assertEqual(len(renewed), 1)
+        self.assertEqual(renewed[0], self.user)

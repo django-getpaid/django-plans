@@ -421,3 +421,19 @@ Example::
         datetime.timedelta(days=1),  # 1 day before expiry
         datetime.timedelta(days=-1), # 1 day after expiry (grace period)
     ]
+
+``PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY``
+-----------------------------------------
+
+**Optional**
+
+Default: `datetime.timedelta(days=30)`
+
+Maximum `datetime.timedelta` after a plan's expiration date that a renewal attempt will be made.
+This setting works in conjunction with ``PLANS_AUTORENEW_SCHEDULE`` and prevents renewal attempts for plans that have been expired for a long time.
+
+Example::
+
+    PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY = datetime.timedelta(days=15)
+
+In this case, no renewal attempt will be made for a plan that expired more than 15 days ago, relative to the renewal schedule.
