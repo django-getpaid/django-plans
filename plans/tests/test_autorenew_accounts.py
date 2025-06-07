@@ -10,6 +10,8 @@ from plans.models import AbstractRecurringUserPlan
 
 
 class ManagementCommandTests(TestCase):
+    maxDiff = None
+
     def test_command_output(self):
         out = StringIO()
         with self.assertWarns(DeprecationWarning):
@@ -27,7 +29,9 @@ class ManagementCommandTests(TestCase):
             call_command("autorenew_accounts", stdout=out)
         self.assertEqual(
             out.getvalue().strip(),
-            "Starting renewal\nAccounts submitted to renewal:\n\tinternal-payment-recurring\t\ttestuser",
+            "Starting renewal\n1 accounts submitted to renewal:\n"
+            "\tinternal-payment-recurring                                            "
+            "testuser                                2020-01-02\tTrue",
         )
 
     def test_renewal_triggered_by_user(self):
