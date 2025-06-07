@@ -27,7 +27,7 @@ def get_active_plans():
 def autorenew_account(
     providers=None, throttle_seconds=0, catch_exceptions=False, dry_run=False
 ):
-    logger.info("Started automatic account renewal")
+    print("Started automatic account renewal")
     PLANS_AUTORENEW_SCHEDULE = getattr(settings, "PLANS_AUTORENEW_SCHEDULE", None)
     PLANS_AUTORENEW_BEFORE_DAYS = getattr(settings, "PLANS_AUTORENEW_BEFORE_DAYS", 0)
     PLANS_AUTORENEW_BEFORE_HOURS = getattr(settings, "PLANS_AUTORENEW_BEFORE_HOURS", 0)
@@ -76,25 +76,25 @@ def autorenew_account(
                 days=PLANS_AUTORENEW_BEFORE_DAYS, hours=PLANS_AUTORENEW_BEFORE_HOURS
             ),
         )
-
+    
     if providers:
         accounts_for_renewal = accounts_for_renewal.filter(
             userplan__recurring__payment_provider__in=providers
         )
 
-    logger.info(f"{accounts_for_renewal.count()} accounts to be renewed.")
+    print(f"{accounts_for_renewal.count()} accounts to be renewed.")
 
     accounts_for_renewal = accounts_for_renewal.all()
 
     if dry_run:
-        logger.info("Dry run mode: No changes will be made.")
+        print("Dry run mode: No changes will be made.")
         for user in accounts_for_renewal:
-            logger.info(f"DRY RUN: Would renew user {user.pk} ({user.email})")
+            print(f"DRY RUN: Would renew user {user.pk} ({user.email})")
             if hasattr(user, "userplan") and not user.userplan.is_active():
-                logger.info(
+                print(
                     f"DRY RUN: Would activate userplan for user {user.pk} ({user.email})"
                 )
-            logger.info(
+            print(
                 f"DRY RUN: Would send account_automatic_renewal signal for user {user.pk} ({user.email})"
             )
         return accounts_for_renewal
@@ -137,7 +137,7 @@ def autorenew_account(
 
 
 def expire_account():
-    logger.info("Started account expiration")
+    print("Started account expiration")
 
     expired_accounts = get_active_plans().filter(
         userplan__expire__lt=datetime.date.today()
