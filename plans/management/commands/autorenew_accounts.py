@@ -25,22 +25,40 @@ class Command(BaseCommand):
             dest="catch_exceptions",
             help="Catch exceptions during renewal and log them",
         )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            dest="dry_run",
+            help="Dry run, do not change any data",
+        )
 
     def handle(self, *args, **options):  # pragma: no cover
         providers = options.get("providers")
+        dry_run = options.get("dry_run")
         self.stdout.write("Starting renewal")
+        if dry_run:
+            self.stdout.write("DRY RUN active")
         throttle_seconds = options.get("throttle")
         catch_exceptions = options.get("catch_exceptions")
         renewed_accounts = tasks.autorenew_account(
             providers,
             throttle_seconds=throttle_seconds,
             catch_exceptions=catch_exceptions,
+            dry_run=dry_run,
         )
         if renewed_accounts:
-            self.stdout.write("Accounts submitted to renewal:")
+            if dry_run:
+                self.stdout.write(
+                    f"{len(renewed_accounts)} accounts would be submitted to renewal:"
+                )
+            else:
+                self.stdout.write(
+                    f"{len(renewed_accounts)} accounts submitted to renewal:"
+                )
             for a in renewed_accounts:
                 self.stdout.write(
-                    f"\t{a.userplan.recurring.payment_provider}\t{a.email}\t{a}"
+                    f"\t{a.userplan.recurring.payment_provider:<30}{a.email:<40}{str(a).strip():<40}"
+                    f"{a.userplan.expire}\t{a.userplan.active}"
                 )
         else:
             self.stdout.write("No accounts autorenewed")
