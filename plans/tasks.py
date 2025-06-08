@@ -108,9 +108,6 @@ def autorenew_account(
             time.sleep(throttle_seconds)
         if catch_exceptions:
             try:
-                if hasattr(user, "userplan") and not user.userplan.is_active():
-                    user.userplan.active = True
-                    user.userplan.save()
                 account_automatic_renewal.send(sender=None, user=user)
             except Exception as e:
                 logger.error(
@@ -128,11 +125,8 @@ def autorenew_account(
                 """
                 mail_admins(subject, message, fail_silently=True)
         else:
-            if hasattr(user, "userplan") and not user.userplan.is_active():
-                user.userplan.active = True
-                user.userplan.save()
             account_automatic_renewal.send(sender=None, user=user)
-            renewed_accounts.append(user)
+        renewed_accounts.append(user)
     return renewed_accounts
 
 
