@@ -10,8 +10,6 @@ from plans.models import AbstractRecurringUserPlan
 
 
 class ManagementCommandTests(TestCase):
-    maxDiff = None
-
     def test_command_output(self):
         out = StringIO()
         with self.assertWarns(DeprecationWarning):
