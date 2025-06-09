@@ -2,6 +2,7 @@ import logging
 from decimal import Decimal
 from urllib.error import URLError
 from xml.sax import SAXParseException
+from zeep.exceptions import Fault
 
 import stdnum.eu.vat
 from django.contrib import messages
@@ -126,6 +127,7 @@ class EUTaxationPolicy(TaxationPolicy):
                     else:
                         return cls.EU_COUNTRIES_VAT[country_code], True
                 except (
+                    Fault,
                     stdnum.exceptions.InvalidComponent,
                     ConnectionError,
                     URLError,
