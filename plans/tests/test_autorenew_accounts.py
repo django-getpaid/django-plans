@@ -12,8 +12,15 @@ from plans.models import AbstractRecurringUserPlan
 class ManagementCommandTests(TestCase):
     def test_command_output(self):
         out = StringIO()
-        call_command("autorenew_accounts", stdout=out)
-        self.assertEqual(out.getvalue(), "Starting renewal\nNo accounts autorenewed\n")
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", stdout=out)
+        self.assertEqual(
+            out.getvalue(),
+            "Starting renewal\n"
+            "Started automatic account renewal\n"
+            "0 accounts to be renewed.\n"
+            "No accounts autorenewed\n",
+        )
 
     def test_renewal(self):
         _make_user(
@@ -22,10 +29,16 @@ class ManagementCommandTests(TestCase):
             userplan__recurring__token_verified=True,
         )
         out = StringIO()
-        call_command("autorenew_accounts", stdout=out)
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", stdout=out)
         self.assertEqual(
             out.getvalue().strip(),
-            "Starting renewal\nAccounts submitted to renewal:\n\tinternal-payment-recurring\t\ttestuser",
+            "Starting renewal\n"
+            "Started automatic account renewal\n"
+            "1 accounts to be renewed.\n"
+            "1 accounts submitted to renewal:\n"
+            "\tinternal-payment-recurring                                            "
+            "testuser                                2020-01-02\tTrue",
         )
 
     def test_renewal_triggered_by_user(self):
@@ -35,8 +48,15 @@ class ManagementCommandTests(TestCase):
             userplan__recurring__token_verified=True,
         )
         out = StringIO()
-        call_command("autorenew_accounts", stdout=out)
-        self.assertEqual(out.getvalue(), "Starting renewal\nNo accounts autorenewed\n")
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", stdout=out)
+        self.assertEqual(
+            out.getvalue(),
+            "Starting renewal\n"
+            "Started automatic account renewal\n"
+            "0 accounts to be renewed.\n"
+            "No accounts autorenewed\n",
+        )
 
     def test_renewal_triggered_by_other(self):
         _make_user(
@@ -45,8 +65,15 @@ class ManagementCommandTests(TestCase):
             userplan__recurring__token_verified=True,
         )
         out = StringIO()
-        call_command("autorenew_accounts", stdout=out)
-        self.assertEqual(out.getvalue(), "Starting renewal\nNo accounts autorenewed\n")
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", stdout=out)
+        self.assertEqual(
+            out.getvalue(),
+            "Starting renewal\n"
+            "Started automatic account renewal\n"
+            "0 accounts to be renewed.\n"
+            "No accounts autorenewed\n",
+        )
 
     def test_renewal_providers(self):
         _make_user(
@@ -56,8 +83,15 @@ class ManagementCommandTests(TestCase):
             userplan__recurring__token_verified=True,
         )
         out = StringIO()
-        call_command("autorenew_accounts", providers="foo", stdout=out)
-        self.assertEqual(out.getvalue(), "Starting renewal\nNo accounts autorenewed\n")
+        with self.assertWarns(DeprecationWarning):
+            call_command("autorenew_accounts", providers="foo", stdout=out)
+        self.assertEqual(
+            out.getvalue(),
+            "Starting renewal\n"
+            "Started automatic account renewal\n"
+            "0 accounts to be renewed.\n"
+            "No accounts autorenewed\n",
+        )
 
 
 def _make_user(
