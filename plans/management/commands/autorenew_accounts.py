@@ -38,7 +38,7 @@ class Command(BaseCommand):
         logger = logging.getLogger("plans.tasks")
         handler = logging.StreamHandler(self.stdout)
         logger.addHandler(handler)
-        verbosity = options["verbosity"]
+        verbosity = options.get("verbosity")
         if verbosity == 0:
             logger.setLevel(logging.WARNING)
         elif verbosity == 1:
