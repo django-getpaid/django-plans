@@ -43,7 +43,7 @@ setup(
         "django-next-url-mixin>=0.1.0",
         "zeep",
         "django-sequences",
-        "swapper~=1.3.0",
+        "swapper~=1.4.0",
         "six",
     ],
     extras_require={
