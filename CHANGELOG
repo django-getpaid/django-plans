@@ -1,6 +1,11 @@
 django-plans changelog
 ======================
 
+2.2.0
+-----
+
+* **Autorenew Schedule Enhancement**: Introduced flexible scheduling mechanism via ``PLANS_AUTORENEW_SCHEDULE`` setting for automatic account renewals. Deprecated legacy ``PLANS_AUTORENEW_BEFORE_DAYS`` and ``PLANS_AUTORENEW_BEFORE_HOURS`` settings with warnings. Enhanced autorenewal logic and expanded test coverage for robust behavior.
+
 2.1.0
 -----
 
