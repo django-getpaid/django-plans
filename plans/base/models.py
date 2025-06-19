@@ -966,6 +966,9 @@ class AbstractOrder(BaseMixin, models.Model):
     def get_invoices(self):
         return AbstractInvoice.get_concrete_model().invoices.filter(order=self)
 
+    def get_credit_notes(self):
+        return AbstractInvoice.get_concrete_model().credit_notes.filter(order=self)
+
     def get_all_invoices(self):
         return self.invoice_set.order_by("issued", "issued_duplicate", "pk")
 
@@ -1053,6 +1056,15 @@ class InvoiceDuplicateManager(models.Manager):
         )
 
 
+class CreditNoteManager(models.Manager):
+    def get_queryset(self):
+        return (
+            super(CreditNoteManager, self)
+            .get_queryset()
+            .filter(type=AbstractInvoice.INVOICE_TYPES["CREDIT_NOTE"])
+        )
+
+
 def get_initial_number(older_invoices):
     return (
         older_invoices.order_by("number").values_list("number", flat=True).last() or 0
@@ -1069,6 +1081,7 @@ class AbstractInvoice(BaseMixin, models.Model):
             (1, "INVOICE", _("Invoice")),
             (2, "DUPLICATE", _("Invoice Duplicate")),
             (3, "PROFORMA", pgettext_lazy("proforma", "Order confirmation")),
+            (4, "CREDIT_NOTE", _("Credit note")),
         ]
     )
 
@@ -1076,6 +1089,7 @@ class AbstractInvoice(BaseMixin, models.Model):
     invoices = InvoiceManager()
     proforma = InvoiceProformaManager()
     duplicates = InvoiceDuplicateManager()
+    credit_notes = CreditNoteManager()
 
     class NUMBERING:
         """Used as a choices for settings.PLANS_INVOICE_COUNTER_RESET"""
@@ -1089,6 +1103,14 @@ class AbstractInvoice(BaseMixin, models.Model):
     )
     order = models.ForeignKey(
         "Order", verbose_name=_("order"), on_delete=models.CASCADE
+    )
+    credit_note_for = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="issued_credit_notes",
+        verbose_name=_("Credit note for"),
     )
     number = models.IntegerField(db_index=True)
     full_number = models.CharField(max_length=200)
@@ -1140,6 +1162,7 @@ class AbstractInvoice(BaseMixin, models.Model):
     issuer_tax_number = models.CharField(
         max_length=200, blank=True, verbose_name=_("TAX/VAT number")
     )
+    cancellation_reason = models.TextField(_("Cancellation reason"), blank=True)
 
     class Meta:
         abstract = True
@@ -1362,3 +1385,71 @@ class AbstractInvoice(BaseMixin, models.Model):
 
     def is_UE_customer(self):
         return EUTaxationPolicy.is_in_EU(self.buyer_country.code)
+
+    def cancel_invoice(self, reason=""):
+        """
+        Cancels the invoice by creating a credit note.
+        It also returns the associated order.
+        """
+        Invoice = self.get_concrete_model()
+        if self.type != Invoice.INVOICE_TYPES.INVOICE:
+            raise ValidationError(_("Only invoices can be cancelled."))
+
+        if self.issued_credit_notes.exists():
+            raise ValidationError(
+                _("This invoice has already been cancelled by a credit note.")
+            )
+
+        # Create the credit note
+        credit_note = Invoice()
+        credit_note.type = Invoice.INVOICE_TYPES.CREDIT_NOTE
+        credit_note.credit_note_for = self
+        credit_note.cancellation_reason = reason
+
+        # Copy data from original invoice
+        credit_note.user = self.user
+        credit_note.order = self.order
+        credit_note.issued = date.today()
+        credit_note.payment_date = date.today()
+        credit_note.selling_date = self.selling_date
+
+        # Negate values
+        credit_note.unit_price_net = -self.unit_price_net
+        credit_note.quantity = self.quantity
+        credit_note.total_net = -self.total_net
+        credit_note.total = -self.total
+        credit_note.tax_total = -self.tax_total
+        credit_note.tax = self.tax  # Tax rate stays the same
+        credit_note.rebate = self.rebate
+        credit_note.currency = self.currency
+
+        # Copy descriptions and addresses
+        credit_note.item_description = (
+            _("Credit note for invoice %s") % self.full_number
+        )
+        credit_note.buyer_name = self.buyer_name
+        credit_note.buyer_street = self.buyer_street
+        credit_note.buyer_zipcode = self.buyer_zipcode
+        credit_note.buyer_city = self.buyer_city
+        credit_note.buyer_country = self.buyer_country
+        credit_note.buyer_tax_number = self.buyer_tax_number
+
+        credit_note.shipping_name = self.shipping_name
+        credit_note.shipping_street = self.shipping_street
+        credit_note.shipping_zipcode = self.shipping_zipcode
+        credit_note.shipping_city = self.shipping_city
+        credit_note.shipping_country = self.shipping_country
+        credit_note.require_shipment = self.require_shipment
+
+        credit_note.issuer_name = self.issuer_name
+        credit_note.issuer_street = self.issuer_street
+        credit_note.issuer_zipcode = self.issuer_zipcode
+        credit_note.issuer_city = self.issuer_city
+        credit_note.issuer_country = self.issuer_country
+        credit_note.issuer_tax_number = self.issuer_tax_number
+
+        # Clean and save
+        credit_note.clean()  # This sets up numbering
+        credit_note.save()
+
+        return credit_note

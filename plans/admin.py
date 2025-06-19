@@ -211,6 +211,22 @@ class OrderAdmin(admin.ModelAdmin):
         )
 
 
+def cancel_selected_invoices(modeladmin, request, queryset):
+    for invoice in queryset:
+        try:
+            invoice.cancel_invoice()
+            modeladmin.message_user(
+                request, f"Invoice {invoice.full_number} cancelled successfully."
+            )
+        except Exception as e:
+            modeladmin.message_user(
+                request, f"Could not cancel {invoice.full_number}: {e}", level="ERROR"
+            )
+
+
+cancel_selected_invoices.short_description = _("Cancel and issue credit note")
+
+
 class InvoiceAdmin(admin.ModelAdmin):
     search_fields = ("full_number", "buyer_tax_number", "user__username", "user__email")
     list_filter = (
@@ -235,6 +251,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_display_links = list_display
     list_select_related = True
     raw_id_fields = ("user", "order")
+    actions = (cancel_selected_invoices,)
 
 
 class RecurringPlanInline(admin.StackedInline):
