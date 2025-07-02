@@ -958,6 +958,8 @@ class AbstractOrder(BaseMixin, models.Model):
                     f"Cannot return order with status other than COMPLETED and NOT_VALID: {self.status}"
                 )
             self.status = self.STATUS.RETURNED
+            for invoice in self.get_invoices():
+                invoice.cancel_invoice()
             self.save()
 
     def get_invoices_proforma(self):
