@@ -247,11 +247,103 @@ class InvoiceAdmin(admin.ModelAdmin):
         "buyer_city",
         "buyer_tax_number",
     )
-    readonly_fields = ("created", "updated_at")
+    readonly_fields = (
+        "created",
+        "updated_at",
+        "full_number",
+        "number",
+        "total_net",
+        "tax_total",
+        "total",
+    )
     list_display_links = list_display
     list_select_related = True
-    raw_id_fields = ("user", "order")
+    raw_id_fields = ("user", "order", "credit_note_for")
     actions = (cancel_selected_invoices,)
+    fieldsets = (
+        (
+            _("Invoice Details"),
+            {
+                "fields": (
+                    "type",
+                    "full_number",
+                    "number",
+                    "user",
+                    "order",
+                    "credit_note_for",
+                    "cancellation_reason",
+                )
+            },
+        ),
+        (
+            _("Dates"),
+            {
+                "fields": (
+                    "issued",
+                    "selling_date",
+                    "payment_date",
+                    "issued_duplicate",
+                    "created",
+                    "updated_at",
+                )
+            },
+        ),
+        (
+            _("Billing Details"),
+            {
+                "fields": (
+                    "item_description",
+                    "quantity",
+                    "unit_price_net",
+                    "tax",
+                    "rebate",
+                    "currency",
+                    "total_net",
+                    "tax_total",
+                    "total",
+                )
+            },
+        ),
+        (
+            _("Buyer Details"),
+            {
+                "fields": (
+                    "buyer_name",
+                    "buyer_street",
+                    "buyer_zipcode",
+                    "buyer_city",
+                    "buyer_country",
+                    "buyer_tax_number",
+                )
+            },
+        ),
+        (
+            _("Shipping Details"),
+            {
+                "fields": (
+                    "require_shipment",
+                    "shipping_name",
+                    "shipping_street",
+                    "shipping_zipcode",
+                    "shipping_city",
+                    "shipping_country",
+                )
+            },
+        ),
+        (
+            _("Issuer Details"),
+            {
+                "fields": (
+                    "issuer_name",
+                    "issuer_street",
+                    "issuer_zipcode",
+                    "issuer_city",
+                    "issuer_country",
+                    "issuer_tax_number",
+                )
+            },
+        ),
+    )
 
 
 class RecurringPlanInline(admin.StackedInline):
