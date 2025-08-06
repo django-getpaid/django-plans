@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import requests
 from django.conf import settings
+from django.contrib.admin import site as admin_site
 from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -40,6 +41,7 @@ from plans.quota import get_user_quota
 from plans.taxation.eu import EUTaxationPolicy
 from plans.validators import ModelCountValidator
 from plans.views import CreateOrderView
+from plans.admin import OrderAdmin, make_order_invoice
 
 User = get_user_model()
 BillingInfo = AbstractBillingInfo.get_concrete_model()
@@ -1773,6 +1775,52 @@ class RecurringPlansTestCase(TestCase):
                 str(caught_warning.message),
                 "has_automatic_renewal is deprecated. Use renewal_triggered_by instead.",
             )
+
+
+class AdminActionsTestCase(TestCase):
+    fixtures = ["initial_plan", "test_django-plans_auth", "test_django-plans_plans"]
+
+    def setUp(self):
+        self.user = User.objects.get(username="test1")
+        self.plan_pricing = PlanPricing.objects.first()
+        self.modeladmin = OrderAdmin(Order, admin_site)
+        self.request = RequestFactory().get("/")
+
+    def test_make_order_invoice_not_completed(self):
+        """
+        Test that make_order_invoice admin action doesn't create invoice for not completed order
+        and sends a message to user.
+        """
+        order = Order.objects.create(
+            user=self.user,
+            pricing=self.plan_pricing.pricing,
+            amount=100,
+            plan=self.plan_pricing.plan,
+            completed=None,
+        )
+        self.assertEqual(
+            Invoice.objects.filter(
+                order=order, type=Invoice.INVOICE_TYPES.INVOICE
+            ).count(),
+            0,
+        )
+
+        queryset = Order.objects.filter(pk=order.pk)
+
+        self.modeladmin.message_user = mock.Mock()
+        make_order_invoice(self.modeladmin, self.request, queryset)
+
+        self.assertEqual(
+            Invoice.objects.filter(
+                order=order, type=Invoice.INVOICE_TYPES.INVOICE
+            ).count(),
+            0,
+        )
+        self.modeladmin.message_user.assert_called_with(
+            self.request,
+            f"Order {order.id} is has no completed date, cannot create invoice.",
+            level="ERROR",
+        )
 
 
 class TasksTestCase(TestCase):
