@@ -167,6 +167,13 @@ def make_order_invoice(modeladmin, request, queryset):
             ).count()
             == 0
         ):
+            if not order.completed:
+                modeladmin.message_user(
+                    request,
+                    f"Order {order.id} is has no completed date, cannot create invoice.",
+                    level="ERROR",
+                )
+                continue
             Invoice.create(order, Invoice.INVOICE_TYPES["INVOICE"])
 
 
