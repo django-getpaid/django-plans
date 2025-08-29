@@ -1,0 +1,160 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+{% endblock %}
+
+{% block nav-breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_partial_credit_note">
+        <input type="hidden" name="_selected_action" value="{{ invoice.pk }}">
+        
+        <div>
+            <fieldset class="module aligned">
+                <h2>{% trans "Original Invoice Details" %}</h2>
+                
+                <div class="form-row">
+                    <div class="readonly">
+                        <label>{% trans "Invoice:" %}</label>
+                        <p><strong>{{ invoice.full_number }}</strong> - {{ invoice.issued|date:"Y-m-d" }}</p>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="readonly">
+                        <label>{% trans "Customer:" %}</label>
+                        <p>
+                            <strong>{{ invoice.buyer_name }}</strong><br>
+                            {{ invoice.buyer_street }}<br>
+                            {{ invoice.buyer_zipcode }} {{ invoice.buyer_city }}<br>
+                            {{ invoice.buyer_country }}
+                            {% if invoice.buyer_tax_number %}<br>{% trans "Tax ID:" %} {{ invoice.buyer_tax_number }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="readonly">
+                        <label>{% trans "Order:" %}</label>
+                        <p>
+                            <strong>#{{ invoice.order.id }}</strong> - {{ invoice.user.username }}<br>
+                            {{ invoice.item_description }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="readonly">
+                        <label>{% trans "Financial Breakdown:" %}</label>
+                        <p>
+                            {% trans "Net Amount:" %} <strong>{{ invoice.total_net }} {{ invoice.currency }}</strong><br>
+                            {% trans "Tax Amount:" %} <strong>{{ invoice.tax_total }} {{ invoice.currency }}</strong> ({{ invoice.tax }}%)<br>
+                            {% trans "Total Amount:" %} <strong>{{ invoice.total }} {{ invoice.currency }}</strong>
+                        </p>
+                    </div>
+                </div>
+                
+                {% if invoice.payment_date %}
+                <div class="form-row">
+                    <div class="readonly">
+                        <label>{% trans "Payment:" %}</label>
+                        <p>{% trans "Due:" %} {{ invoice.payment_date|date:"Y-m-d" }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </fieldset>
+            
+            <fieldset class="module aligned">
+                <h2>{% trans "Credit Note Amounts" %}</h2>
+                
+                <div class="form-row{% if form.net_amount.errors %} errors{% endif %}">
+                    <div>
+                        <label class="required" for="{{ form.net_amount.id_for_label }}">{{ form.net_amount.label }}:</label>
+                        {{ form.net_amount }}
+                        {{ form.net_amount.errors }}
+                        {% if form.net_amount.help_text %}
+                            <p class="help">{{ form.net_amount.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row{% if form.tax_amount.errors %} errors{% endif %}">
+                    <div>
+                        <label class="required" for="{{ form.tax_amount.id_for_label }}">{{ form.tax_amount.label }}:</label>
+                        {{ form.tax_amount }}
+                        {{ form.tax_amount.errors }}
+                        {% if form.tax_amount.help_text %}
+                            <p class="help">{{ form.tax_amount.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row{% if form.reason.errors %} errors{% endif %}">
+                    <div>
+                        <label class="required" for="{{ form.reason.id_for_label }}">{{ form.reason.label }}:</label>
+                        {{ form.reason }}
+                        {{ form.reason.errors }}
+                        {% if form.reason.help_text %}
+                            <p class="help">{{ form.reason.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </fieldset>
+            
+            <fieldset class="module aligned">
+                <h2>{% trans "Quick Examples" %}</h2>
+                
+                <div class="form-row">
+                    <div class="readonly">
+                        <ul>
+                            <li><strong>{% trans "Tax refund (customer overcharged):" %}</strong> Net: 0, Tax: 21.00</li>
+                            <li><strong>{% trans "Additional tax (customer undercharged):" %}</strong> Net: 0, Tax: -21.00</li>
+                            <li><strong>{% trans "Amount refund (customer overcharged):" %}</strong> Net: 50.00, Tax: 10.50</li>
+                            <li><strong>{% trans "Full refund:" %}</strong> Use the pre-filled default values</li>
+                        </ul>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        
+        <div class="submit-row">
+            <input type="submit" value="{% trans 'Create Partial Credit Note' %}" class="default" name="apply">
+            <a href="{% url opts|admin_urlname:'changelist' %}" class="button cancel-link">{% trans "Cancel" %}</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add some helpful JavaScript to calculate totals
+    const netInput = document.getElementById('id_net_amount');
+    const taxInput = document.getElementById('id_tax_amount');
+    
+    function updatePreview() {
+        const netAmount = parseFloat(netInput.value) || 0;
+        const taxAmount = parseFloat(taxInput.value) || 0;
+        const totalAdjustment = netAmount + taxAmount;
+        
+        // You could add a preview section here if needed
+        console.log(`Total adjustment: ${totalAdjustment}`);
+    }
+    
+    netInput.addEventListener('input', updatePreview);
+    taxInput.addEventListener('input', updatePreview);
+});
+</script>
+{% endblock %}

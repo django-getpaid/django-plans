@@ -2,10 +2,14 @@ from copy import deepcopy
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from ordered_model.admin import OrderedModelAdmin
+
+from .forms import PartialCreditNoteForm
 
 from plans.base.models import (
     AbstractBillingInfo,
@@ -227,6 +231,64 @@ def cancel_selected_invoices(modeladmin, request, queryset):
 cancel_selected_invoices.short_description = _("Cancel and issue credit note")
 
 
+def create_partial_credit_note(modeladmin, request, queryset):
+    """Create partial credit notes with custom amounts"""
+    if queryset.count() != 1:
+        modeladmin.message_user(
+            request,
+            "Please select exactly one invoice to create a partial credit note.",
+            level="ERROR",
+        )
+        return
+
+    invoice = queryset.first()
+    if invoice.type != invoice.INVOICE_TYPES.INVOICE:
+        modeladmin.message_user(
+            request,
+            "Only regular invoices can have partial credit notes.",
+            level="ERROR",
+        )
+        return
+
+    if request.method == "POST" and "apply" in request.POST:
+        form = PartialCreditNoteForm(request.POST)
+        if form.is_valid():
+            credit_note = invoice.create_partial_credit_note(
+                form.cleaned_data["net_amount"],
+                form.cleaned_data["tax_amount"],
+                form.cleaned_data["reason"],
+            )
+            modeladmin.message_user(
+                request,
+                "Partial credit note %s created successfully for invoice %s."
+                % (credit_note.full_number, invoice.full_number),
+            )
+            return HttpResponseRedirect(reverse("admin:plans_invoice_changelist"))
+    else:
+        # Initialize form with default values from invoice
+        initial_data = {
+            "net_amount": invoice.total_net,
+            "tax_amount": invoice.tax_total,
+            "reason": "",
+        }
+        form = PartialCreditNoteForm(initial=initial_data)
+
+    context = {
+        "title": "Create Partial Credit Note for Invoice %s" % invoice.full_number,
+        "invoice": invoice,
+        "opts": modeladmin.model._meta,
+        "has_view_permission": modeladmin.has_view_permission(request),
+        "form": form,
+    }
+
+    return TemplateResponse(
+        request, "admin/plans/invoice/partial_credit_note_form.html", context
+    )
+
+
+create_partial_credit_note.short_description = _("Create partial credit note")
+
+
 class InvoiceAdmin(admin.ModelAdmin):
     search_fields = ("full_number", "buyer_tax_number", "user__username", "user__email")
     list_filter = (
@@ -259,7 +321,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_display_links = list_display
     list_select_related = True
     raw_id_fields = ("user", "order", "credit_note_for")
-    actions = (cancel_selected_invoices,)
+    actions = (cancel_selected_invoices, create_partial_credit_note)
     fieldsets = (
         (
             _("Invoice Details"),

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import HiddenInput
-from django.utils.translation import gettext
+from django.utils.translation import gettext, gettext_lazy as _
 
 from plans.base.models import AbstractBillingInfo, AbstractOrder, AbstractPlanPricing
 
@@ -70,4 +70,43 @@ class BillingInfoWithoutShippingForm(BillingInfoForm):
 class FakePaymentsForm(forms.Form):
     status = forms.ChoiceField(
         choices=Order.STATUS, required=True, label=gettext("Change order status to")
+    )
+
+
+class PartialCreditNoteForm(forms.Form):
+    """Form for creating partial credit notes with proper validation."""
+
+    net_amount = forms.DecimalField(
+        label=_("Net Amount to Refund/Charge"),
+        max_digits=7,
+        decimal_places=2,
+        help_text=_(
+            "Positive = refund to customer, Negative = additional charge, Zero = no change"
+        ),
+        widget=forms.NumberInput(attrs={"class": "vNumberField", "step": "0.01"}),
+    )
+
+    tax_amount = forms.DecimalField(
+        label=_("Tax Amount to Refund/Charge"),
+        max_digits=7,
+        decimal_places=2,
+        help_text=_(
+            "Positive = refund tax to customer, Negative = charge additional tax, Zero = no change"
+        ),
+        widget=forms.NumberInput(attrs={"class": "vNumberField", "step": "0.01"}),
+    )
+
+    reason = forms.CharField(
+        label=_("Reason for Correction"),
+        help_text=_(
+            "Provide a clear explanation for this correction (required for audit purposes)."
+        ),
+        widget=forms.Textarea(
+            attrs={
+                "class": "vLargeTextField",
+                "rows": 4,
+                "cols": 40,
+                "placeholder": _("Explain why this correction is needed..."),
+            }
+        ),
     )
