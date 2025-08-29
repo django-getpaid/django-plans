@@ -1425,33 +1425,70 @@ class AbstractInvoice(BaseMixin, models.Model):
         credit_note.rebate = self.rebate
         credit_note.currency = self.currency
 
-        # Copy descriptions and addresses
         credit_note.item_description = (
             _("Credit note for invoice %s") % self.full_number
         )
-        credit_note.buyer_name = self.buyer_name
-        credit_note.buyer_street = self.buyer_street
-        credit_note.buyer_zipcode = self.buyer_zipcode
-        credit_note.buyer_city = self.buyer_city
-        credit_note.buyer_country = self.buyer_country
-        credit_note.buyer_tax_number = self.buyer_tax_number
-
-        credit_note.shipping_name = self.shipping_name
-        credit_note.shipping_street = self.shipping_street
-        credit_note.shipping_zipcode = self.shipping_zipcode
-        credit_note.shipping_city = self.shipping_city
-        credit_note.shipping_country = self.shipping_country
-        credit_note.require_shipment = self.require_shipment
-
-        credit_note.issuer_name = self.issuer_name
-        credit_note.issuer_street = self.issuer_street
-        credit_note.issuer_zipcode = self.issuer_zipcode
-        credit_note.issuer_city = self.issuer_city
-        credit_note.issuer_country = self.issuer_country
-        credit_note.issuer_tax_number = self.issuer_tax_number
+        self._copy_addresses_to_credit_note(credit_note)
 
         # Clean and save
         credit_note.clean()  # This sets up numbering
         credit_note.save()
 
         return credit_note
+
+    def create_partial_credit_note(self, net_amount, tax_amount, reason=""):
+        """
+        Creates a partial credit note with custom amounts.
+        User input: positive = refund to customer, negative = additional charge.
+        """
+        Invoice = self.get_concrete_model()
+        if self.type != Invoice.INVOICE_TYPES.INVOICE:
+            raise ValidationError(_("Only invoices can have partial credit notes."))
+
+        credit_note = Invoice(
+            type=Invoice.INVOICE_TYPES.CREDIT_NOTE,
+            credit_note_for=self,
+            user=self.user,
+            order=self.order,
+            issued=date.today(),
+            payment_date=date.today(),
+            selling_date=self.selling_date,
+            unit_price_net=-net_amount,
+            quantity=1,
+            total_net=-net_amount,
+            tax_total=-tax_amount,
+            total=-(net_amount + tax_amount),
+            tax=self.tax,
+            rebate=self.rebate,
+            currency=self.currency,
+        )
+
+        total_user_input = net_amount + tax_amount
+        action = (
+            "Refund"
+            if total_user_input > 0
+            else "Additional charge" if total_user_input < 0 else "Adjustment"
+        )
+        credit_note.item_description = _("%s for invoice %s: %s") % (
+            action,
+            self.full_number,
+            reason,
+        )
+        credit_note.cancellation_reason = "%s: %s" % (action, reason)
+
+        self._copy_addresses_to_credit_note(credit_note)
+        credit_note.clean()
+        credit_note.save()
+        return credit_note
+
+    def _copy_addresses_to_credit_note(self, credit_note):
+        """Copy all address fields from invoice to credit note."""
+        address_prefixes = ("buyer_", "shipping_", "issuer_")
+        address_fields = [
+            field.name
+            for field in self._meta.fields
+            if any(field.name.startswith(prefix) for prefix in address_prefixes)
+            or field.name == "require_shipment"
+        ]
+        for field_name in address_fields:
+            setattr(credit_note, field_name, getattr(self, field_name))
