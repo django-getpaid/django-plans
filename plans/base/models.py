@@ -78,7 +78,7 @@ class AbstractPlan(BaseMixin, OrderedModel):
         help_text=_('Both "Unknown" and "No" means that the plan is not default'),
         default=None,
         db_index=True,
-        unique=True,
+        unique=False,
         null=True,
     )
     available = models.BooleanField(
