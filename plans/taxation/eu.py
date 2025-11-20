@@ -7,10 +7,11 @@ import stdnum.eu.vat
 from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
-from requests.exceptions import ConnectionError
-from zeep.exceptions import Fault
+from requests.exceptions import ConnectionError, Timeout
+from zeep.exceptions import Fault, TransportError
 
 from plans.taxation import TaxationPolicy
+from plans.taxation.tedb_client import TEDBClient
 from plans.utils import country_code_transform
 
 logger = logging.getLogger("plans.taxation.eu.vies")
@@ -27,11 +28,14 @@ class EUTaxationPolicy(TaxationPolicy):
 
     This taxation policy was updated at 1 Jan 2015 after new UE VAT regulations. You should also probably
     register in MOSS system.
+
+    VAT rates are retrieved from the European Commission's TEDB service when possible,
+    with fallback to static rates table for reliability.
     """
 
-    # Standard VAT rates according to
-    # http://ec.europa.eu/taxation_customs/resources/documents/taxation/vat/how_vat_works/rates/vat_rates_en.pdf
-    # Situation at 1 Jan 2017
+    # Standard VAT rates for EU countries
+    # Updated: November 2025
+    # Note: VAT rates change frequently - verify current rates for production use
 
     EU_COUNTRIES_VAT = {
         "BE": Decimal("21"),  # Belgium
@@ -39,7 +43,9 @@ class EUTaxationPolicy(TaxationPolicy):
         "CZ": Decimal("21"),  # Czech Republic
         "DK": Decimal("25"),  # Denmark
         "DE": Decimal("19"),  # Germany
-        "EE": Decimal("20"),  # Estonia
+        "EE": Decimal(
+            "22"
+        ),  # Estonia (increased from 20% in Jan 2024, will be 24% from July 2025)
         "EL": Decimal("24"),  # Greece
         "ES": Decimal("21"),  # Spain
         "FR": Decimal("20"),  # France
@@ -56,10 +62,10 @@ class EUTaxationPolicy(TaxationPolicy):
         "AT": Decimal("20"),  # Austria
         "PL": Decimal("23"),  # Poland
         "PT": Decimal("23"),  # Portugal
-        "RO": Decimal("19"),  # Romania
+        "RO": Decimal("21"),  # Romania (increased from 19% in Aug 2025)
         "SI": Decimal("22"),  # Slovenia
-        "SK": Decimal("20"),  # Slovakia
-        "FI": Decimal("24"),  # Finland
+        "SK": Decimal("23"),  # Slovakia (increased from 20% in Jan 2025)
+        "FI": Decimal("25.5"),  # Finland (increased from 24% in Sep 2024)
         "SE": Decimal("25"),  # Sweden
         # 'GB': Decimal('20'),  # United Kingdom (Great Britain)
     }
@@ -69,15 +75,54 @@ class EUTaxationPolicy(TaxationPolicy):
         return country_code_transform(country_code).upper() in cls.EU_COUNTRIES_VAT
 
     @classmethod
+    def _get_tedb_client(cls):
+        """Get TEDB client instance, cached as class attribute."""
+        if not hasattr(cls, "_tedb_client"):
+            cls._tedb_client = TEDBClient()
+        return cls._tedb_client
+
+    @classmethod
+    def _get_vat_rate_from_tedb(cls, country_code):
+        """
+        Get VAT rate from TEDB service with fallback to static table.
+
+        Args:
+            country_code: ISO 2-letter country code
+
+        Returns:
+            Decimal VAT rate or None if not available
+        """
+        try:
+            tedb_client = cls._get_tedb_client()
+            rate = tedb_client.get_vat_rate(country_code)
+            if rate is not None:
+                logger.info(f"Using TEDB VAT rate for {country_code}: {rate}")
+                return rate
+        except (ConnectionError, Timeout, Fault, TransportError) as e:
+            logger.warning(f"TEDB service unavailable for {country_code}: {e}")
+
+        # Fallback to static table
+        try:
+            rate = cls.EU_COUNTRIES_VAT[country_code]
+            logger.info(f"Using fallback VAT rate for {country_code}: {rate}")
+            return rate
+        except KeyError:
+            logger.error(f"No VAT rate available for {country_code}")
+            return None
+
+    @classmethod
     def get_default_tax(cls):
         issuer_country_code = cls.get_issuer_country_code()
         issuer_country_code = country_code_transform(issuer_country_code)
-        try:
-            return cls.EU_COUNTRIES_VAT[issuer_country_code]
-        except KeyError:
-            raise ImproperlyConfigured(
-                "EUTaxationPolicy requires that issuer country is in EU"
-            )
+
+        # Try TEDB first, then fallback to static table
+        rate = cls._get_vat_rate_from_tedb(issuer_country_code)
+        if rate is not None:
+            return rate
+
+        raise ImproperlyConfigured(
+            "EUTaxationPolicy requires that issuer country is in EU"
+        )
 
     @classmethod
     def get_tax_rate(cls, tax_id, country_code, request=None):
@@ -101,6 +146,9 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(country_code):
                 # Customer (private person) is from a EU
                 # Customer pays his VAT rate
+                rate = cls._get_vat_rate_from_tedb(country_code)
+                if rate is not None:
+                    return rate, True
                 return cls.EU_COUNTRIES_VAT[country_code], True
             else:
                 # Customer (private person) not from EU
@@ -125,6 +173,9 @@ class EUTaxationPolicy(TaxationPolicy):
                         # Charge back
                         return None, True
                     else:
+                        rate = cls._get_vat_rate_from_tedb(country_code)
+                        if rate is not None:
+                            return rate, True
                         return cls.EU_COUNTRIES_VAT[country_code], True
                 except (
                     Fault,
@@ -148,6 +199,9 @@ class EUTaxationPolicy(TaxationPolicy):
                             ),
                         )
                     logger.exception("TAX_ID=%s" % (tax_id))
+                    rate = cls._get_vat_rate_from_tedb(country_code)
+                    if rate is not None:
+                        return rate, False
                     return cls.EU_COUNTRIES_VAT[country_code], False
             else:
                 # Company is not from EU
