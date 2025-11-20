@@ -34,9 +34,3 @@ Please notice that you will use a custom migration for your project. It usually 
 This app will also make all required adjustments in django admin.
 
 For more info on how translation works in details please refer to `django-modeltranslation docs<https://django-modeltranslation.readthedocs.org/en/latest/>`_.
-
-
-
-
-
-

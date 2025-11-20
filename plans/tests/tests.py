@@ -26,6 +26,7 @@ from internet_sabotage import no_connection
 from model_bakery import baker
 
 from plans import tasks
+from plans.admin import OrderAdmin, make_order_invoice
 from plans.base.models import (
     AbstractBillingInfo,
     AbstractInvoice,
@@ -41,7 +42,6 @@ from plans.quota import get_user_quota
 from plans.taxation.eu import EUTaxationPolicy
 from plans.validators import ModelCountValidator
 from plans.views import CreateOrderView
-from plans.admin import OrderAdmin, make_order_invoice
 
 User = get_user_model()
 BillingInfo = AbstractBillingInfo.get_concrete_model()

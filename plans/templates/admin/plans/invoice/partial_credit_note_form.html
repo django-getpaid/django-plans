@@ -22,18 +22,18 @@
         {% csrf_token %}
         <input type="hidden" name="action" value="create_partial_credit_note">
         <input type="hidden" name="_selected_action" value="{{ invoice.pk }}">
-        
+
         <div>
             <fieldset class="module aligned">
                 <h2>{% trans "Original Invoice Details" %}</h2>
-                
+
                 <div class="form-row">
                     <div class="readonly">
                         <label>{% trans "Invoice:" %}</label>
                         <p><strong>{{ invoice.full_number }}</strong> - {{ invoice.issued|date:"Y-m-d" }}</p>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="readonly">
                         <label>{% trans "Customer:" %}</label>
@@ -46,7 +46,7 @@
                         </p>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="readonly">
                         <label>{% trans "Order:" %}</label>
@@ -56,7 +56,7 @@
                         </p>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="readonly">
                         <label>{% trans "Financial Breakdown:" %}</label>
@@ -67,7 +67,7 @@
                         </p>
                     </div>
                 </div>
-                
+
                 {% if invoice.payment_date %}
                 <div class="form-row">
                     <div class="readonly">
@@ -77,10 +77,10 @@
                 </div>
                 {% endif %}
             </fieldset>
-            
+
             <fieldset class="module aligned">
                 <h2>{% trans "Credit Note Amounts" %}</h2>
-                
+
                 <div class="form-row{% if form.net_amount.errors %} errors{% endif %}">
                     <div>
                         <label class="required" for="{{ form.net_amount.id_for_label }}">{{ form.net_amount.label }}:</label>
@@ -91,7 +91,7 @@
                         {% endif %}
                     </div>
                 </div>
-                
+
                 <div class="form-row{% if form.tax_amount.errors %} errors{% endif %}">
                     <div>
                         <label class="required" for="{{ form.tax_amount.id_for_label }}">{{ form.tax_amount.label }}:</label>
@@ -102,7 +102,7 @@
                         {% endif %}
                     </div>
                 </div>
-                
+
                 <div class="form-row{% if form.reason.errors %} errors{% endif %}">
                     <div>
                         <label class="required" for="{{ form.reason.id_for_label }}">{{ form.reason.label }}:</label>
@@ -114,10 +114,10 @@
                     </div>
                 </div>
             </fieldset>
-            
+
             <fieldset class="module aligned">
                 <h2>{% trans "Quick Examples" %}</h2>
-                
+
                 <div class="form-row">
                     <div class="readonly">
                         <ul>
@@ -130,7 +130,7 @@
                 </div>
             </fieldset>
         </div>
-        
+
         <div class="submit-row">
             <input type="submit" value="{% trans 'Create Partial Credit Note' %}" class="default" name="apply">
             <a href="{% url opts|admin_urlname:'changelist' %}" class="button cancel-link">{% trans "Cancel" %}</a>
@@ -143,16 +143,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add some helpful JavaScript to calculate totals
     const netInput = document.getElementById('id_net_amount');
     const taxInput = document.getElementById('id_tax_amount');
-    
+
     function updatePreview() {
         const netAmount = parseFloat(netInput.value) || 0;
         const taxAmount = parseFloat(taxInput.value) || 0;
         const totalAdjustment = netAmount + taxAmount;
-        
+
         // You could add a preview section here if needed
         console.log(`Total adjustment: ${totalAdjustment}`);
     }
-    
+
     netInput.addEventListener('input', updatePreview);
     taxInput.addEventListener('input', updatePreview);
 });
