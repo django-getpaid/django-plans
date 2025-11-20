@@ -1,7 +1,8 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import HiddenInput
-from django.utils.translation import gettext, gettext_lazy as _
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 
 from plans.base.models import AbstractBillingInfo, AbstractOrder, AbstractPlanPricing
 

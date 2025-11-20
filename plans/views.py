@@ -37,10 +37,10 @@ from plans.base.models import (
 from plans.forms import BillingInfoForm, CreateOrderForm, FakePaymentsForm
 from plans.importer import import_name
 from plans.mixins import LoginRequired
+from plans.plan_change import get_change_price
 from plans.signals import order_started
 from plans.utils import get_currency
 from plans.validators import plan_validation
-from plans.plan_change import get_change_price
 
 UserPlan = AbstractUserPlan.get_concrete_model()
 PlanPricing = AbstractPlanPricing.get_concrete_model()

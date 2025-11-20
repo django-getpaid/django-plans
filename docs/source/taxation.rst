@@ -34,4 +34,3 @@ FIXME: under developement
 .. autoclass:: plans.taxation.ru.RussianTaxationPolicy
     :members:
     :undoc-members:
-
