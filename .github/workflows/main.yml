@@ -75,6 +75,12 @@ jobs:
                 FAILURE=1
               }
 
+      - name: Test fresh migration from scratch
+        run: |
+          # Test that migrations work on a completely fresh database
+          # This specifically tests the fix for issue #192
+          cd demo && python manage.py migrate --run-syncdb
+
       - name: Testing
         run: |
           # Run tests for sample app used for testing extensibility
