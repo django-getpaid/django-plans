@@ -1,6 +1,11 @@
 django-plans changelog
 ======================
 
+2.3.0
+-----
+
+* **VAT Rates Integration**: Added TEDB (Taxes in Europe Database) integration for real-time EU VAT rates with automatic 24-hour caching and fallback to updated static rates table. Updated VAT rates for Estonia (22%), Finland (25.5%), Slovakia (23%), and Romania (21%) to reflect 2024-2025 changes.
+
 2.2.0
 -----
 

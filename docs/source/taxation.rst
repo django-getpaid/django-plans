@@ -18,13 +18,16 @@ Django-plans application is shipped with some default taxation policies. You can
 
 .. autoclass:: plans.taxation.eu.EUTaxationPolicy
 
+The EU taxation policy now includes automatic VAT rate updates via the European Commission's TEDB (Taxes in Europe Database) service. VAT rates are cached for 24 hours and automatically fall back to updated static rates if the service is unavailable.
 
-
+**Recent VAT Rate Updates (2024-2025):**
+- Estonia: 22% (increased from 20% in January 2024)
+- Finland: 25.5% (increased from 24% in September 2024)
+- Slovakia: 23% (increased from 20% in January 2025)
+- Romania: 21% (increased from 19% in August 2025)
 
 .. note::
-    This taxation policy requires ``suds`` (we use suds-jurko) and ``vatnumber`` python modules (connecting to `VIES <http://ec.europa.eu/taxation_customs/vies/>`_). If you want them automatically installed please remember to insert extra depedencies for pip::
-
-        $ pip install django-plans[eu]
+    This taxation policy requires ``zeep`` and ``python-stdnum`` modules (connecting to `VIES <http://ec.europa.eu/taxation_customs/vies/>`_ and `TEDB <https://ec.europa.eu/taxation_customs/tedb/>`_). These are automatically installed with django-plans.
 
 ``RussianTaxationPolicy``
 -------------------------
