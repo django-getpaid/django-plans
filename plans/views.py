@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Q
 from django.http import Http404, HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, RedirectView, TemplateView, View
@@ -533,6 +533,21 @@ class InvoiceDetailView(LoginRequired, DetailView):
                 .filter(user=self.request.user)
                 .select_related("order")
             )
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle custom invoice 404 page
+
+        Try to explain to multi-account users they need to login to correct
+        account to access their invoices.
+        """
+        try:
+            self.object = self.get_object()
+        except Http404:
+            return render(request, "plans/invoice_404.html", status=404)
+
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
 
 class FakePaymentsView(LoginRequired, SingleObjectMixin, FormView):
