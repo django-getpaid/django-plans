@@ -14,7 +14,7 @@ Add this app to your ``INSTALED_APPS`` in django settings.py::
     INSTALLED_APPS += ('plans', 'ordered_model',)
 
 .. note::
-    
+
     The app 'ordered_model' is required to display the assets used in the django admin to manage the plan model ordering
 
 You should also define all other variables in ``settings.py`` marked as **required**.
@@ -53,4 +53,3 @@ You should send this signal providing ``user`` argument as an object of ``auth.U
     you are done. django-plans automagically integrates with this app
     (if it is available) and will activate user plan when django-registration
     send it's signal after account activation.
-

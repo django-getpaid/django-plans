@@ -9,8 +9,6 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from ordered_model.admin import OrderedModelAdmin
 
-from .forms import PartialCreditNoteForm
-
 from plans.base.models import (
     AbstractBillingInfo,
     AbstractInvoice,
@@ -24,6 +22,7 @@ from plans.base.models import (
     AbstractUserPlan,
 )
 
+from .forms import PartialCreditNoteForm
 from .signals import account_automatic_renewal
 
 Invoice = AbstractInvoice.get_concrete_model()

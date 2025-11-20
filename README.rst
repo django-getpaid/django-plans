@@ -4,8 +4,8 @@ Welcome to django-plans
 
 .. image:: https://codecov.io/gh/django-getpaid/django-plans/branch/master/graph/badge.svg?token=oEyv7odqUW
    :target: https://codecov.io/gh/django-getpaid/django-plans
-   
-Django-plans is a pluggable app for managing pricing plans with quotas and accounts expiration. 
+
+Django-plans is a pluggable app for managing pricing plans with quotas and accounts expiration.
 
 Features currently supported:
 

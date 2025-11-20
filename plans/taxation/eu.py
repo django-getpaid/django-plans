@@ -2,13 +2,13 @@ import logging
 from decimal import Decimal
 from urllib.error import URLError
 from xml.sax import SAXParseException
-from zeep.exceptions import Fault
 
 import stdnum.eu.vat
 from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
 from requests.exceptions import ConnectionError
+from zeep.exceptions import Fault
 
 from plans.taxation import TaxationPolicy
 from plans.utils import country_code_transform
