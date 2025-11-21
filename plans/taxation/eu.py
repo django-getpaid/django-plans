@@ -43,9 +43,7 @@ class EUTaxationPolicy(TaxationPolicy):
         "CZ": Decimal("21"),  # Czech Republic
         "DK": Decimal("25"),  # Denmark
         "DE": Decimal("19"),  # Germany
-        "EE": Decimal(
-            "22"
-        ),  # Estonia (increased from 20% in Jan 2024, will be 24% from July 2025)
+        "EE": Decimal("24"),  # Estonia (increased to 24% in July 2025)
         "EL": Decimal("24"),  # Greece
         "ES": Decimal("21"),  # Spain
         "FR": Decimal("20"),  # France

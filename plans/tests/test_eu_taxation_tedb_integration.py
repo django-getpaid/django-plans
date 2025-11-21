@@ -45,7 +45,7 @@ class EUTaxationTEDBIntegrationTest(TestCase):
         """Test that recently updated VAT rates are correct in static table."""
         # Test recently changed rates
         recent_changes = {
-            "EE": Decimal("22"),  # Estonia (changed from 20% in Jan 2024)
+            "EE": Decimal("24"),  # Estonia (changed to 24% in July 2025)
             "FI": Decimal("25.5"),  # Finland (changed from 24% in Sep 2024)
             "SK": Decimal("23"),  # Slovakia (changed from 20% in Jan 2025)
             "RO": Decimal("21"),  # Romania (changed from 19% in Aug 2025)

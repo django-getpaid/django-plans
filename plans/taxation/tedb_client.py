@@ -62,33 +62,37 @@ class TEDBClient:
         # Try TEDB service
         if self.client:
             try:
-                # Note: The actual TEDB API signature is complex and may vary
-                # This is a simplified implementation that will be enhanced
-                # based on actual TEDB API documentation
-                logger.info(
-                    f"Attempting to retrieve VAT rate from TEDB for {country_code}"
+                logger.info(f"Retrieving VAT rate from TEDB for {country_code}")
+
+                response = self.client.service.retrieveVatRates(
+                    memberStates={"isoCode": [country_code]}, situationOn=date
                 )
 
-                # For now, we'll catch any API call errors and fall back gracefully
-                # The actual implementation would use the correct TEDB API parameters
-                response = None  # Placeholder for actual TEDB call
-
-                if response and hasattr(response, "vatRates") and response.vatRates:
-                    for vat_rate in response.vatRates:
+                if hasattr(response, "vatRateResults") and response.vatRateResults:
+                    # Look for standard/default VAT rate
+                    for vat_rate in response.vatRateResults:
                         if (
-                            hasattr(vat_rate, "memberStateISOCode")
-                            and vat_rate.memberStateISOCode == country_code
-                            and hasattr(vat_rate, "standardRate")
+                            hasattr(vat_rate, "memberState")
+                            and vat_rate.memberState == country_code
+                            and hasattr(vat_rate, "rate")
+                            and hasattr(vat_rate, "type")
                         ):
 
-                            rate = Decimal(str(vat_rate.standardRate))
-
-                            # Cache the result
-                            cache.set(cache_key, rate, self.CACHE_TIMEOUT)
-                            logger.info(
-                                f"Retrieved VAT rate from TEDB for {country_code}: {rate}"
-                            )
-                            return rate
+                            # Check if this is a standard rate
+                            if vat_rate.type == "STANDARD":
+                                rate_info = vat_rate.rate
+                                # Handle both dict and zeep object formats
+                                if hasattr(rate_info, "value") and hasattr(
+                                    rate_info, "type"
+                                ):
+                                    if rate_info.type == "DEFAULT":
+                                        rate = Decimal(str(rate_info.value))
+                                        # Cache the result
+                                        cache.set(cache_key, rate, self.CACHE_TIMEOUT)
+                                        logger.info(
+                                            f"Retrieved standard VAT rate from TEDB for {country_code}: {rate}%"
+                                        )
+                                        return rate
             except (Fault, TransportError, ConnectionError, Timeout) as e:
                 logger.warning(f"TEDB service error for {country_code}: {e}")
 
