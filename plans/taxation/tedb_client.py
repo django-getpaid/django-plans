@@ -86,7 +86,15 @@ class TEDBClient:
                                     rate_info, "type"
                                 ):
                                     if rate_info.type == "DEFAULT":
-                                        rate = Decimal(str(rate_info.value))
+                                        # Convert to Decimal and normalize to remove trailing zeros
+                                        # This ensures "24.0" becomes "24" for consistent JSON serialization
+                                        raw_decimal = Decimal(str(rate_info.value))
+                                        rate = (
+                                            raw_decimal.quantize(Decimal("1"))
+                                            if raw_decimal % 1 == 0
+                                            else raw_decimal
+                                        )
+
                                         # Cache the result
                                         cache.set(cache_key, rate, self.CACHE_TIMEOUT)
                                         logger.info(
