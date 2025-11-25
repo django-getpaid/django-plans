@@ -1357,6 +1357,8 @@ class AbstractInvoice(BaseMixin, models.Model):
         if language_code is not None:
             translation.deactivate()
 
+        return invoice
+
     def send_invoice_by_email(self):
         if self.type in getattr(
             settings, "PLANS_SEND_EMAILS_DISABLED_INVOICE_TYPES", []
@@ -1412,7 +1414,9 @@ class AbstractInvoice(BaseMixin, models.Model):
         credit_note.user = self.user
         credit_note.order = self.order
         credit_note.issued = date.today()
-        credit_note.payment_date = date.today()
+        credit_note.payment_date = (
+            self.payment_date
+        )  # Use original invoice's payment_date
         credit_note.selling_date = self.selling_date
 
         # Negate values
@@ -1451,7 +1455,7 @@ class AbstractInvoice(BaseMixin, models.Model):
             user=self.user,
             order=self.order,
             issued=date.today(),
-            payment_date=date.today(),
+            payment_date=self.payment_date,  # Use original invoice's payment_date
             selling_date=self.selling_date,
             unit_price_net=-net_amount,
             quantity=1,
