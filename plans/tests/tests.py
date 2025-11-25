@@ -736,6 +736,91 @@ class TestInvoice(TestCase):
         self.assertEqual(i.tax_total, o.total() - o.amount)
         self.assertEqual(i.currency, o.currency)
 
+    def test_cancel_invoice_uses_original_payment_date(self):
+        """Test that credit notes use the original invoice's payment_date"""
+        user = User.objects.get(username="test1")
+
+        # Create billing info for the user (required for Invoice.create)
+        BillingInfo.objects.get_or_create(user=user, defaults={"country": "US"})
+
+        plan_pricing = PlanPricing.objects.all()[0]
+
+        # Create an order and invoice with a specific payment date
+        original_payment_date = date(2024, 1, 15)
+        order = Order(
+            user=user,
+            plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing,
+            amount=plan_pricing.price,
+            completed=datetime(2024, 1, 15),  # Use datetime to avoid timezone warning
+        )
+        order.save()
+
+        # Create invoice
+        invoice = Invoice.create(order, Invoice.INVOICE_TYPES.INVOICE)
+        self.assertIsNotNone(invoice)
+        self.assertEqual(invoice.payment_date, original_payment_date)
+
+        # Cancel the invoice (create credit note) on a different date
+        with freeze_time("2024-02-20"):
+            credit_note = invoice.cancel_invoice(reason="Test cancellation")
+
+        # Credit note should use original invoice's payment_date, not today's date
+        self.assertEqual(credit_note.type, Invoice.INVOICE_TYPES.CREDIT_NOTE)
+        self.assertEqual(credit_note.payment_date, original_payment_date)
+        self.assertNotEqual(credit_note.payment_date, date(2024, 2, 20))
+        self.assertEqual(credit_note.issued, date(2024, 2, 20))  # issued is today
+        self.assertEqual(credit_note.credit_note_for, invoice)
+
+        # Verify amounts are negated
+        self.assertEqual(credit_note.total, -invoice.total)
+        self.assertEqual(credit_note.total_net, -invoice.total_net)
+
+    def test_create_partial_credit_note_uses_original_payment_date(self):
+        """Test that partial credit notes use the original invoice's payment_date"""
+        user = User.objects.get(username="test1")
+
+        # Create billing info for the user (required for Invoice.create)
+        BillingInfo.objects.get_or_create(user=user, defaults={"country": "US"})
+
+        plan_pricing = PlanPricing.objects.all()[0]
+
+        # Create an order and invoice with a specific payment date
+        original_payment_date = date(2024, 1, 15)
+        order = Order(
+            user=user,
+            plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing,
+            amount=Decimal("100.00"),
+            completed=datetime(2024, 1, 15),  # Use datetime to avoid timezone warning
+        )
+        order.save()
+
+        # Create invoice
+        invoice = Invoice.create(order, Invoice.INVOICE_TYPES.INVOICE)
+        self.assertIsNotNone(invoice)
+        self.assertEqual(invoice.payment_date, original_payment_date)
+
+        # Create partial credit note on a different date
+        with freeze_time("2024-03-10"):
+            credit_note = invoice.create_partial_credit_note(
+                net_amount=Decimal("30.00"),
+                tax_amount=Decimal("6.00"),
+                reason="Partial refund",
+            )
+
+        # Credit note should use original invoice's payment_date, not today's date
+        self.assertEqual(credit_note.type, Invoice.INVOICE_TYPES.CREDIT_NOTE)
+        self.assertEqual(credit_note.payment_date, original_payment_date)
+        self.assertNotEqual(credit_note.payment_date, date(2024, 3, 10))
+        self.assertEqual(credit_note.issued, date(2024, 3, 10))  # issued is today
+        self.assertEqual(credit_note.credit_note_for, invoice)
+
+        # Verify amounts
+        self.assertEqual(credit_note.total_net, Decimal("-30.00"))
+        self.assertEqual(credit_note.tax_total, Decimal("-6.00"))
+        self.assertEqual(credit_note.total, Decimal("-36.00"))
+
 
 @transaction.atomic
 def complete_order():
