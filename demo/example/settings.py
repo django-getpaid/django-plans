@@ -172,6 +172,8 @@ LOGIN_REDIRECT_URL = "/foo/list/"
 
 ENABLE_FAKE_PAYMENTS = True
 
+TEST_RUNNER = "example.test_runner.PlansTestRunner"
+
 if os.environ.get("SAMPLE_APP", False):
     INSTALLED_APPS.remove("plans")
     INSTALLED_APPS.append("example.sample_plans")
