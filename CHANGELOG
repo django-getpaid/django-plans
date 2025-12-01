@@ -1,6 +1,11 @@
 django-plans changelog
 ======================
 
+2.3.1
+-----
+
+* **Migration Safety**: Fixed PostgreSQL migration safety issue in Plan slug field migration (0017). Added documentation for safe deployment on large PostgreSQL tables using concurrent index creation to avoid table locks during production deployments.
+
 2.3.0
 -----
 

@@ -51,6 +51,9 @@ class Migration(migrations.Migration):
         # Populate slugs from existing names
         migrations.RunPython(populate_slugs, reverse_populate_slugs),
         # Convert to required SlugField with unique constraint
+        # NOTE: For PostgreSQL production deployments with large tables,
+        # consider running this migration with --fake and manually creating
+        # the unique index with CREATE UNIQUE INDEX CONCURRENTLY
         migrations.AlterField(
             model_name="plan",
             name="slug",
