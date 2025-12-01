@@ -102,12 +102,14 @@ copy_plan.short_description = _("Make a plan copy")
 class PlanAdmin(OrderedModelAdmin):
     search_fields = (
         "name",
+        "slug",
         "customized__username",
         "customized__email",
     )
     list_filter = ("available", "visible")
     list_display = [
         "name",
+        "slug",
         "description",
         "customized",
         "default",
@@ -121,6 +123,7 @@ class PlanAdmin(OrderedModelAdmin):
     list_select_related = True
     raw_id_fields = ("customized",)
     readonly_fields = ("created", "updated_at")
+    prepopulated_fields = {"slug": ("name",)}
     actions = [
         copy_plan,
     ]

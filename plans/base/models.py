@@ -73,6 +73,7 @@ class AbstractPlan(BaseMixin, OrderedModel):
     """
 
     name = models.CharField(_("name"), max_length=100)
+    slug = models.SlugField(_("slug"), max_length=100, unique=True)
     description = models.TextField(_("description"), blank=True)
     default = models.BooleanField(
         help_text=_('Both "Unknown" and "No" means that the plan is not default'),
