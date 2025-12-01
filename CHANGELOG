@@ -1,10 +1,11 @@
 django-plans changelog
 ======================
 
-2.3.1
+2.4.0
 -----
 
-* **Migration Safety**: Fixed PostgreSQL migration safety issue in Plan slug field migration (0017). Added documentation for safe deployment on large PostgreSQL tables using concurrent index creation to avoid table locks during production deployments.
+* **Plan Slug Field**: Added unique slug field to Plan model for URL-friendly identifiers. Includes automatic slug generation from plan names with duplicate handling and comprehensive test coverage. **WARNING**: Migration creates unique index synchronously and can lock PostgreSQL tables with large datasets - see migration comments for safe production deployment steps.
+* **Bug Fixes**: Fixed TEDB API integration and updated Estonia VAT rate to 24%. Fixed backward compatible Decimal serialization for VAT rates. Fixed payment_date handling when generating credit notes and invoices. Fixed local imports to reduce circular dependencies.
 
 2.3.0
 -----
