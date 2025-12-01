@@ -10,6 +10,7 @@
       "customized": null,
       "description": "Plan for small company",
       "name": "Standard",
+      "slug": "standard",
       "order": 0
     }
   },
@@ -23,6 +24,7 @@
       "customized": null,
       "description": "For better use",
       "name": "Premium",
+      "slug": "premium",
       "order": 1
     }
   },
@@ -36,6 +38,7 @@
       "customized": null,
       "description": "Professional plan",
       "name": "PRO",
+      "slug": "pro",
       "order": 2
     }
   },
@@ -51,6 +54,7 @@
       ],
       "description": "Custom for test1",
       "name": "Custom",
+      "slug": "custom",
       "order": 4
     }
   },
@@ -66,6 +70,7 @@
       ],
       "description": "Custom test 2",
       "name": "Custom 2",
+      "slug": "custom-2",
       "order": 5
     }
   },
@@ -78,6 +83,7 @@
       "created": "2014-03-30T10:41:52.428Z",
       "description": "Free Test",
       "name": "Free",
+      "slug": "free",
       "order": 6
     }
   },
