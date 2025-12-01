@@ -51,9 +51,12 @@ class Migration(migrations.Migration):
         # Populate slugs from existing names
         migrations.RunPython(populate_slugs, reverse_populate_slugs),
         # Convert to required SlugField with unique constraint
-        # NOTE: For PostgreSQL production deployments with large tables,
-        # consider running this migration with --fake and manually creating
-        # the unique index with CREATE UNIQUE INDEX CONCURRENTLY
+        # WARNING: This operation creates a unique index synchronously and can
+        # LOCK THE TABLE on PostgreSQL with large datasets, causing downtime.
+        # For production PostgreSQL deployments, consider:
+        # 1. Run: python manage.py migrate plans 0017 --fake
+        # 2. Manually: CREATE UNIQUE INDEX CONCURRENTLY plans_plan_slug_unique ON plans_plan (slug);
+        # 3. Then: ALTER TABLE plans_plan ADD CONSTRAINT plans_plan_slug_unique UNIQUE USING INDEX plans_plan_slug_unique;
         migrations.AlterField(
             model_name="plan",
             name="slug",
