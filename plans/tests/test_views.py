@@ -134,6 +134,27 @@ class InvoiceDetailViewTests(TestCase):
             response, '<td class="number">123.00&nbsp;EUR</td>', html=True
         )
 
+    def test_get_other_user(self):
+        user_a = baker.make(User, username="Andy Aight")
+        user_b = baker.make(User, username="Bob Bar")
+        order_b = baker.make("Order", user=user_b, plan__name="Foo plan")
+        invoice_b = baker.make("Invoice", order=order_b, user=user_b, total=123)
+        # superusers can access all invoices
+        self.assertFalse(user_a.is_superuser)
+        self.assertFalse(user_b.is_superuser)
+        # login as user_a and try to access user_b's invoice
+        self.client.force_login(user_a)
+        response = self.client.get(
+            reverse("invoice_preview_html", kwargs={"pk": invoice_b.pk})
+        )
+        self.assertContains(response, "<h1>Invoice Not Found</h1>", status_code=404)
+        # login as user B and ensure the invoice is available
+        self.client.force_login(user_b)
+        response = self.client.get(
+            reverse("invoice_preview_html", kwargs={"pk": invoice_b.pk})
+        )
+        self.assertContains(response, '<span class="en">Invoice ID</span>', html=True)
+
 
 class FakePaymentViewTests(TestCase):
     def test_get(self):

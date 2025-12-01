@@ -1,0 +1,23 @@
+{% extends "plans/base.html" %}
+{% load i18n %}
+
+
+{% block body %}
+    <h1>Invoice Not Found</h1>
+
+    <p>
+        Invoices are only available to
+        <strong>logged-in users associated with the order</strong>.
+    </p>
+
+    <p>
+        If you believe your invoice should be here, please
+        <a href="{% url 'login' %}?next={{ request.path }}">log in</a>
+        using the <strong>account the invoice belongs to</strong>.
+    </p>
+
+    <p>
+        If you received this link by email, you may check the email for hints on
+        which account the invoice belongs to.
+    </p>
+{% endblock %}
