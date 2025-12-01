@@ -3,6 +3,7 @@ Tests for the slug migration functionality.
 """
 
 from django.test import TestCase
+from django.utils.text import slugify
 
 from plans.base.models import AbstractPlan
 
@@ -20,7 +21,6 @@ class SlugMigrationTestCase(TestCase):
     def test_populate_slugs_migration_function(self):
         """Test the populate_slugs function from migration 0017."""
         # Test the migration logic directly
-        from django.utils.text import slugify
 
         # Test cases that would be handled by the migration
         test_cases = [
@@ -99,7 +99,6 @@ class SlugMigrationTestCase(TestCase):
 
         # We can't actually create duplicates due to our validation, so we'll
         # test the migration logic directly
-        from django.utils.text import slugify
 
         # Simulate plans with same names (like in fixtures)
         plan_names = ["Default Plan", "Default Plan", "Standard", "Premium"]
