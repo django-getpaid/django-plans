@@ -65,3 +65,12 @@ Invoice model class
 
 .. autoclass:: plans.models.Invoice
    :members:
+
+Invoice views
+-------------
+
+.. autoclass:: plans.views.InvoiceDetailView
+
+The ``InvoiceDetailView`` provides access to invoice details. Users can only access invoices associated with their account (unless they are superusers). When an invoice is not found or not accessible, a custom 404 page is displayed with helpful messaging for multi-account users, explaining they need to log in with the correct account to access their invoices.
+
+The view uses the template ``plans/invoice_404.html`` for 404 errors, which can be customized in your project.

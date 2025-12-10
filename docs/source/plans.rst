@@ -31,6 +31,17 @@ Plan name that is visible in headers, invoice, etc. This should be a short name 
 
     This field supports i18n. In admin view you will be able to input this name in all available languages.
 
+``slug``
+```````
+
+**type**: slug (unique)
+
+URL-friendly identifier for the plan, automatically generated from the plan name. The slug is unique and can be used in URLs to reference specific plans. If multiple plans would generate the same slug, a number suffix is automatically appended (e.g., "basic", "basic-1", "basic-2").
+
+.. note::
+
+    The slug field was added in version 2.4.0. For existing installations, slugs are automatically populated from plan names during migration.
+
 ``description``
 ```````````````
 
