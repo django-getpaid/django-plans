@@ -4,7 +4,7 @@ Installation
 Installing module code
 ------------------------
 
-You can install app using package manager directly from github:
+You can install the app from PyPI:
 
 .. code-block:: bash
 
