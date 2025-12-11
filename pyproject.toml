@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-plans"
+dynamic = ["version"]
+description = "Pluggable django app for managing pricing plans with quotas and accounts expiration"
+readme = "README.rst"
+license = "MIT"
+authors = [
+    { name = "Krzysztof Dorosz", email = "cypreess@gmail.com" }
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "django-countries>=4.5",
+    "pytz>=2017.2",
+    "django-ordered-model>=1.4.1",
+    "python-stdnum",
+    "django-next-url-mixin>=0.1.0",
+    "zeep",
+    "django-sequences",
+    "swapper~=1.4.0",
+    "six",
+]
+
+[project.optional-dependencies]
+i18n = [
+    "django-modeltranslation>=0.5b1",
+]
+
+[project.urls]
+Homepage = "https://github.com/django-getpaid/django-plans"
+Repository = "https://github.com/django-getpaid/django-plans"
+Issues = "https://github.com/django-getpaid/django-plans/issues"
+Documentation = "https://django-plans.readthedocs.io/"
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "plans.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["plans", "plans.*", "plans_i18n"]
+
+[tool.pytest.ini_options]
+python_files = "test*.py"
+addopts = "--tb=short"
