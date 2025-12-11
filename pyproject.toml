@@ -30,7 +30,6 @@ classifiers = [
 ]
 dependencies = [
     "django-countries>=4.5",
-    "pytz>=2017.2",
     "django-ordered-model>=1.4.1",
     "python-stdnum",
     "django-next-url-mixin>=0.1.0",
