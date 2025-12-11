@@ -62,3 +62,24 @@ include = ["plans", "plans.*", "plans_i18n"]
 [tool.pytest.ini_options]
 python_files = "test*.py"
 addopts = "--tb=short"
+
+[tool.ruff]
+line-length = 120
+exclude = [
+    "env",
+    "venv",
+    ".venv",
+    ".tox",
+    "bow",
+    "docs",
+    "migrations",
+    "node_modules",
+    "static",
+]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "N", "I"]
+ignore = [
+    "N802",  # function name should be lowercase
+    "N806",  # variable in function should be lowercase
+]
