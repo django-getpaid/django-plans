@@ -1,6 +1,3 @@
-import six
-
-
 class Enumeration(object):
     """
     A small helper class for more readable enumerations,
@@ -35,7 +32,7 @@ class Enumeration(object):
         return len(self.enum_list)
 
     def __getitem__(self, v):
-        if isinstance(v, six.string_types):
+        if isinstance(v, str):
             return self.enum_dict[v]
         elif isinstance(v, int):
             return self.enum_list[v]
