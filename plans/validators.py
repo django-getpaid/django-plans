@@ -1,4 +1,3 @@
-import six
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -117,7 +116,7 @@ class ModelAttributeValidator(ModelCountValidator):
             "model_name_plural": self.model._meta.verbose_name_plural.title().lower(),
             "objects": ", ".join(
                 map(
-                    lambda o: '<a href="%s">%s</a>' % (o.get_absolute_url(), six.u(o)),
+                    lambda o: '<a href="%s">%s</a>' % (o.get_absolute_url(), str(o)),
                     kwargs["not_valid_objects"],
                 )
             ),

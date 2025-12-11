@@ -37,7 +37,6 @@ dependencies = [
     "zeep",
     "django-sequences",
     "swapper~=1.4.0",
-    "six",
 ]
 
 [project.optional-dependencies]
