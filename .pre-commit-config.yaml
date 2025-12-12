@@ -1,7 +1,7 @@
 # Pre-commit configuration matching GitHub CI exactly
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         exclude: ^(test_env/|\.tox/|venv/|env/)
@@ -11,22 +11,13 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.8
     hooks:
-      - id: flake8
-        exclude: ^(test_env/|\.tox/|venv/|env/)
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: [--profile=black]
-        # Make isort compatible with black formatting
-        exclude: ^(test_env/|\.tox/|venv/|env/)
+      - id: ruff-check
 
   - repo: https://github.com/psf/black
-    rev: 24.10.0
+    rev: 25.12.0
     hooks:
       - id: black
         # GitHub CI runs: black --check . (no custom line-length, uses default)
