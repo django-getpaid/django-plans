@@ -58,3 +58,37 @@ class EUTaxationTEDBIntegrationTest(TestCase):
                 expected_rate,
                 f"VAT rate for {country} should be {expected_rate}%, got {actual_rate}%",
             )
+
+    @override_settings(PLANS_TAX_COUNTRY="DE")
+    def test_static_vat_rates_match_tedb(self):
+        """
+        Validate that static VAT table matches live TEDB data.
+
+        This test queries the actual TEDB API and compares with our static table.
+        It will FAIL if rates don't match, indicating either:
+        - VAT rates have changed and need updating
+        - Bug in TEDB parsing (e.g., returning regional rates)
+
+        This test is designed to catch issues like Spain returning 7% (Canary Islands)
+        instead of 21% (mainland).
+        """
+        tedb_client = EUTaxationPolicy._get_tedb_client()
+
+        if not tedb_client.client:
+            self.skipTest("TEDB client not available")
+
+        # Test all countries in our static table
+        for country_code, static_rate in EUTaxationPolicy.EU_COUNTRIES_VAT.items():
+            tedb_rate = tedb_client.get_vat_rate(country_code)
+
+            self.assertIsNotNone(
+                tedb_rate,
+                f"{country_code}: TEDB returned None (service error or no data)",
+            )
+
+            self.assertEqual(
+                tedb_rate,
+                static_rate,
+                f"{country_code}: TEDB returned {tedb_rate}% but static table has {static_rate}% "
+                f"- either VAT changed or there's a bug (e.g., regional rate like Canary Islands)",
+            )

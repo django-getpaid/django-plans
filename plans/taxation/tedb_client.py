@@ -70,6 +70,8 @@ class TEDBClient:
 
                 if hasattr(response, "vatRateResults") and response.vatRateResults:
                     # Look for standard/default VAT rate
+                    # BUG: This returns the FIRST rate found, which might be regional
+                    # (e.g., Canary Islands 7% instead of mainland Spain 21%)
                     for vat_rate in response.vatRateResults:
                         if (
                             hasattr(vat_rate, "memberState")
