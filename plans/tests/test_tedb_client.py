@@ -92,3 +92,115 @@ class TEDBClientTest(TestCase):
         rate = self.client.get_vat_rate("DE")
 
         self.assertIsNone(rate)
+
+    @patch("plans.taxation.tedb_client.datetime")
+    def test_regional_rate_filtering_spain(self, mock_datetime):
+        """
+        Test that regional rates are filtered correctly (Spain case).
+
+        Spain has 2 STANDARD+DEFAULT rates in TEDB:
+        - 7% for Canary Islands (with comment)
+        - 21% for mainland (no comment)
+
+        This test verifies we return 21% (mainland), not 7% (regional).
+        """
+        # Mock current date
+        mock_datetime.now.return_value.strftime.return_value = "2025-11-01"
+
+        # Create mock SOAP response structure for Spain
+        mock_rate_canary = Mock()
+        mock_rate_canary.memberState = "ES"
+        mock_rate_canary.type = "STANDARD"
+        mock_rate_canary.rate = Mock()
+        mock_rate_canary.rate.type = "DEFAULT"
+        mock_rate_canary.rate.value = 7.0
+        mock_rate_canary.comment = "VAT - Canary Islands - "
+
+        mock_rate_mainland = Mock()
+        mock_rate_mainland.memberState = "ES"
+        mock_rate_mainland.type = "STANDARD"
+        mock_rate_mainland.rate = Mock()
+        mock_rate_mainland.rate.type = "DEFAULT"
+        mock_rate_mainland.rate.value = 21.0
+        mock_rate_mainland.comment = None
+
+        mock_response = Mock()
+        mock_response.vatRateResults = [mock_rate_canary, mock_rate_mainland]
+
+        # Mock the SOAP client
+        mock_soap_client = Mock()
+        mock_soap_client.service.retrieveVatRates.return_value = mock_response
+        self.client.client = mock_soap_client
+
+        # Execute
+        rate = self.client.get_vat_rate("ES")
+
+        # Verify: Should return 21 (mainland), not 7 (Canary Islands)
+        self.assertEqual(rate, Decimal("21"))
+
+        # Verify the rate was cached
+        cached = cache.get(self.client._get_cache_key("ES", "2025-11-01"))
+        self.assertEqual(cached, Decimal("21"))
+
+    @patch("plans.taxation.tedb_client.datetime")
+    def test_all_rates_have_comments_use_highest(self, mock_datetime):
+        """
+        Test fallback when all rates have comments (e.g., France).
+
+        When all STANDARD+DEFAULT rates have comments, we should use the highest.
+        """
+        # Mock current date
+        mock_datetime.now.return_value.strftime.return_value = "2025-11-01"
+
+        # Create mock response with single rate with comment
+        mock_rate = Mock()
+        mock_rate.memberState = "FR"
+        mock_rate.type = "STANDARD"
+        mock_rate.rate = Mock()
+        mock_rate.rate.type = "DEFAULT"
+        mock_rate.rate.value = 20.0
+        mock_rate.comment = "Article 278 of the General Tax Code"
+
+        mock_response = Mock()
+        mock_response.vatRateResults = [mock_rate]
+
+        # Mock the SOAP client
+        mock_soap_client = Mock()
+        mock_soap_client.service.retrieveVatRates.return_value = mock_response
+        self.client.client = mock_soap_client
+
+        # Execute
+        rate = self.client.get_vat_rate("FR")
+
+        # Verify: Should return 20 (the only/highest rate)
+        self.assertEqual(rate, Decimal("20"))
+
+    @patch("plans.taxation.tedb_client.datetime")
+    def test_decimal_normalization(self, mock_datetime):
+        """Test that whole number rates are normalized (21.0 → 21)."""
+        # Mock current date
+        mock_datetime.now.return_value.strftime.return_value = "2025-11-01"
+
+        # Create mock response with 21.0 (float from SOAP)
+        mock_rate = Mock()
+        mock_rate.memberState = "ES"
+        mock_rate.type = "STANDARD"
+        mock_rate.rate = Mock()
+        mock_rate.rate.type = "DEFAULT"
+        mock_rate.rate.value = 21.0  # Float value
+        mock_rate.comment = None
+
+        mock_response = Mock()
+        mock_response.vatRateResults = [mock_rate]
+
+        # Mock the SOAP client
+        mock_soap_client = Mock()
+        mock_soap_client.service.retrieveVatRates.return_value = mock_response
+        self.client.client = mock_soap_client
+
+        # Execute
+        rate = self.client.get_vat_rate("ES")
+
+        # Verify: Should be Decimal("21"), not Decimal("21.0")
+        self.assertEqual(rate, Decimal("21"))
+        self.assertEqual(str(rate), "21")  # Ensure string representation is clean
