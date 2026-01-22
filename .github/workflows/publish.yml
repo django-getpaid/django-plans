@@ -5,7 +5,9 @@ on:
     types: [published]
   push:
     tags:
-      - '*.*.*'  # Matches semantic version tags like 2.0.0, 1.2.0, etc. (no leading "v")
+      - '*.*.*'  # Matches semantic version tags like 2.0.0, 1.2.0, etc.
+                 # IMPORTANT: Use tags WITHOUT "v" prefix (e.g., 2.1.2, not v2.1.2)
+                 # This matches our historical tag naming convention
 
 jobs:
   publish:
