@@ -1,6 +1,8 @@
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.test import TestCase, override_settings
+from zeep.exceptions import XMLSyntaxError
 
 from plans.taxation.eu import EUTaxationPolicy
 
@@ -39,6 +41,54 @@ class EUTaxationTEDBIntegrationTest(TestCase):
         # Should fall back to static table
         rate = EUTaxationPolicy._get_vat_rate_from_tedb("DE")
         self.assertEqual(rate, Decimal("19"))
+
+    @override_settings(PLANS_TAX_COUNTRY="DE")
+    @patch("plans.taxation.tedb_client.Client")
+    def test_fallback_when_tedb_returns_html_error_page(self, mock_client_class):
+        """
+        Test that system falls back to static rates when TEDB returns HTML error page.
+
+        This simulates the production issue where the EU server returns:
+        "Server temporarily unavailable" HTML page instead of WSDL XML.
+        """
+        # Simulate the EU server returning an HTML error page
+        mock_client_class.side_effect = XMLSyntaxError(
+            "Invalid XML content received (xmlParseEntityRef: no name, line 12, column 48)"
+        )
+
+        # Clear the cached TEDB client to force re-initialization
+        if hasattr(EUTaxationPolicy, "_tedb_client"):
+            delattr(EUTaxationPolicy, "_tedb_client")
+
+        # This should NOT crash, but fall back to static table
+        rate = EUTaxationPolicy._get_vat_rate_from_tedb("DE")
+
+        # Should return Germany's static rate
+        self.assertEqual(rate, Decimal("19"))
+
+    @override_settings(PLANS_TAX_COUNTRY="DE")
+    @patch("plans.taxation.tedb_client.Client")
+    def test_get_tax_rate_falls_back_on_xml_syntax_error(self, mock_client_class):
+        """
+        Test that get_tax_rate (used in actual user requests) falls back gracefully.
+
+        This is the end-to-end test for the production error scenario.
+        """
+        # Simulate the EU server returning an HTML error page
+        mock_client_class.side_effect = XMLSyntaxError(
+            "Invalid XML content received (xmlParseEntityRef: no name, line 12, column 48)"
+        )
+
+        # Clear the cached TEDB client to force re-initialization
+        if hasattr(EUTaxationPolicy, "_tedb_client"):
+            delattr(EUTaxationPolicy, "_tedb_client")
+
+        # This should NOT crash the request, but use static rates
+        rate, success = EUTaxationPolicy.get_tax_rate(None, "FR")
+
+        # Should return France's static rate
+        self.assertEqual(rate, Decimal("20"))
+        self.assertTrue(success)
 
     @override_settings(PLANS_TAX_COUNTRY="DE")
     def test_updated_vat_rates_in_static_table(self):

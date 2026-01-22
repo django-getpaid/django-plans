@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 from django.core.cache import cache
 from django.test import TestCase
 from requests.exceptions import ConnectionError
+from zeep.exceptions import XMLSyntaxError
 
 from plans.taxation.tedb_client import TEDBClient
 
@@ -32,6 +33,19 @@ class TEDBClientTest(TestCase):
         """Test SOAP client initialization failure."""
         mock_client_class.side_effect = ConnectionError("Network error")
 
+        client = TEDBClient()
+
+        self.assertIsNone(client.client)
+
+    @patch("plans.taxation.tedb_client.Client")
+    def test_client_initialization_xml_syntax_error(self, mock_client_class):
+        """Test SOAP client initialization when server returns HTML instead of WSDL."""
+        # Simulate the EU server returning an HTML error page
+        mock_client_class.side_effect = XMLSyntaxError(
+            "Invalid XML content received (xmlParseEntityRef: no name, line 12, column 48)"
+        )
+
+        # This should not crash, but gracefully set client to None
         client = TEDBClient()
 
         self.assertIsNone(client.client)
