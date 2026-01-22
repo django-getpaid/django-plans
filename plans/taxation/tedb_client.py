@@ -6,7 +6,7 @@ from typing import Optional
 from django.core.cache import cache
 from requests.exceptions import ConnectionError, Timeout
 from zeep import Client
-from zeep.exceptions import Fault, TransportError
+from zeep.exceptions import Fault, TransportError, XMLSyntaxError
 
 logger = logging.getLogger("plans.taxation.tedb")
 
@@ -30,7 +30,7 @@ class TEDBClient:
         try:
             self.client = Client(self.WSDL_URL)
             logger.info("TEDB SOAP client initialized successfully")
-        except (ConnectionError, Timeout, TransportError, Fault) as e:
+        except (ConnectionError, Timeout, TransportError, Fault, XMLSyntaxError) as e:
             logger.error(f"Failed to initialize TEDB SOAP client: {e}")
             self.client = None
 

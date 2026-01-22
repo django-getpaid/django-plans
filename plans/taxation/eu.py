@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
 from requests.exceptions import ConnectionError, Timeout
-from zeep.exceptions import Fault, TransportError
+from zeep.exceptions import Fault, TransportError, XMLSyntaxError
 
 from plans.taxation import TaxationPolicy
 from plans.taxation.tedb_client import TEDBClient
@@ -96,7 +96,7 @@ class EUTaxationPolicy(TaxationPolicy):
             if rate is not None:
                 logger.info(f"Using TEDB VAT rate for {country_code}: {rate}")
                 return rate
-        except (ConnectionError, Timeout, Fault, TransportError) as e:
+        except (ConnectionError, Timeout, Fault, TransportError, XMLSyntaxError) as e:
             logger.warning(f"TEDB service unavailable for {country_code}: {e}")
 
         # Fallback to static table
