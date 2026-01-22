@@ -1,11 +1,17 @@
 django-plans changelog
 ======================
 
+2.1.2
+-----
+
+* **Bug Fixes**: **CRITICAL**: Fixed TEDB client crashing when EU service returns HTML error page instead of WSDL XML (``XMLSyntaxError``). The client now gracefully falls back to static VAT rates when the TEDB service is temporarily unavailable, preventing user request failures.
+* **Tests**: Added tests for ``XMLSyntaxError`` handling and fallback mechanism when TEDB service returns HTML error pages.
+
 2.1.1
 -----
 
-* **Bug Fixes**: Fixed TEDB client to correctly filter regional VAT rates (e.g., Spain was returning 7% for Canary Islands instead of 21% for mainland). The client now prioritizes rates without territorial comments to return general/mainland rates. Removed debug print statement from TEDB client. **CRITICAL**: Fixed TEDB client crashing when EU service returns HTML error page instead of WSDL XML (``XMLSyntaxError``). The client now gracefully falls back to static VAT rates when the TEDB service is temporarily unavailable, preventing user request failures.
-* **Tests**: Added comprehensive unit tests for regional VAT rate filtering logic, documenting Spain, France, and decimal normalization behaviors. Added tests for ``XMLSyntaxError`` handling and fallback mechanism when TEDB service returns HTML error pages.
+* **Bug Fixes**: Fixed TEDB client to correctly filter regional VAT rates (e.g., Spain was returning 7% for Canary Islands instead of 21% for mainland). The client now prioritizes rates without territorial comments to return general/mainland rates. Removed debug print statement from TEDB client.
+* **Tests**: Added comprehensive unit tests for regional VAT rate filtering logic, documenting Spain, France, and decimal normalization behaviors.
 
 2.1.0
 -----
