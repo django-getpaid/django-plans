@@ -1,8 +1,19 @@
+import argparse
 import logging
+from datetime import datetime
 
 from django.core.management import BaseCommand
 
 from plans import tasks
+
+
+def valid_date(s):
+    """Validate date string in YYYY-MM-DD format"""
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError as e:
+        msg = f"Not a valid date: '{s}'."
+        raise argparse.ArgumentTypeError(msg) from e
 
 
 class Command(BaseCommand):
@@ -33,6 +44,13 @@ class Command(BaseCommand):
             dest="dry_run",
             help="Dry run, do not change any data",
         )
+        parser.add_argument(
+            "-d",
+            "--date",
+            type=valid_date,
+            dest="date",
+            help="Simulate 'today' as this date (YYYY-MM-DD) for testing renewal logic",
+        )
 
     def handle(self, *args, **options):  # pragma: no cover
         logger = logging.getLogger("plans.tasks")
@@ -49,9 +67,14 @@ class Command(BaseCommand):
         try:
             providers = options.get("providers")
             dry_run = options.get("dry_run")
+            simulated_date = options.get("date")
             self.stdout.write("Starting renewal")
             if dry_run:
                 self.stdout.write("DRY RUN active")
+            if simulated_date:
+                self.stdout.write(
+                    f"Simulating renewals as if today were: {simulated_date}"
+                )
             throttle_seconds = options.get("throttle")
             catch_exceptions = options.get("catch_exceptions")
             renewed_accounts = tasks.autorenew_account(
@@ -59,6 +82,7 @@ class Command(BaseCommand):
                 throttle_seconds=throttle_seconds,
                 catch_exceptions=catch_exceptions,
                 dry_run=dry_run,
+                simulated_date=simulated_date,
             )
             if renewed_accounts:
                 if dry_run:

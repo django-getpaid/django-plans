@@ -233,3 +233,88 @@ class AutorenewSchedulerTests(TestCase):
         renewed = autorenew_account()
         self.assertEqual(len(renewed), 1)
         self.assertEqual(renewed[0], self.user)
+
+    @override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=3)])
+    def test_autorenew_with_simulated_date_before_expiry(self):
+        """Test that simulated_date allows testing renewals for a specific date."""
+        # Plan expires on 2023-01-15
+        self.user_plan.expire = datetime.date(2023, 1, 15)
+        self.user_plan.save()
+
+        # Simulate 2023-01-13 (2 days before expiry)
+        # Schedule is 3 days, so should renew
+        simulated = datetime.date(2023, 1, 13)
+        renewed = autorenew_account(simulated_date=simulated)
+        self.assertEqual(len(renewed), 1)
+        self.assertEqual(renewed[0], self.user)
+
+    @override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=3)])
+    def test_autorenew_with_simulated_date_should_not_renew(self):
+        """Test that simulated_date correctly excludes plans outside the window."""
+        # Plan expires on 2023-01-15
+        self.user_plan.expire = datetime.date(2023, 1, 15)
+        self.user_plan.save()
+
+        # Simulate 2023-01-10 (5 days before expiry)
+        # Schedule is 3 days, so should NOT renew
+        simulated = datetime.date(2023, 1, 10)
+        renewed = autorenew_account(simulated_date=simulated)
+        self.assertEqual(len(renewed), 0)
+
+    @override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=-3)])
+    def test_autorenew_with_simulated_date_after_expiry(self):
+        """Test that simulated_date works for expired plans."""
+        # Plan expired on 2023-01-10
+        self.user_plan.expire = datetime.date(2023, 1, 10)
+        self.user_plan.save()
+        self.user_plan.expire_account()
+
+        # Simulate 2023-01-13 (3 days after expiry)
+        # Schedule is -3 days, so should renew
+        simulated = datetime.date(2023, 1, 13)
+        renewed = autorenew_account(simulated_date=simulated)
+        self.assertEqual(len(renewed), 1)
+        self.assertEqual(renewed[0], self.user)
+
+    @override_settings(
+        PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=-7)],
+        PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY=datetime.timedelta(days=30),
+    )
+    def test_autorenew_with_simulated_date_respects_max_window(self):
+        """Test that simulated_date respects the max days after expiry window."""
+        # Plan expired on 2023-01-01
+        self.user_plan.expire = datetime.date(2023, 1, 1)
+        self.user_plan.save()
+        self.user_plan.expire_account()
+
+        # Simulate 2023-02-05 (35 days after expiry)
+        # Max window is 30 days, so should NOT renew (too old)
+        simulated = datetime.date(2023, 2, 5)
+        renewed = autorenew_account(simulated_date=simulated)
+        self.assertEqual(len(renewed), 0)
+
+        # Simulate 2023-01-30 (29 days after expiry)
+        # Within the max window, so should renew
+        simulated = datetime.date(2023, 1, 30)
+        renewed = autorenew_account(simulated_date=simulated)
+        self.assertEqual(len(renewed), 1)
+        self.assertEqual(renewed[0], self.user)
+
+    @override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=1)])
+    def test_autorenew_with_simulated_date_vs_real_time(self):
+        """Test that simulated_date overrides the real current time."""
+        # Plan expires on 2025-01-15
+        self.user_plan.expire = datetime.date(2025, 1, 15)
+        self.user_plan.save()
+
+        # Without simulated date (real time is around 2024-2026), should not match
+        # because the plan is far in the future or past
+        renewed = autorenew_account()
+        # May or may not renew depending on when test runs
+
+        # With simulated date 2025-01-14 (1 day before expiry)
+        # Schedule is 1 day, so should definitely renew
+        simulated = datetime.date(2025, 1, 14)
+        renewed = autorenew_account(simulated_date=simulated)
+        self.assertEqual(len(renewed), 1)
+        self.assertEqual(renewed[0], self.user)

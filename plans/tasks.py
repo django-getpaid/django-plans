@@ -25,7 +25,11 @@ def get_active_plans():
 
 
 def autorenew_account(
-    providers=None, throttle_seconds=0, catch_exceptions=False, dry_run=False
+    providers=None,
+    throttle_seconds=0,
+    catch_exceptions=False,
+    dry_run=False,
+    simulated_date=None,
 ):
     logger.info("Started automatic account renewal")
     PLANS_AUTORENEW_SCHEDULE = getattr(settings, "PLANS_AUTORENEW_SCHEDULE", None)
@@ -44,7 +48,14 @@ def autorenew_account(
             logger.warning(
                 "PLANS_AUTORENEW_SCHEDULE is set, ignoring PLANS_AUTORENEW_BEFORE_DAYS and PLANS_AUTORENEW_BEFORE_HOURS"
             )
-        now_dt = timezone.now()
+        if simulated_date:
+            # Convert date to timezone-aware datetime at start of day
+            now_dt = timezone.make_aware(
+                datetime.datetime.combine(simulated_date, datetime.time(0, 0))
+            )
+            logger.info(f"Using simulated date: {simulated_date}")
+        else:
+            now_dt = timezone.now()
         q = Q()
         max_renew_after = getattr(
             settings,
@@ -70,8 +81,15 @@ def autorenew_account(
             DeprecationWarning,
             stacklevel=2,
         )
+        if simulated_date:
+            now_dt = timezone.make_aware(
+                datetime.datetime.combine(simulated_date, datetime.time(0, 0))
+            )
+            logger.info(f"Using simulated date: {simulated_date}")
+        else:
+            now_dt = timezone.now()
         accounts_for_renewal = accounts_to_check.filter(
-            userplan__expire__lt=timezone.now()
+            userplan__expire__lt=now_dt
             + datetime.timedelta(
                 days=PLANS_AUTORENEW_BEFORE_DAYS, hours=PLANS_AUTORENEW_BEFORE_HOURS
             ),
