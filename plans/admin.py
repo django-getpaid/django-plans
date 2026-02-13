@@ -70,7 +70,7 @@ class QuotaAdmin(OrderedModelAdmin):
     ]
 
     readonly_fields = ("created", "updated_at")
-    list_display_links = list_display
+    list_display_links = ["codename", "name"]
 
 
 def copy_plan(modeladmin, request, queryset):
@@ -118,7 +118,7 @@ class PlanAdmin(OrderedModelAdmin):
         "created",
         "move_up_down_links",
     ]
-    list_display_links = list_display
+    list_display_links = ["name", "slug"]
     inlines = (PlanPricingInline, PlanQuotaInline)
     list_select_related = True
     raw_id_fields = ("customized",)
