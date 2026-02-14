@@ -1,9 +1,17 @@
 Welcome to django-plans
 =======================
 
+.. image:: https://img.shields.io/pypi/v/django-plans.svg
+   :target: https://pypi.org/project/django-plans/
+   :alt: PyPI version
+
+.. image:: https://img.shields.io/pypi/pyversions/django-plans.svg
+   :target: https://pypi.org/project/django-plans/
+   :alt: Python versions
 
 .. image:: https://codecov.io/gh/django-getpaid/django-plans/branch/master/graph/badge.svg?token=oEyv7odqUW
    :target: https://codecov.io/gh/django-getpaid/django-plans
+   :alt: Code coverage
 
 Django-plans is a pluggable app for managing pricing plans with quotas and accounts expiration.
 
