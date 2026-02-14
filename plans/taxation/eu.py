@@ -177,6 +177,8 @@ class EUTaxationPolicy(TaxationPolicy):
                         return cls.EU_COUNTRIES_VAT[country_code], True
                 except (
                     Fault,
+                    TransportError,
+                    XMLSyntaxError,
                     stdnum.exceptions.InvalidComponent,
                     ConnectionError,
                     URLError,
