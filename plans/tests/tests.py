@@ -1303,6 +1303,34 @@ class EUTaxationPolicyTestCase(TestCase):
                 self.policy.get_tax_rate("123456", "AT"), (Decimal("20.0"), True)
             )
 
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_company_EU_vies_transport_error(self, mock_check):
+        """Test VIES TransportError fallback (e.g., CloudFront 403, network issues)."""
+        from zeep.exceptions import TransportError
+
+        mock_check.side_effect = TransportError(
+            "Server returned response (403) with invalid XML"
+        )
+        with self.settings(PLANS_TAX=Decimal("23.0"), PLANS_TAX_COUNTRY="PL"):
+            # Should fall back to country VAT rate (Austria: 20%)
+            rate, success = self.policy.get_tax_rate("AT123456789", "AT")
+            self.assertEqual(rate, Decimal("20.0"))
+            self.assertFalse(success)  # Indicates fallback was used
+
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_company_EU_vies_xml_syntax_error(self, mock_check):
+        """Test VIES XMLSyntaxError fallback (e.g., HTML error page instead of WSDL)."""
+        from zeep.exceptions import XMLSyntaxError
+
+        mock_check.side_effect = XMLSyntaxError(
+            "Invalid XML content received (xmlParseEntityRef: no name, line 12, column 48)"
+        )
+        with self.settings(PLANS_TAX=Decimal("23.0"), PLANS_TAX_COUNTRY="PL"):
+            # Should fall back to country VAT rate (Germany: 19%)
+            rate, success = self.policy.get_tax_rate("DE123456789", "DE")
+            self.assertEqual(rate, Decimal("19.0"))
+            self.assertFalse(success)  # Indicates fallback was used
+
 
 class BillingInfoTestCase(TestCase):
     def test_clean_tax_number(self):

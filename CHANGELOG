@@ -1,6 +1,12 @@
 django-plans changelog
 ======================
 
+2.1.3
+-----
+
+* **Bug Fixes**: **CRITICAL**: Fixed VIES VAT validation crashing when EU service returns ``TransportError`` (e.g., CloudFront 403) or ``XMLSyntaxError`` (e.g., HTML error page instead of WSDL). These exceptions were imported but not caught in the VIES exception handler, causing user checkout failures. The system now gracefully falls back to country-based VAT rates and displays a user-friendly warning message when VIES validation fails.
+* **Tests**: Added unit tests for ``TransportError`` and ``XMLSyntaxError`` handling in VIES validation to ensure proper fallback behavior.
+
 2.1.2
 -----
 
