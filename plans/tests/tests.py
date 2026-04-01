@@ -821,6 +821,109 @@ class TestInvoice(TestCase):
         self.assertEqual(credit_note.tax_total, Decimal("-6.00"))
         self.assertEqual(credit_note.total, Decimal("-36.00"))
 
+    def test_cancel_invoice_with_nullable_fields(self):
+        """Test that cancel_invoice handles None values for unit_price_net,
+        item_description, and rebate without crashing.
+
+        This covers the case where a subclass (e.g. one using line items)
+        sets these fields to None at the class level. The credit note save
+        is mocked because the test DB has NOT NULL on these columns, but real
+        subclasses remove the columns entirely.
+        """
+        user = User.objects.get(username="test1")
+        BillingInfo.objects.get_or_create(user=user, defaults={"country": "US"})
+        plan_pricing = PlanPricing.objects.all()[0]
+
+        order = Order(
+            user=user,
+            plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing,
+            amount=plan_pricing.price,
+            completed=datetime(2024, 1, 15),
+        )
+        order.save()
+
+        invoice = Invoice.create(order, Invoice.INVOICE_TYPES.INVOICE)
+        self.assertIsNotNone(invoice)
+
+        invoice.__dict__["unit_price_net"] = None
+        invoice.__dict__["item_description"] = None
+        invoice.__dict__["rebate"] = None
+
+        # Mock save to avoid NOT NULL DB constraint (real subclasses don't have the column)
+        with mock.patch.object(Invoice, "save"):
+            credit_note = invoice.cancel_invoice(reason="Test with nullable fields")
+
+        self.assertEqual(credit_note.type, Invoice.INVOICE_TYPES.CREDIT_NOTE)
+        self.assertEqual(credit_note.credit_note_for, invoice)
+        self.assertEqual(credit_note.total, -invoice.total)
+        self.assertEqual(credit_note.total_net, -invoice.total_net)
+        # Negated unit_price_net should not have been set (it was None)
+        self.assertIsNone(credit_note.unit_price_net)
+
+    def test_create_partial_credit_note_with_nullable_fields(self):
+        """Test that create_partial_credit_note handles None values for
+        unit_price_net, item_description, and rebate without crashing.
+        """
+        user = User.objects.get(username="test1")
+        BillingInfo.objects.get_or_create(user=user, defaults={"country": "US"})
+        plan_pricing = PlanPricing.objects.all()[0]
+
+        order = Order(
+            user=user,
+            plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing,
+            amount=Decimal("100.00"),
+            completed=datetime(2024, 1, 15),
+        )
+        order.save()
+
+        invoice = Invoice.create(order, Invoice.INVOICE_TYPES.INVOICE)
+        self.assertIsNotNone(invoice)
+
+        invoice.__dict__["unit_price_net"] = None
+        invoice.__dict__["item_description"] = None
+        invoice.__dict__["rebate"] = None
+
+        with mock.patch.object(Invoice, "save"):
+            credit_note = invoice.create_partial_credit_note(
+                net_amount=Decimal("30.00"),
+                tax_amount=Decimal("6.00"),
+                reason="Partial refund with nullable fields",
+            )
+
+        self.assertEqual(credit_note.type, Invoice.INVOICE_TYPES.CREDIT_NOTE)
+        self.assertEqual(credit_note.total_net, Decimal("-30.00"))
+        self.assertEqual(credit_note.total, Decimal("-36.00"))
+        self.assertEqual(credit_note.tax_total, Decimal("-6.00"))
+        self.assertIn("Refund", credit_note.cancellation_reason)
+
+    def test_cancel_invoice_with_all_fields_present(self):
+        """Verify existing behavior is unchanged when all fields are present."""
+        user = User.objects.get(username="test1")
+        BillingInfo.objects.get_or_create(user=user, defaults={"country": "US"})
+        plan_pricing = PlanPricing.objects.all()[0]
+
+        order = Order(
+            user=user,
+            plan=plan_pricing.plan,
+            pricing=plan_pricing.pricing,
+            amount=plan_pricing.price,
+            completed=datetime(2024, 6, 15),
+        )
+        order.save()
+
+        invoice = Invoice.create(order, Invoice.INVOICE_TYPES.INVOICE)
+        credit_note = invoice.cancel_invoice(reason="Full cancel")
+
+        # All fields should be set (not None) on the credit note
+        self.assertIsNotNone(credit_note.unit_price_net)
+        self.assertEqual(credit_note.unit_price_net, -invoice.unit_price_net)
+        self.assertIsNotNone(credit_note.rebate)
+        self.assertEqual(credit_note.rebate, invoice.rebate)
+        self.assertIsNotNone(credit_note.item_description)
+        self.assertIn("Credit note", credit_note.item_description)
+
 
 @transaction.atomic
 def complete_order():
