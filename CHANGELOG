@@ -1,6 +1,12 @@
 django-plans changelog
 ======================
 
+2.1.4
+-----
+
+* **Bug Fixes**: Fixed ``cancel_invoice()`` and ``create_partial_credit_note()`` crashing with ``TypeError`` when subclasses set ``unit_price_net``, ``item_description``, or ``rebate`` to ``None``. These fields are now guarded with ``is not None`` checks, allowing subclasses that use line items (instead of a single unit price) to create credit notes via the parent class methods without overriding them.
+* **Tests**: Added tests for credit note creation with nullable fields to ensure subclass compatibility, plus a regression test verifying standard behavior is unchanged.
+
 2.1.3
 -----
 

@@ -1421,18 +1421,23 @@ class AbstractInvoice(BaseMixin, models.Model):
         credit_note.selling_date = self.selling_date
 
         # Negate values
-        credit_note.unit_price_net = -self.unit_price_net
+        # Guard optional fields: subclasses may set unit_price_net, rebate,
+        # or item_description to None to indicate they don't use them.
+        if self.unit_price_net is not None:
+            credit_note.unit_price_net = -self.unit_price_net
         credit_note.quantity = self.quantity
         credit_note.total_net = -self.total_net
         credit_note.total = -self.total
         credit_note.tax_total = -self.tax_total
         credit_note.tax = self.tax  # Tax rate stays the same
-        credit_note.rebate = self.rebate
+        if self.rebate is not None:
+            credit_note.rebate = self.rebate
         credit_note.currency = self.currency
 
-        credit_note.item_description = (
-            _("Credit note for invoice %s") % self.full_number
-        )
+        if self.item_description is not None:
+            credit_note.item_description = (
+                _("Credit note for invoice %s") % self.full_number
+            )
         self._copy_addresses_to_credit_note(credit_note)
 
         # Clean and save
@@ -1450,7 +1455,8 @@ class AbstractInvoice(BaseMixin, models.Model):
         if self.type != Invoice.INVOICE_TYPES.INVOICE:
             raise ValidationError(_("Only invoices can have partial credit notes."))
 
-        credit_note = Invoice(
+        # Build kwargs, skipping fields that subclasses may have set to None
+        kwargs = dict(
             type=Invoice.INVOICE_TYPES.CREDIT_NOTE,
             credit_note_for=self,
             user=self.user,
@@ -1458,15 +1464,18 @@ class AbstractInvoice(BaseMixin, models.Model):
             issued=date.today(),
             payment_date=self.payment_date,  # Use original invoice's payment_date
             selling_date=self.selling_date,
-            unit_price_net=-net_amount,
             quantity=1,
             total_net=-net_amount,
             tax_total=-tax_amount,
             total=-(net_amount + tax_amount),
             tax=self.tax,
-            rebate=self.rebate,
             currency=self.currency,
         )
+        if self.unit_price_net is not None:
+            kwargs["unit_price_net"] = -net_amount
+        if self.rebate is not None:
+            kwargs["rebate"] = self.rebate
+        credit_note = Invoice(**kwargs)
 
         total_user_input = net_amount + tax_amount
         action = (
@@ -1474,11 +1483,12 @@ class AbstractInvoice(BaseMixin, models.Model):
             if total_user_input > 0
             else "Additional charge" if total_user_input < 0 else "Adjustment"
         )
-        credit_note.item_description = _("%s for invoice %s: %s") % (
-            action,
-            self.full_number,
-            reason,
-        )
+        if self.item_description is not None:
+            credit_note.item_description = _("%s for invoice %s: %s") % (
+                action,
+                self.full_number,
+                reason,
+            )
         credit_note.cancellation_reason = "%s: %s" % (action, reason)
 
         self._copy_addresses_to_credit_note(credit_note)
