@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import logging
 import re
 import warnings
-from datetime import date, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 import stdnum.eu.vat
@@ -251,13 +251,13 @@ class AbstractUserPlan(BaseMixin, models.Model):
         if self.expire is None:
             return False
         else:
-            return self.expire < date.today()
+            return self.expire < now().date()
 
     def days_left(self):
         if self.expire is None:
             return None
         else:
-            return (self.expire - date.today()).days
+            return (self.expire - now().date()).days
 
     def clean_activation(self):
         errors = plan_validation(self.user)
@@ -297,7 +297,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
             return None
         if not self.is_expired() and self.expire is not None and self.plan == plan:
             return self.expire
-        return date.today()
+        return now().date()
 
     def has_automatic_renewal(self):
         return (
@@ -430,7 +430,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
                 # but just in case we consider a case when user has a different plan
                 if not self.plan.is_free() and self.expire is None:
                     status = True
-                elif not self.plan.is_free() and self.expire > date.today():
+                elif not self.plan.is_free() and self.expire > now().date():
                     status = False
                     accounts_logger.warning(
                         "Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]"
@@ -1341,7 +1341,7 @@ class AbstractInvoice(BaseMixin, models.Model):
         except BillingInfo.DoesNotExist:
             return
 
-        day = date.today()
+        day = now().date()
         pday = order.completed
         if invoice_type == cls.INVOICE_TYPES["PROFORMA"]:
             pday = day + timedelta(days=14)
@@ -1414,7 +1414,7 @@ class AbstractInvoice(BaseMixin, models.Model):
         # Copy data from original invoice
         credit_note.user = self.user
         credit_note.order = self.order
-        credit_note.issued = date.today()
+        credit_note.issued = now().date()
         credit_note.payment_date = (
             self.payment_date
         )  # Use original invoice's payment_date
@@ -1461,7 +1461,7 @@ class AbstractInvoice(BaseMixin, models.Model):
             credit_note_for=self,
             user=self.user,
             order=self.order,
-            issued=date.today(),
+            issued=now().date(),
             payment_date=self.payment_date,  # Use original invoice's payment_date
             selling_date=self.selling_date,
             quantity=1,
