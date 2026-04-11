@@ -20,6 +20,7 @@ from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
+from django.utils.timezone import now
 from django_concurrent_tests.helpers import call_concurrently
 from freezegun import freeze_time
 from internet_sabotage import no_connection
@@ -97,14 +98,14 @@ class PlansTestCase(TestCase):
 
     def test_get_user_quota_expired_no_default(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() - timedelta(days=5)
+        u.userplan.expire = now().date() - timedelta(days=5)
         Plan.get_default_plan().delete()
         with self.assertRaises(ValidationError):
             get_user_quota(u)
 
     def test_get_user_quota_expired_free_plan(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() - timedelta(days=5)
+        u.userplan.expire = now().date() - timedelta(days=5)
         with self.assertRaises(ValidationError):
             get_user_quota(u)
 
@@ -122,14 +123,14 @@ class PlansTestCase(TestCase):
 
     def test_extend_account_same_plan_future(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
         u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
         self.assertEqual(
             u.userplan.expire,
-            date.today()
+            now().date()
             + timedelta(days=50)
             + timedelta(days=plan_pricing.pricing.period),
         )
@@ -139,14 +140,14 @@ class PlansTestCase(TestCase):
 
     def test_extend_account_same_plan_before(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() - timedelta(days=50)
+        u.userplan.expire = now().date() - timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
         u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
         self.assertEqual(
             u.userplan.expire,
-            date.today() + timedelta(days=plan_pricing.pricing.period),
+            now().date() + timedelta(days=plan_pricing.pricing.period),
         )
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
         self.assertEqual(u.userplan.active, True)
@@ -160,7 +161,7 @@ class PlansTestCase(TestCase):
         Tests if account has been activated
         """
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() - timedelta(days=50)
+        u.userplan.expire = now().date() - timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(
@@ -169,7 +170,7 @@ class PlansTestCase(TestCase):
         u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
         self.assertEqual(
             u.userplan.expire,
-            date.today() + timedelta(days=plan_pricing.pricing.period),
+            now().date() + timedelta(days=plan_pricing.pricing.period),
         )
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
         self.assertEqual(u.userplan.active, True)
@@ -205,7 +206,7 @@ class PlansTestCase(TestCase):
         Tests if account has not been activated
         """
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=5)
+        u.userplan.expire = now().date() + timedelta(days=5)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(
@@ -213,26 +214,26 @@ class PlansTestCase(TestCase):
         )[0]
         default_plan = Plan.objects.get(pk=1)
         u.userplan.extend_account(plan_pricing.plan, plan_pricing.pricing)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=5))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=5))
         self.assertEqual(u.userplan.plan, default_plan)
         self.assertEqual(u.userplan.active, False)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_reduce_account_future(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.save()
         pricing = Pricing.objects.get(planpricing__plan=u.userplan.plan, period=30)
         u.userplan.reduce_account(pricing)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=20))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=20))
 
     def test_reduce_account_before(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() - timedelta(days=50)
+        u.userplan.expire = now().date() - timedelta(days=50)
         u.save()
         pricing = Pricing.objects.get(planpricing__plan=u.userplan.plan, period=30)
         u.userplan.reduce_account(pricing)
-        self.assertEqual(u.userplan.expire, date.today() - timedelta(days=80))
+        self.assertEqual(u.userplan.expire, now().date() - timedelta(days=80))
 
     def test_reduce_account_expire_none(self):
         u = User.objects.get(username="test1")
@@ -244,14 +245,14 @@ class PlansTestCase(TestCase):
 
     def test_reduce_account_pricing_none(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.save()
         u.userplan.reduce_account(None)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=50))
 
     def test_expire_account(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.active = True
         u.userplan.save()
         u.userplan.expire_account()
@@ -260,7 +261,7 @@ class PlansTestCase(TestCase):
 
     def test_remind_expire(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=14)
+        u.userplan.expire = now().date() + timedelta(days=14)
         u.userplan.active = True
         u.userplan.save()
         u.userplan.remind_expire_soon()
@@ -271,7 +272,7 @@ class PlansTestCase(TestCase):
         with self.settings(SEND_PLANS_EMAILS=False):
             # Re-run the remind_expire test, but look for 0 emails sent
             u = User.objects.get(username="test1")
-            u.userplan.expire = date.today() + timedelta(days=14)
+            u.userplan.expire = now().date() + timedelta(days=14)
             u.userplan.active = True
             u.userplan.save()
             u.userplan.remind_expire_soon()
@@ -286,7 +287,7 @@ class PlansTestCase(TestCase):
         Tests if account has been activated
         """
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=14)
+        u.userplan.expire = now().date() + timedelta(days=14)
         self.assertIsNotNone(u.userplan.expire)
 
         plan = Plan.objects.get(name="Free")
@@ -987,7 +988,7 @@ class OrderTestCase(TestCase):
 
     def test_order_complete_order(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
@@ -1000,17 +1001,17 @@ class OrderTestCase(TestCase):
         self.assertTrue(order.complete_order())
         self.assertEqual(
             u.userplan.expire,
-            date.today()
+            now().date()
             + timedelta(days=50)
             + timedelta(days=plan_pricing.pricing.period),
         )
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
         self.assertEqual(u.userplan.active, True)
         self.assertEqual(order.status, 2)  # completed
-        self.assertEqual(order.plan_extended_from, date.today() + timedelta(days=50))
+        self.assertEqual(order.plan_extended_from, now().date() + timedelta(days=50))
         self.assertEqual(
             order.plan_extended_until,
-            date.today()
+            now().date()
             + timedelta(days=50)
             + timedelta(days=plan_pricing.pricing.period),
         )
@@ -1018,7 +1019,7 @@ class OrderTestCase(TestCase):
 
     def test_order_complete_order_invalid(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=5)
+        u.userplan.expire = now().date() + timedelta(days=5)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
@@ -1029,7 +1030,7 @@ class OrderTestCase(TestCase):
             plan=PlanPricing.objects.all()[0].plan,
         )
         self.assertTrue(order.complete_order())
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=5))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=5))
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
         self.assertEqual(u.userplan.active, False)
         self.assertEqual(order.status, 3)  # not valid
@@ -1037,7 +1038,7 @@ class OrderTestCase(TestCase):
     def test_order_complete_order_completed(self):
         """Completed order doesn't get completed any more"""
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
         plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
@@ -1052,7 +1053,7 @@ class OrderTestCase(TestCase):
 
     def test_return_order_new(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(
             plan=u.userplan.plan, pricing__period__gt=0
@@ -1073,7 +1074,7 @@ class OrderTestCase(TestCase):
             order.return_order()
         self.assertEqual(order.status, Order.STATUS.NEW)
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=50))
 
     def test_return_order_completed(self):
         u = User.objects.get(username="test1")
@@ -1094,7 +1095,7 @@ class OrderTestCase(TestCase):
 
         self.assertEqual(order.status, Order.STATUS.RETURNED)
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.expire, date.today())
+        self.assertEqual(u.userplan.expire, now().date())
 
     def test_return_order_completed_then_same_plan(self):
         u = User.objects.get(username="test1")
@@ -1115,7 +1116,7 @@ class OrderTestCase(TestCase):
             )
             .first()
         )
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(
             plan=u.userplan.plan, pricing__period__gt=30
@@ -1144,11 +1145,11 @@ class OrderTestCase(TestCase):
 
         self.assertEqual(order.status, Order.STATUS.RETURNED)
         self.assertEqual(u.userplan.plan, plan_pricing_then.plan)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50 + 30))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=50 + 30))
 
     def test_return_order_completed_then_paid_plan(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.save()
         plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
         order = Order.objects.create(
@@ -1178,11 +1179,11 @@ class OrderTestCase(TestCase):
 
         self.assertEqual(order.status, Order.STATUS.RETURNED)
         self.assertEqual(u.userplan.plan, plan_pricing_then.plan)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50 + 365))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=50 + 365))
 
     def test_return_order_completed_then_free_plan(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.save()
         plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
         order = Order.objects.create(
@@ -1208,7 +1209,7 @@ class OrderTestCase(TestCase):
 
     def test_return_order_not_valid(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.save()
         plan_user = u.userplan.plan
         plan_pricing = (
@@ -1229,11 +1230,11 @@ class OrderTestCase(TestCase):
 
         self.assertEqual(order.status, Order.STATUS.RETURNED)
         self.assertEqual(u.userplan.plan, plan_user)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=50))
 
     def test_return_order_canceled(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(
             plan=u.userplan.plan, pricing__period__gt=0
@@ -1254,11 +1255,11 @@ class OrderTestCase(TestCase):
             order.return_order()
         self.assertEqual(order.status, Order.STATUS.CANCELED)
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=50))
 
     def test_return_order_returned(self):
         u = User.objects.get(username="test1")
-        u.userplan.expire = date.today() + timedelta(days=50)
+        u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(
             plan=u.userplan.plan, pricing__period__gt=0
@@ -1277,7 +1278,7 @@ class OrderTestCase(TestCase):
 
         self.assertEqual(order.status, Order.STATUS.RETURNED)
         self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        self.assertEqual(u.userplan.expire, date.today() + timedelta(days=50))
+        self.assertEqual(u.userplan.expire, now().date() + timedelta(days=50))
 
     def test_amount_taxed_none(self):
         o = Order()
@@ -2049,7 +2050,7 @@ class TasksTestCase(TestCase):
     def test_expire_account_task(self):
         order = baker.make("Order", amount=10)
         userplan = baker.make("UserPlan", user=self.user)
-        userplan.expire = date.today() - timedelta(days=1)
+        userplan.expire = now().date() - timedelta(days=1)
         userplan.active = True
 
         # If the automatic renewal didn't go through, even automatic renewal plans has to go
@@ -2073,7 +2074,7 @@ class TasksTestCase(TestCase):
     def test_expire_account_task_notify(self):
         order = baker.make("Order", amount=10)
         userplan = baker.make("UserPlan", user=self.user)
-        userplan.expire = date.today() + timedelta(days=3)
+        userplan.expire = now().date() + timedelta(days=3)
         userplan.active = True
 
         # If the automatic renewal didn't go through, even automatic renewal plans has to go
@@ -2093,3 +2094,50 @@ class TasksTestCase(TestCase):
             mail.outbox[0].subject,
             "Your account foo bar will expire in 3 days",
         )
+
+
+class TimezoneConsistencyTestCase(TestCase):
+    """Regression tests for date.today() vs timezone.now().date() bug.
+
+    When USE_TZ=True and the system timezone differs from UTC, date.today()
+    returns the local date while timezone.now().date() returns the UTC date.
+    Near midnight UTC these can differ by one day, causing incorrect plan
+    expiry checks, days_left calculations, and extension logic.
+
+    Fixed in 2.1.5: all date calculations now use timezone.now().date().
+
+    These tests mock timezone.now() to return a date far from today. If the
+    code accidentally used date.today() instead, it would return the actual
+    current date and the assertions would fail.
+    """
+
+    @patch("plans.base.models.now", return_value=datetime(2020, 1, 15, 12, 0, 0))
+    def test_is_expired_uses_timezone_now(self, mock_now):
+        up = baker.make("UserPlan", expire=date(2020, 1, 15))
+        self.assertFalse(up.is_expired())
+        up.expire = date(2020, 1, 14)
+        self.assertTrue(up.is_expired())
+
+    @patch("plans.base.models.now", return_value=datetime(2020, 1, 15, 12, 0, 0))
+    def test_days_left_uses_timezone_now(self, mock_now):
+        up = baker.make("UserPlan", expire=date(2020, 1, 25))
+        self.assertEqual(up.days_left(), 10)
+
+    @patch("plans.base.models.now", return_value=datetime(2020, 1, 15, 12, 0, 0))
+    def test_get_plan_extended_from_uses_timezone_now(self, mock_now):
+        plan = baker.make("Plan")
+        pricing = baker.make("Pricing", period=30)
+        baker.make("PlanPricing", plan=plan, pricing=pricing, price=Decimal("10.00"))
+        up = baker.make("UserPlan", plan=plan, expire=date(2020, 1, 10))
+        extended_from = up.get_plan_extended_from(plan)
+        self.assertEqual(extended_from, date(2020, 1, 15))
+
+    @override_settings(PLANS_SEND_EMAILS_PLAN_EXTENDED=False)
+    @patch("plans.base.models.now", return_value=datetime(2020, 1, 15, 12, 0, 0))
+    def test_extend_account_uses_timezone_now(self, mock_now):
+        plan = baker.make("Plan")
+        pricing = baker.make("Pricing", period=30)
+        baker.make("PlanPricing", plan=plan, pricing=pricing, price=Decimal("10.00"))
+        up = baker.make("UserPlan", plan=plan, expire=date(2020, 1, 10), active=False)
+        up.extend_account(plan, pricing)
+        self.assertEqual(up.expire, date(2020, 2, 14))
