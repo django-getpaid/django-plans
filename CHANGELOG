@@ -1,7 +1,7 @@
 django-plans changelog
 ======================
 
-2.1.5
+2.1.6
 -----
 
 * **Bug Fixes**: Fixed timezone inconsistency in date calculations when ``USE_TZ=True`` with a non-UTC system timezone. Methods ``is_expired()``, ``days_left()``, ``get_plan_extended_from()``, ``extend_account()``, invoice creation, and the ``expire_account`` task all used ``date.today()`` (system-local date) instead of ``timezone.now().date()`` (UTC date). Near midnight UTC, this caused off-by-one-day errors in plan expiry checks, proration calculations, and billing period boundaries. All date references now consistently use ``django.utils.timezone.now().date()``.
