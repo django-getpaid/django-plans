@@ -919,6 +919,14 @@ class AbstractOrder(BaseMixin, models.Model):
         )
 
         if order.completed is None:
+            # Lock the UserPlan row to serialize concurrent modifications
+            # (e.g. multiple payments for the same user processed simultaneously).
+            # Without this, concurrent transactions read stale expire/plan values,
+            # causing extensions not to stack and refunds to over-subtract.
+            AbstractUserPlan.get_concrete_model().objects.select_for_update().get(
+                user=self.user
+            )
+            self.user.userplan.refresh_from_db()
             self.plan_extended_from = self.get_plan_extended_from()
             status = self.user.userplan.extend_account(self.plan, self.pricing)
             self.plan_extended_until = self.user.userplan.expire
@@ -933,6 +941,7 @@ class AbstractOrder(BaseMixin, models.Model):
         else:
             return False
 
+    @transaction.atomic()
     def return_order(self):
         if self.status != self.STATUS.RETURNED:
             if self.status == self.STATUS.COMPLETED:
@@ -953,6 +962,10 @@ class AbstractOrder(BaseMixin, models.Model):
                             f"plan_extended_until={self.plan_extended_until}, "
                             f"pricing.period={self.pricing.period}"
                         )
+                AbstractUserPlan.get_concrete_model().objects.select_for_update().get(
+                    user=self.user
+                )
+                self.user.userplan.refresh_from_db()
                 self.user.userplan.reduce_account(self.pricing)
             elif self.status != self.STATUS.NOT_VALID:
                 raise ValueError(

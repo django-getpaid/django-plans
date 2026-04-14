@@ -983,6 +983,139 @@ class ConcurrentTestInvoice(TransactionTestCase):
             self.assertEqual(Invoice.objects.count(), 1)
 
 
+class ConcurrentCompleteOrderTest(TransactionTestCase):
+    """Verify that concurrent complete_order/return_order calls for the same
+    user correctly serialize via select_for_update, so extensions stack and
+    reductions subtract the right amount."""
+
+    fixtures = ["initial_plan", "test_django-plans_auth", "test_django-plans_plans"]
+
+    @staticmethod
+    def _complete_order_in_thread(order_id, results, index):
+        """Thread target: complete an order and close the DB connection."""
+        try:
+            order = Order.objects.get(id=order_id)
+            order.complete_order()
+            results[index] = True
+        except Exception as e:
+            results[index] = e
+        finally:
+            from django.db import connection
+
+            connection.close()
+
+    @staticmethod
+    def _return_order_in_thread(order_id, results, index):
+        try:
+            order = Order.objects.get(id=order_id)
+            order.return_order()
+            results[index] = True
+        except Exception as e:
+            results[index] = e
+        finally:
+            from django.db import connection
+
+            connection.close()
+
+    def test_concurrent_complete_order_stacks_expire(self):
+        import threading
+
+        u = User.objects.get(username="test1")
+        u.userplan.expire = now().date() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+
+        order_ids = []
+        for _ in range(3):
+            order = Order.objects.create(
+                user=u,
+                pricing=plan_pricing.pricing,
+                amount=100,
+                plan=plan_pricing.plan,
+            )
+            order_ids.append(order.id)
+
+        results = [None] * 3
+        threads = [
+            threading.Thread(
+                target=self._complete_order_in_thread, args=(oid, results, i)
+            )
+            for i, oid in enumerate(order_ids)
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=30)
+
+        for i, r in enumerate(results):
+            if isinstance(r, Exception):
+                raise r
+            self.assertTrue(r, f"Thread {i} did not complete")
+
+        u.userplan.refresh_from_db()
+        self.assertEqual(
+            u.userplan.expire,
+            now().date() + timedelta(days=50 + 30 * 3),
+        )
+        self.assertEqual(
+            Order.objects.filter(
+                id__in=order_ids, status=Order.STATUS.COMPLETED
+            ).count(),
+            3,
+        )
+
+    def test_concurrent_return_order_reduces_correctly(self):
+        """Complete 3 orders sequentially, return 2 concurrently — expire
+        should reflect only the remaining 1 extension."""
+        import threading
+
+        u = User.objects.get(username="test1")
+        u.userplan.expire = now().date() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+
+        orders = []
+        for _ in range(3):
+            order = Order.objects.create(
+                user=u,
+                pricing=plan_pricing.pricing,
+                amount=100,
+                plan=plan_pricing.plan,
+            )
+            order.complete_order()
+            orders.append(order)
+
+        u.userplan.refresh_from_db()
+        self.assertEqual(
+            u.userplan.expire,
+            now().date() + timedelta(days=50 + 30 * 3),
+        )
+
+        results = [None] * 2
+        threads = [
+            threading.Thread(
+                target=self._return_order_in_thread,
+                args=(orders[i + 1].id, results, i),
+            )
+            for i in range(2)
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=30)
+
+        for i, r in enumerate(results):
+            if isinstance(r, Exception):
+                raise r
+            self.assertTrue(r, f"Thread {i} did not complete")
+
+        u.userplan.refresh_from_db()
+        self.assertEqual(
+            u.userplan.expire,
+            now().date() + timedelta(days=50 + 30),
+        )
+
+
 class OrderTestCase(TestCase):
     fixtures = ["initial_plan", "test_django-plans_auth", "test_django-plans_plans"]
 
