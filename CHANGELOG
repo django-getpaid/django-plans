@@ -1,6 +1,12 @@
 django-plans changelog
 ======================
 
+2.1.7
+-----
+
+* **Bug Fixes**: **CRITICAL**: Fixed race condition in ``complete_order()`` and ``return_order()`` when multiple payments for the same user are processed concurrently (e.g. duplicate payment webhooks). Without row-level locking on ``UserPlan``, concurrent transactions read stale ``expire``/``plan`` values (PostgreSQL READ COMMITTED isolation), causing plan extensions not to stack and refunds to over-subtract — potentially cancelling a valid subscription. Both methods now acquire ``select_for_update()`` on the ``UserPlan`` row before modifying it, serializing concurrent access per-user. Also wraps ``return_order()`` in ``@transaction.atomic()`` to properly scope the lock.
+* **Tests**: Added concurrent ``complete_order`` and ``return_order`` tests using threads and ``TransactionTestCase`` to verify that extensions stack correctly and refund reductions are accurate under concurrent execution.
+
 2.1.6
 -----
 
