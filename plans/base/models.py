@@ -923,10 +923,16 @@ class AbstractOrder(BaseMixin, models.Model):
             # (e.g. multiple payments for the same user processed simultaneously).
             # Without this, concurrent transactions read stale expire/plan values,
             # causing extensions not to stack and refunds to over-subtract.
-            AbstractUserPlan.get_concrete_model().objects.select_for_update().get(
-                user=self.user
+            # Uses filter().first() instead of get() to avoid DoesNotExist when
+            # the user has no UserPlan row (e.g. in test setups with baker).
+            locked = (
+                AbstractUserPlan.get_concrete_model()
+                .objects.select_for_update()
+                .filter(user=self.user)
+                .first()
             )
-            self.user.userplan.refresh_from_db()
+            if locked is not None:
+                self.user.userplan.refresh_from_db()
             self.plan_extended_from = self.get_plan_extended_from()
             status = self.user.userplan.extend_account(self.plan, self.pricing)
             self.plan_extended_until = self.user.userplan.expire
@@ -962,10 +968,14 @@ class AbstractOrder(BaseMixin, models.Model):
                             f"plan_extended_until={self.plan_extended_until}, "
                             f"pricing.period={self.pricing.period}"
                         )
-                AbstractUserPlan.get_concrete_model().objects.select_for_update().get(
-                    user=self.user
+                locked = (
+                    AbstractUserPlan.get_concrete_model()
+                    .objects.select_for_update()
+                    .filter(user=self.user)
+                    .first()
                 )
-                self.user.userplan.refresh_from_db()
+                if locked is not None:
+                    self.user.userplan.refresh_from_db()
                 self.user.userplan.reduce_account(self.pricing)
             elif self.status != self.STATUS.NOT_VALID:
                 raise ValueError(
