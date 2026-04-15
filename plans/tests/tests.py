@@ -1184,6 +1184,32 @@ class OrderTestCase(TestCase):
         )
         self.assertFalse(order.complete_order())
 
+    def test_complete_order_userplan_linked_to_different_user(self):
+        """complete_order must not crash on select_for_update when
+        the Order's user has no UserPlan row in the DB, but has an
+        ORM-cached userplan from a different user (e.g. baker creating
+        an order with user__userplan=baker.make("UserPlan"))."""
+        u = User.objects.get(username="test1")
+        other_user = User.objects.get(username="test2")
+        u.userplan.expire = now().date() + timedelta(days=50)
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+        )
+        # Simulate baker's user__userplan=baker.make("UserPlan"):
+        # the UserPlan row in DB points to other_user, but order.user
+        # has an in-memory cached userplan attribute.
+        cached_userplan = u.userplan
+        UserPlan.objects.filter(user=other_user).delete()
+        cached_userplan.user = other_user
+        cached_userplan.save()
+        # At this point u has no UserPlan in DB, but u.userplan is cached in memory
+        self.assertTrue(order.complete_order())
+
     def test_return_order_new(self):
         u = User.objects.get(username="test1")
         u.userplan.expire = now().date() + timedelta(days=50)
