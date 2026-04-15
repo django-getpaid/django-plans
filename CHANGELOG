@@ -1,6 +1,12 @@
 django-plans changelog
 ======================
 
+2.1.8
+-----
+
+* **Bug Fixes**: Fixed ``select_for_update().get()`` in ``complete_order()`` and ``return_order()`` crashing with ``UserPlan.DoesNotExist`` when the Order's user has no ``UserPlan`` row in the database (e.g. in test setups where baker creates an Order with ``user__userplan=baker.make("UserPlan")``). The lock now uses ``filter().first()`` and skips ``refresh_from_db()`` when no row is found, preserving concurrency protection while not introducing crash paths that didn't exist before the locking was added in 2.1.7.
+* **Tests**: Added test for ``complete_order()`` when the ``UserPlan`` row is linked to a different user than the Order's user (simulating baker's double-underscore reverse relation behavior).
+
 2.1.7
 -----
 
