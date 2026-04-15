@@ -19,6 +19,8 @@ jobs:
   tests:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
 
     strategy:
       matrix:
@@ -62,7 +64,6 @@ jobs:
            pip install -q -e .
            pip install -q --upgrade --upgrade-strategy eager -r demo/requirements.txt
            pip install -q Django==${{ matrix.DJANGO_VERSION }} --pre
-           pip install codecov
 
       - name: Run migration check
         run: |
@@ -86,10 +87,19 @@ jobs:
           # Run tests for sample app used for testing extensibility
           PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" SAMPLE_APP=1 demo/manage.py test example
           PYTHONPATH="." MANAGE_PY_PATH="demo/manage.py" PYTHONWARNINGS="error::DeprecationWarning" coverage run demo/manage.py test plans
-          coverage xml && codecov
+          coverage xml
         env:
           POSTGRES_HOST: postgres
           POSTGRES_PORT: 5432
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: ./coverage.xml
+          flags: django${{ matrix.DJANGO_VERSION }}-py${{ matrix.python-version }}
+          fail_ci_if_error: false
+
   lint:
     runs-on: ubuntu-latest
     steps:
