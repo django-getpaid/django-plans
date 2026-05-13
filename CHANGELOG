@@ -1,6 +1,12 @@
 django-plans changelog
 ======================
 
+2.1.9
+-----
+
+* **Bug Fixes**: Fixed ``Order.return_order`` leaving ``UserPlan.expire`` later than the user's pre-order state when refunding an order completed against an expired (or ``expire=None``) plan. From an expired state ``extend_account`` advances ``expire`` to ``today + pricing.period``, but ``reduce_account`` rewound by exactly ``pricing.period``, so refunds kept the days the extension rolled over the expired gap. ``complete_order`` now snapshots ``UserPlan.expire``/``active`` on the ``Order`` (migration 0018) and ``return_order`` rewinds by the actual extension delta. Legacy orders without a snapshot keep the previous behaviour.
+* **Tests**: Added tests for the expired-plan refund regression and for stacked refunds across multiple orders.
+
 2.1.8
 -----
 
