@@ -468,15 +468,78 @@ class AbstractUserPlan(BaseMixin, models.Model):
 
         return status
 
-    def reduce_account(self, pricing):
+    def reduce_account(self, pricing, order=None):
         """
         Manages reducing account after returning an order
+
         :param pricing: if pricing is None then nothing is changed
+        :param order: the order being returned. If provided and the order
+            carries a UserPlan snapshot (taken in ``complete_order`` before
+            ``extend_account`` ran), ``expire`` is rewound by the exact
+            number of days the extension added rather than by
+            ``pricing.period``. This makes refund symmetric with extension
+            even when the plan was expired (or had ``expire=None``) at
+            completion time, where ``extend_account`` advances ``expire``
+            by more than ``pricing.period`` days.
+
+            For backward compatibility with orders completed before the
+            snapshot fields existed (and for callers that don't have an
+            order, like tests of the raw API), ``order=None`` keeps the
+            legacy ``expire -= pricing.period`` behaviour.
         :return:
         """
-        if pricing is not None:
-            self.expire = self.get_plan_reduced_until(pricing)
+        if pricing is None:
+            return
+        if order is not None and order.userplan_active_before is not None:
+            # Snapshot path: rewind by the actual extension delta so the
+            # refund is symmetric with what extend_account did, even when
+            # the plan was expired (or had expire=None) at completion time.
+            if order.userplan_expire_before is None:
+                # Order extended out of ``expire=None``. Its ledger
+                # contribution is exactly ``pricing.period`` days
+                # (``plan_extended_until - plan_extended_from``). If a
+                # later order has extended past ``plan_extended_until``,
+                # this order's contribution is still inside the user's
+                # current expire - subtract pricing.period and keep the
+                # rest. Otherwise no later extension is in effect, so we
+                # restore expire to None (the pre-order state).
+                if (
+                    self.expire is not None
+                    and order.plan_extended_until is not None
+                    and self.expire > order.plan_extended_until
+                ):
+                    self.expire = self.expire - timedelta(days=pricing.period)
+                else:
+                    self.expire = None
+            elif order.plan_extended_until is not None and self.expire is not None:
+                # Standard snapshot path: rewind by the actual extension
+                # delta. Equals pricing.period for continuation orders,
+                # is larger for fresh-start orders that extended out of
+                # an expired (but non-None) state.
+                extension_days = (
+                    order.plan_extended_until - order.userplan_expire_before
+                ).days
+                self.expire = self.expire - timedelta(days=extension_days)
+            else:
+                # plan_extended_until missing or current expire missing -
+                # nothing safe to compute, fall back to legacy subtraction.
+                self.expire = self.get_plan_reduced_until(pricing)
+            # Derive active from the resulting expire: a refund must not
+            # deactivate a user whose later orders still reach into the
+            # future. When we end up with expire=None we have no signal
+            # from the date and fall back to the snapshot - that's the
+            # pre-order state, which is the right answer because expire
+            # being None means no later order has extended either.
+            # ``>=`` matches ``is_expired``: a plan expiring today is
+            # still active for today.
+            if self.expire is None:
+                self.active = order.userplan_active_before
+            else:
+                self.active = self.expire >= now().date()
             self.save()
+            return
+        self.expire = self.get_plan_reduced_until(pricing)
+        self.save()
 
     def expire_account(self):
         """manages account expiration"""
@@ -866,6 +929,38 @@ class AbstractOrder(BaseMixin, models.Model):
         null=True,
         blank=True,
     )
+    # Snapshot of UserPlan state captured by ``complete_order`` *before*
+    # ``UserPlan.extend_account`` runs. ``return_order`` uses it to reverse
+    # the exact same number of days that were added, which is the only way
+    # to undo extensions that started from an expired (or ``None``) state:
+    # in those cases ``extend_account`` advances ``expire`` to
+    # ``now().date() + pricing.period`` rather than
+    # ``previous_expire + pricing.period`` -> a naive
+    # ``expire -= pricing.period`` rewind would land *later* than where the
+    # plan was before the order, leaving stale paid-plan time the user no
+    # longer owns. Both fields are nullable: legacy orders completed before
+    # this snapshot existed don't have one, and ``return_order`` keeps the
+    # old subtract-period fallback for them.
+    userplan_expire_before = models.DateField(
+        _("user plan expire before"),
+        help_text=_(
+            "Snapshot of ``UserPlan.expire`` taken before this order extended "
+            "the user's plan. Used to restore expire on refund."
+        ),
+        null=True,
+        blank=True,
+    )
+    userplan_active_before = models.BooleanField(
+        _("user plan active before"),
+        help_text=_(
+            "Snapshot of ``UserPlan.active`` taken before this order extended "
+            "the user's plan. Doubles as the marker that a snapshot was taken: "
+            "it's None for legacy orders completed before the snapshot fields "
+            "existed and either True or False for new orders."
+        ),
+        null=True,
+        blank=True,
+    )
     amount = models.DecimalField(
         _("amount"), max_digits=7, decimal_places=2, db_index=True
     )
@@ -933,6 +1028,16 @@ class AbstractOrder(BaseMixin, models.Model):
             )
             if locked is not None:
                 self.user.userplan.refresh_from_db()
+            # Snapshot the UserPlan state *before* extend_account runs so
+            # return_order can rewind by the exact number of days the
+            # extension added. extend_account/reduce_account are otherwise
+            # asymmetric for plans that were expired (or had expire=None) at
+            # completion time: extend_account jumps expire forward to
+            # ``now().date() + pricing.period`` instead of
+            # ``previous_expire + pricing.period``, while reduce_account
+            # always rewinds by exactly ``pricing.period`` days.
+            self.userplan_expire_before = self.user.userplan.expire
+            self.userplan_active_before = self.user.userplan.active
             self.plan_extended_from = self.get_plan_extended_from()
             status = self.user.userplan.extend_account(self.plan, self.pricing)
             self.plan_extended_until = self.user.userplan.expire
@@ -976,7 +1081,7 @@ class AbstractOrder(BaseMixin, models.Model):
                 )
                 if locked is not None:
                     self.user.userplan.refresh_from_db()
-                self.user.userplan.reduce_account(self.pricing)
+                self.user.userplan.reduce_account(self.pricing, order=self)
             elif self.status != self.STATUS.NOT_VALID:
                 raise ValueError(
                     f"Cannot return order with status other than COMPLETED and NOT_VALID: {self.status}"
