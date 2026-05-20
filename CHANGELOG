@@ -1,8 +1,13 @@
 django-plans changelog
 ======================
 
-2.1.9
+2.2.0
 -----
+
+* **Release**: Version renumbering of 2.1.9. The 2.1.9 release shipped migration 0018, which is operationally backward-incompatible for downstream apps pinning ``~=2.1`` even though the migration is purely additive (two nullable fields on ``Order``). Re-released under 2.2.0 to comply with the Django ecosystem convention that any new migration warrants a minor version bump. 2.1.9 has been yanked on PyPI; users already on 2.1.9 can upgrade to 2.2.0 with no DB changes (migration 0018 is identical). See issue #235.
+
+2.1.9 (yanked)
+--------------
 
 * **Bug Fixes**: Fixed ``Order.return_order`` leaving ``UserPlan.expire`` later than the user's pre-order state when refunding an order completed against an expired (or ``expire=None``) plan. From an expired state ``extend_account`` advances ``expire`` to ``today + pricing.period``, but ``reduce_account`` rewound by exactly ``pricing.period``, so refunds kept the days the extension rolled over the expired gap. ``complete_order`` now snapshots ``UserPlan.expire``/``active`` on the ``Order`` (migration 0018) and ``return_order`` rewinds by the actual extension delta. Legacy orders without a snapshot keep the previous behaviour.
 * **Tests**: Added tests for the expired-plan refund regression and for stacked refunds across multiple orders.
