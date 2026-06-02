@@ -1,6 +1,12 @@
 django-plans changelog
 ======================
 
+2.3.0
+-----
+
+* **Bug Fixes**: Fixed ``Order.return_order`` leaving the user on a paid plan with ``expire=None`` after refunding a first purchase. When a free-plan user (``expire=None``) buys a paid plan, ``extend_account`` switches ``UserPlan.plan`` to the paid tier; on refund ``reduce_account`` restored ``expire`` to the pre-order ``None`` but never reverted ``plan``, leaving a non-free ``UserPlan`` with no expiry — an internally inconsistent state flagged by downstream consistency checks. ``complete_order`` now also snapshots ``UserPlan.plan`` on the ``Order`` (migration 0019, one nullable FK) and ``return_order`` restores it when an order is fully unwound out of an ``expire=None`` pre-order state. Continuation refunds (where a later order still covers the user) and legacy orders without a snapshot are unaffected.
+* **Tests**: Added a regression test for the refunded-first-purchase scenario (``test_return_order_refunded_first_purchase_reverts_to_free``), a backward-compat test for legacy orders with no plan snapshot (``test_return_order_legacy_without_plan_snapshot_keeps_plan``), and updated ``test_return_order_completed`` to assert the plan reverts to free.
+
 2.2.0
 -----
 

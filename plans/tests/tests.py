@@ -1237,7 +1237,8 @@ class OrderTestCase(TestCase):
 
     def test_return_order_completed(self):
         u = User.objects.get(username="test1")
-        u.userplan.plan = Plan.objects.filter(planpricing__isnull=True).first()
+        free_plan = Plan.objects.filter(planpricing__isnull=True).first()
+        u.userplan.plan = free_plan
         u.userplan.expire = None
         u.userplan.save()
         plan_pricing = PlanPricing.objects.filter(pricing__period__gt=0).first()
@@ -1249,17 +1250,97 @@ class OrderTestCase(TestCase):
             status=Order.STATUS.NEW,
         )
         order.complete_order()
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
 
         order.return_order()
 
         self.assertEqual(order.status, Order.STATUS.RETURNED)
-        self.assertEqual(u.userplan.plan, plan_pricing.plan)
-        # Refund restores expire to the snapshot taken before the order
-        # extended the plan. The user had ``expire=None`` (no expiry) before,
-        # so a full refund leaves them with no expiry again - which is
-        # symmetric with what extend_account did and matches what the user
-        # had before paying.
+        # Refund fully unwinds the first purchase back to the pre-order
+        # state: the user had the free plan with ``expire=None`` before, so
+        # both the plan and expire are restored. Restoring the plan (not
+        # just expire) is symmetric with what extend_account did and avoids
+        # the inconsistent "paid plan with expire=None" state that the
+        # consistency checks flag.
+        self.assertEqual(u.userplan.plan, free_plan)
         self.assertIsNone(u.userplan.expire)
+
+    def test_return_order_refunded_first_purchase_reverts_to_free(self):
+        """Regression: a refunded first purchase (free -> paid) must not
+        leave the user on the paid plan with ``expire=None``.
+
+        Production scenario (BlenderKit user illiahabruskyi@gmail.com): an
+        active free-plan user with ``expire=None`` bought a 30-day paid
+        plan, then the payment was refunded. Before this fix reduce_account
+        restored ``expire`` to None but left ``plan`` on the paid tier,
+        producing a non-free UserPlan with no expiry - flagged by the
+        ``check_userplan_active_missing_expire`` consistency check.
+        """
+        u = User.objects.get(username="test1")
+        free_plan = Plan.objects.filter(planpricing__isnull=True).first()
+        u.userplan.plan = free_plan
+        u.userplan.expire = None
+        u.userplan.active = True
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(pricing__period__gt=0).first()
+        self.assertFalse(plan_pricing.plan.is_free())
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        # Sanity: completion put the user on the paid plan with an expiry.
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
+        self.assertIsNotNone(u.userplan.expire)
+
+        order.return_order()
+
+        u.userplan.refresh_from_db()
+        self.assertEqual(u.userplan.plan, free_plan)
+        self.assertIsNone(u.userplan.expire)
+        self.assertTrue(u.userplan.active)
+        # The exact invariant the consistency check enforces.
+        self.assertFalse(not u.userplan.plan.is_free() and u.userplan.expire is None)
+
+    def test_return_order_legacy_without_plan_snapshot_keeps_plan(self):
+        """Backward compat: orders completed before ``userplan_plan_before``
+        existed (recorded between migrations 0018 and 0019) reach the full
+        unwind branch with no plan snapshot. Such a refund must still rewind
+        ``expire`` to the pre-order None state without crashing and must
+        leave ``plan`` untouched - it cannot do better without the snapshot,
+        but it must never null the plan.
+        """
+        u = User.objects.get(username="test1")
+        free_plan = Plan.objects.filter(planpricing__isnull=True).first()
+        u.userplan.plan = free_plan
+        u.userplan.expire = None
+        u.userplan.active = True
+        u.userplan.save()
+        plan_pricing = PlanPricing.objects.filter(pricing__period__gt=0).first()
+        order = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order.complete_order()
+        # Emulate a legacy order: active/expire snapshots present, plan
+        # snapshot missing (the field did not yet exist at completion time).
+        order.userplan_plan_before = None
+        order.save(update_fields=["userplan_plan_before"])
+        self.assertIsNotNone(order.userplan_active_before)
+        self.assertIsNone(order.userplan_plan_before_id)
+
+        order.return_order()
+
+        u.userplan.refresh_from_db()
+        # ``expire`` is still rewound to the pre-order None state ...
+        self.assertIsNone(u.userplan.expire)
+        # ... but with no snapshot the plan is left as-is (never nulled).
+        self.assertEqual(u.userplan.plan, plan_pricing.plan)
 
     def test_return_order_completed_then_same_plan(self):
         u = User.objects.get(username="test1")
@@ -1445,9 +1526,10 @@ class OrderTestCase(TestCase):
         self.assertEqual(u.userplan.expire, now().date() + timedelta(days=50))
 
     def test_complete_order_snapshots_userplan_state(self):
-        """complete_order must snapshot UserPlan.expire/active before
+        """complete_order must snapshot UserPlan.expire/active/plan before
         extend_account so return_order can restore them."""
         u = User.objects.get(username="test1")
+        plan_before = u.userplan.plan
         u.userplan.expire = now().date() + timedelta(days=50)
         u.userplan.active = False
         u.userplan.save()
@@ -1467,6 +1549,7 @@ class OrderTestCase(TestCase):
             order.userplan_expire_before, now().date() + timedelta(days=50)
         )
         self.assertEqual(order.userplan_active_before, False)
+        self.assertEqual(order.userplan_plan_before, plan_before)
 
     def test_return_order_after_extension_from_expired_plan(self):
         """Refunding an order that was completed against an *expired*
