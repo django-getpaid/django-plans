@@ -480,7 +480,10 @@ class AbstractUserPlan(BaseMixin, models.Model):
             ``pricing.period``. This makes refund symmetric with extension
             even when the plan was expired (or had ``expire=None``) at
             completion time, where ``extend_account`` advances ``expire``
-            by more than ``pricing.period`` days.
+            by more than ``pricing.period`` days. When the order is fully
+            unwound out of an ``expire=None`` pre-order state, the snapshot
+            ``plan`` is also restored so a refunded first purchase doesn't
+            leave the user on a paid plan with ``expire=None``.
 
             For backward compatibility with orders completed before the
             snapshot fields existed (and for callers that don't have an
@@ -510,7 +513,18 @@ class AbstractUserPlan(BaseMixin, models.Model):
                 ):
                     self.expire = self.expire - timedelta(days=pricing.period)
                 else:
+                    # Full unwind back to the pre-order state. The user had
+                    # no expiry before this order, so they owned no paid
+                    # subscription time - restore both expire (None) and the
+                    # plan they were on before (typically the free/default
+                    # plan). extend_account changed ``plan`` on completion;
+                    # without reverting it here a refunded first purchase
+                    # leaves the user on a paid plan with expire=None, an
+                    # internally inconsistent state. Guarded on the snapshot
+                    # being present so legacy orders keep their plan.
                     self.expire = None
+                    if order.userplan_plan_before_id is not None:
+                        self.plan = order.userplan_plan_before
             elif order.plan_extended_until is not None and self.expire is not None:
                 # Standard snapshot path: rewind by the actual extension
                 # delta. Equals pricing.period for continuation orders,
@@ -938,9 +952,13 @@ class AbstractOrder(BaseMixin, models.Model):
     # ``previous_expire + pricing.period`` -> a naive
     # ``expire -= pricing.period`` rewind would land *later* than where the
     # plan was before the order, leaving stale paid-plan time the user no
-    # longer owns. Both fields are nullable: legacy orders completed before
-    # this snapshot existed don't have one, and ``return_order`` keeps the
-    # old subtract-period fallback for them.
+    # longer owns. ``userplan_plan_before`` similarly lets ``return_order``
+    # restore the plan itself when an order is fully unwound (free -> paid
+    # -> refund), so a refunded first purchase doesn't strand the user on a
+    # paid plan with ``expire=None``. All three fields are nullable: legacy
+    # orders completed before these snapshots existed don't have them, and
+    # ``return_order`` keeps the old subtract-period / keep-plan fallback for
+    # them.
     userplan_expire_before = models.DateField(
         _("user plan expire before"),
         help_text=_(
@@ -960,6 +978,21 @@ class AbstractOrder(BaseMixin, models.Model):
         ),
         null=True,
         blank=True,
+    )
+    userplan_plan_before = models.ForeignKey(
+        "Plan",
+        verbose_name=_("user plan plan before"),
+        related_name="+",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text=_(
+            "Snapshot of ``UserPlan.plan`` taken before this order extended "
+            "the user's plan. Used to restore the plan on refund when the "
+            "order is fully unwound: without it, refunding a first purchase "
+            "(free -> paid) would leave the user on the paid plan with "
+            "expire=None. None for legacy orders predating this field."
+        ),
     )
     amount = models.DecimalField(
         _("amount"), max_digits=7, decimal_places=2, db_index=True
@@ -1038,6 +1071,7 @@ class AbstractOrder(BaseMixin, models.Model):
             # always rewinds by exactly ``pricing.period`` days.
             self.userplan_expire_before = self.user.userplan.expire
             self.userplan_active_before = self.user.userplan.active
+            self.userplan_plan_before = self.user.userplan.plan
             self.plan_extended_from = self.get_plan_extended_from()
             status = self.user.userplan.extend_account(self.plan, self.pricing)
             self.plan_extended_until = self.user.userplan.expire
