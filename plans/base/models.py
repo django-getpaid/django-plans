@@ -468,6 +468,43 @@ class AbstractUserPlan(BaseMixin, models.Model):
 
         return status
 
+    def _shift_orders_stacked_after(self, order, expire_before_reduction):
+        """Slide later stacked orders' windows back after a mid-chain refund.
+
+        Returning an order rewinds ``expire``, but completed orders stacked
+        on top of the returned one still describe the pre-refund timeline:
+        their ``plan_extended_from``/``plan_extended_until`` cover days the
+        user no longer owns. Those dates are load-bearing - host apps
+        schedule period-based processing (e.g. creator revenue distribution)
+        by them, and ``expire`` should equal the last completed order's
+        ``plan_extended_until``. Shift each later order's window back by
+        exactly the delta the refund removed from ``expire``. Durations are
+        preserved, so ``return_order``'s from/until sanity check still holds
+        if a later order is refunded afterwards.
+        """
+        if order is None or order.plan_extended_until is None:
+            return
+        if expire_before_reduction is None or self.expire is None:
+            return
+        delta = expire_before_reduction - self.expire
+        if delta <= timedelta(0):
+            return
+        later_orders = (
+            order.__class__.objects.filter(
+                user=self.user,
+                status=order.STATUS.COMPLETED,
+                plan_extended_from__gte=order.plan_extended_until,
+            )
+            .exclude(pk=order.pk)
+            .exclude(plan_extended_until=None)
+        )
+        for later_order in later_orders:
+            later_order.plan_extended_from -= delta
+            later_order.plan_extended_until -= delta
+            later_order.save(
+                update_fields=["plan_extended_from", "plan_extended_until"]
+            )
+
     def reduce_account(self, pricing, order=None):
         """
         Manages reducing account after returning an order
@@ -485,6 +522,12 @@ class AbstractUserPlan(BaseMixin, models.Model):
             ``plan`` is also restored so a refunded first purchase doesn't
             leave the user on a paid plan with ``expire=None``.
 
+            Completed orders stacked after the returned one get their
+            ``plan_extended_from``/``plan_extended_until`` shifted back by
+            the same delta the refund removed from ``expire``, so their
+            windows keep describing the days they actually cover (see
+            ``_shift_orders_stacked_after``).
+
             For backward compatibility with orders completed before the
             snapshot fields existed (and for callers that don't have an
             order, like tests of the raw API), ``order=None`` keeps the
@@ -493,6 +536,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
         """
         if pricing is None:
             return
+        expire_before_reduction = self.expire
         if order is not None and order.userplan_active_before is not None:
             # Snapshot path: rewind by the actual extension delta so the
             # refund is symmetric with what extend_account did, even when
@@ -551,9 +595,11 @@ class AbstractUserPlan(BaseMixin, models.Model):
             else:
                 self.active = self.expire >= now().date()
             self.save()
+            self._shift_orders_stacked_after(order, expire_before_reduction)
             return
         self.expire = self.get_plan_reduced_until(pricing)
         self.save()
+        self._shift_orders_stacked_after(order, expire_before_reduction)
 
     def expire_account(self):
         """manages account expiration"""

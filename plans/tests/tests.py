@@ -1822,6 +1822,183 @@ class OrderTestCase(TestCase):
         self.assertIsNone(u.userplan.expire)
         self.assertFalse(u.userplan.active)
 
+    def test_return_order_mid_chain_shifts_later_order_window(self):
+        """Refunding an older order must slide later stacked orders'
+        plan_extended_from/until back by the refunded delta, so the
+        invariant ``expire == last completed order's plan_extended_until``
+        survives a mid-chain refund. Without the shift, the later order
+        keeps describing days the user no longer owns - and host apps that
+        schedule period-based processing by those dates work on a window
+        that no longer exists."""
+        u = User.objects.get(username="test1")
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        u.userplan.expire = now().date() + timedelta(days=10)
+        u.userplan.active = True
+        u.userplan.save()
+
+        order_first = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_first.complete_order()
+        order_then = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_then.complete_order()
+        order_then_from = order_then.plan_extended_from
+        order_then_until = order_then.plan_extended_until
+
+        order_first.return_order()
+
+        order_then.refresh_from_db()
+        self.assertEqual(
+            order_then.plan_extended_from, order_then_from - timedelta(days=30)
+        )
+        self.assertEqual(
+            order_then.plan_extended_until, order_then_until - timedelta(days=30)
+        )
+        # Duration is preserved, so ``order_then`` itself stays refundable
+        # (return_order asserts until - from == pricing.period).
+        u.userplan.refresh_from_db()
+        self.assertEqual(u.userplan.expire, order_then.plan_extended_until)
+        # The refunded order's own window is untouched - it documents what
+        # the order did when it completed.
+        order_first.refresh_from_db()
+        self.assertEqual(
+            order_first.plan_extended_until - order_first.plan_extended_from,
+            timedelta(days=30),
+        )
+
+    def test_return_order_mid_chain_shifts_by_fresh_start_delta(self):
+        """The shift uses the actual rewound delta, not pricing.period:
+        a fresh-start order that extended out of an expired state removed
+        more than pricing.period days, and the later order must slide by
+        exactly that amount."""
+        u = User.objects.get(username="test1")
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        previous_expire = now().date() - timedelta(days=13)
+        u.userplan.expire = previous_expire
+        u.userplan.active = False
+        u.userplan.save()
+
+        order_fresh_start = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_fresh_start.complete_order()
+        order_continuation = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_continuation.complete_order()
+        continuation_until = order_continuation.plan_extended_until
+
+        order_fresh_start.return_order()
+
+        # The fresh start added 43 days (today+30 minus today-13); the
+        # continuation order slides back by the same 43.
+        order_continuation.refresh_from_db()
+        self.assertEqual(
+            order_continuation.plan_extended_until,
+            continuation_until - timedelta(days=43),
+        )
+        u.userplan.refresh_from_db()
+        self.assertEqual(u.userplan.expire, order_continuation.plan_extended_until)
+
+    def test_return_order_last_order_leaves_earlier_windows_alone(self):
+        """Refunding the newest order must not touch earlier orders'
+        windows - only orders stacked *after* the returned one shift."""
+        u = User.objects.get(username="test1")
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        u.userplan.expire = now().date() + timedelta(days=10)
+        u.userplan.active = True
+        u.userplan.save()
+
+        order_first = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_first.complete_order()
+        order_then = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_then.complete_order()
+        order_first_from = order_first.plan_extended_from
+        order_first_until = order_first.plan_extended_until
+
+        order_then.return_order()
+
+        order_first.refresh_from_db()
+        self.assertEqual(order_first.plan_extended_from, order_first_from)
+        self.assertEqual(order_first.plan_extended_until, order_first_until)
+        u.userplan.refresh_from_db()
+        self.assertEqual(u.userplan.expire, order_first.plan_extended_until)
+
+    def test_return_order_corrupt_snapshot_never_shifts_later_orders_forward(self):
+        """A corrupt snapshot can make the rewind delta non-positive: here
+        ``userplan_expire_before`` was recorded *after* the order's own
+        ``plan_extended_until``, so the standard rewind computes negative
+        extension_days and expire grows on refund. Applying that delta to
+        later orders would shift their windows forward into days that were
+        never bought - the shift must be skipped instead."""
+        u = User.objects.get(username="test1")
+        plan_pricing = PlanPricing.objects.get(plan=u.userplan.plan, pricing__period=30)
+        u.userplan.expire = now().date() + timedelta(days=10)
+        u.userplan.active = True
+        u.userplan.save()
+
+        order_first = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_first.complete_order()
+        order_then = Order.objects.create(
+            user=u,
+            pricing=plan_pricing.pricing,
+            amount=100,
+            plan=plan_pricing.plan,
+            status=Order.STATUS.NEW,
+        )
+        order_then.complete_order()
+        order_then_from = order_then.plan_extended_from
+        order_then_until = order_then.plan_extended_until
+
+        # Corrupt the snapshot: pretend the pre-order expire was later than
+        # the extension the order recorded.
+        order_first.userplan_expire_before = (
+            order_first.plan_extended_until + timedelta(days=10)
+        )
+        order_first.save()
+
+        order_first.return_order()
+
+        order_then.refresh_from_db()
+        self.assertEqual(order_then.plan_extended_from, order_then_from)
+        self.assertEqual(order_then.plan_extended_until, order_then_until)
+
     def test_return_order_isolated_none_before_restores_none(self):
         """Single order extending out of expire=None: refund must
         restore expire to None and active to the pre-order snapshot."""
