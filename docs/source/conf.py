@@ -51,7 +51,7 @@ copyright = "2012, Krzysztof Dorosz"
 # built documents.
 #
 # The short X.Y version.
-version = "2.3.0"
+version = "2.3.1"
 # The full version, including alpha/beta/rc tags. Derived from ``version``
 # so bumpversion (which only rewrites ``version``) keeps both in sync -
 # a literal value here went stale at 2.1.3 while releases moved on.
