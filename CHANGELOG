@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-unreleased
-----------
+2.3.1
+-----
 
 * **Bug Fixes**: Fixed ``Order.return_order`` leaving stale ``plan_extended_from``/``plan_extended_until`` on completed orders stacked after the returned one. A mid-chain refund (e.g. a yearly order refunded after a monthly order already extended past it) correctly rewound ``UserPlan.expire``, but later orders kept describing the pre-refund timeline — breaking the invariant that ``expire`` equals the last completed order's ``plan_extended_until``, and misleading downstream consumers that schedule period-based processing by those dates. ``reduce_account`` now shifts each later completed order's window back by the same delta the refund removed from ``expire``. Durations are preserved, so later orders remain refundable themselves. Refunding the newest order, full unwinds to the pre-order state, and legacy orders without ``plan_extended_until`` are unaffected.
 * **Tests**: Added regression tests for the mid-chain window shift (standard and fresh-start deltas) and a guard that refunding the newest order leaves earlier orders' windows untouched.
