@@ -1,6 +1,18 @@
 django-plans changelog
 ======================
 
+unreleased
+----------
+
+* **Fix**: ``autorenew_account`` retried the same account several times per
+  scheduled slot when the task was run more often than daily: the renewal
+  window coerces the expiration date through the current time zone while the
+  already-attempted guard compares it as a naive timestamp in the connection
+  time zone, leaving a gap as wide as the UTC offset in which an account
+  re-qualifies although its attempt was recorded. A minimum spacing between
+  attempts (new setting ``PLANS_AUTORENEW_MIN_TIME_BETWEEN_ATTEMPTS``,
+  default 23 hours) closes the gap for any task cadence and time zone.
+
 2.3.1
 -----
 
