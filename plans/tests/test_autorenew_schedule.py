@@ -233,3 +233,86 @@ class AutorenewSchedulerTests(TestCase):
         renewed = autorenew_account()
         self.assertEqual(len(renewed), 1)
         self.assertEqual(renewed[0], self.user)
+
+
+class AutorenewAttemptSpacingTests(TestCase):
+    """One scheduled slot must produce one attempt, at any task cadence.
+
+    The window test (``expire <= now + offset``) coerces the datetime to a
+    date in the *current time zone*; the guard (``last_renewal_attempt <
+    expire - offset``) is computed in SQL, where ``date - interval`` yields a
+    naive timestamp read in the *connection* time zone. Between the two
+    readings of the same date lies a gap as wide as the UTC offset, and a
+    task run inside it re-qualifies the user even though the previous attempt
+    was recorded. Under an hourly scheduler this charged failing cards three
+    times per slot in production (offset + 1 attempts), for months.
+    """
+
+    def setUp(self):
+        self.user = baker.make(User, username="spacing_user", email="spacing@example.com")
+        self.plan = baker.make("Plan", name="Test Plan")
+        self.pricing = baker.make("Pricing", period=30)
+        baker.make("PlanPricing", plan=self.plan, pricing=self.pricing, price=10)
+        self.user_plan = baker.make("UserPlan", user=self.user, plan=self.plan)
+        baker.make(
+            RecurringUserPlan,
+            user_plan=self.user_plan,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            token_verified=True,
+            pricing=self.pricing,
+            amount=Decimal(10),
+            currency="USD",
+        )
+
+    def _attempts_at(self, *instants):
+        attempts = []
+        for instant in instants:
+            with freeze_time(instant):
+                attempts.append(len(autorenew_account()))
+        return attempts
+
+    @override_settings(
+        PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=1, hours=3)],
+        TIME_ZONE="Europe/Prague",
+    )
+    def test_hourly_runs_in_the_timezone_gap_attempt_only_once(self):
+        # The production trace, verbatim: plan expires 2026-08-04 (CEST,
+        # UTC+2). The window opens with the Prague date at 19:01 UTC; the SQL
+        # guard boundary sits at 21:00 UTC. Hourly runs re-attempted at
+        # 20:01 and 21:01 before the guard finally closed.
+        self.user_plan.expire = datetime.date(2026, 8, 4)
+        self.user_plan.save()
+
+        attempts = self._attempts_at(
+            "2026-08-02 19:01:00",
+            "2026-08-02 20:01:00",
+            "2026-08-02 21:01:00",
+            "2026-08-02 22:01:00",
+        )
+
+        self.assertEqual(sum(attempts), 1, attempts)
+
+    @override_settings(
+        PLANS_AUTORENEW_SCHEDULE=[
+            datetime.timedelta(days=1, hours=3),
+            datetime.timedelta(0),
+        ],
+        TIME_ZONE="Europe/Prague",
+    )
+    def test_the_next_scheduled_slot_still_fires(self):
+        # The spacing must close the gap, not the schedule: after the
+        # 1d3h-slot attempt, the on-expiry slot a day later must still run.
+        self.user_plan.expire = datetime.date(2026, 8, 4)
+        self.user_plan.save()
+
+        first_day = self._attempts_at(
+            "2026-08-02 19:01:00",
+            "2026-08-02 20:01:00",
+        )
+        next_day = self._attempts_at(
+            "2026-08-03 22:01:00",
+            "2026-08-03 23:01:00",
+        )
+
+        self.assertEqual(sum(first_day), 1, first_day)
+        self.assertEqual(sum(next_day), 1, next_day)

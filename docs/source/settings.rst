@@ -437,3 +437,27 @@ Example::
     PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY = datetime.timedelta(days=15)
 
 In this case, no renewal attempt will be made for a plan that expired more than 15 days ago, relative to the renewal schedule.
+
+``PLANS_AUTORENEW_MIN_TIME_BETWEEN_ATTEMPTS``
+---------------------------------------------
+
+**Optional**
+
+Default: `datetime.timedelta(hours=23)`
+
+Minimum `datetime.timedelta` between two renewal attempts for the same account.
+
+Each entry of ``PLANS_AUTORENEW_SCHEDULE`` is meant to produce a single
+attempt, but the per-slot bookkeeping compares the plan's expiration *date*
+with two different clocks (the current time zone for the renewal window, the
+database connection's time zone for the already-attempted guard). Inside the
+gap between those readings a task run re-qualifies an account whose attempt
+was already recorded -- so a scheduler firing the task hourly retried failing
+cards several times per slot. This spacing closes the gap regardless of time
+zones or task cadence.
+
+Lower it only if your ``PLANS_AUTORENEW_SCHEDULE`` contains entries less than
+a day apart::
+
+    PLANS_AUTORENEW_MIN_TIME_BETWEEN_ATTEMPTS = datetime.timedelta(hours=6)
+

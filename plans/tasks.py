@@ -51,12 +51,33 @@ def autorenew_account(
             "PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY",
             datetime.timedelta(days=30),
         )
+        # The slot guard below compares ``last_renewal_attempt`` against
+        # ``expire - schedule`` in SQL, where the DateField is read as a naive
+        # timestamp in the *connection* time zone -- while the window checks
+        # coerce the same field through the *current* time zone. Between the
+        # two readings of one date lies a gap as wide as the UTC offset, and a
+        # task run inside it re-qualifies a user whose attempt was already
+        # recorded. The minimum spacing closes that gap independently of time
+        # zones and of how often the scheduler fires the task.
+        min_time_between_attempts = getattr(
+            settings,
+            "PLANS_AUTORENEW_MIN_TIME_BETWEEN_ATTEMPTS",
+            datetime.timedelta(hours=23),
+        )
         for schedule in PLANS_AUTORENEW_SCHEDULE:
             q |= Q(
                 Q(userplan__recurring__last_renewal_attempt__isnull=True)
-                | Q(
-                    userplan__recurring__last_renewal_attempt__lt=F("userplan__expire")
-                    - schedule
+                | (
+                    Q(
+                        userplan__recurring__last_renewal_attempt__lt=F(
+                            "userplan__expire"
+                        )
+                        - schedule
+                    )
+                    & Q(
+                        userplan__recurring__last_renewal_attempt__lte=now_dt
+                        - min_time_between_attempts
+                    )
                 ),
                 userplan__expire__lte=now_dt + schedule,
                 userplan__expire__gte=now_dt + schedule - max_renew_after,
