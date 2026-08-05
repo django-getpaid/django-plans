@@ -249,7 +249,9 @@ class AutorenewAttemptSpacingTests(TestCase):
     """
 
     def setUp(self):
-        self.user = baker.make(User, username="spacing_user", email="spacing@example.com")
+        self.user = baker.make(
+            User, username="spacing_user", email="spacing@example.com"
+        )
         self.plan = baker.make("Plan", name="Test Plan")
         self.pricing = baker.make("Pricing", period=30)
         baker.make("PlanPricing", plan=self.plan, pricing=self.pricing, price=10)
