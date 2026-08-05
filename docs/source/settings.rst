@@ -460,4 +460,3 @@ Lower it only if your ``PLANS_AUTORENEW_SCHEDULE`` contains entries less than
 a day apart::
 
     PLANS_AUTORENEW_MIN_TIME_BETWEEN_ATTEMPTS = datetime.timedelta(hours=6)
-
