@@ -747,18 +747,6 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
     last_renewal_attempt = models.DateTimeField(
         _("last renewal attempt"), null=True, blank=True
     )
-    last_renewal_slot_open = models.DateField(
-        _("last renewal slot opened on"),
-        help_text=_(
-            "Local calendar date on which the last attempted renewal slot "
-            "opened. A schedule entry fires only when its own opening date is "
-            "strictly newer -- an ordering on whole days, deliberately free "
-            "of timestamp arithmetic, which cannot be made consistent across "
-            "time zones and database backends."
-        ),
-        null=True,
-        blank=True,
-    )
 
     class Meta:
         abstract = True

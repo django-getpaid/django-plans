@@ -36,20 +36,6 @@ def _slot_open_day_delta(schedule):
     return math.ceil(schedule / datetime.timedelta(days=1))
 
 
-def _newest_open_slot(expire, schedule_entries, today):
-    """Opening date of the newest slot already open for ``expire``.
-
-    Recorded on every attempt; a schedule entry fires only when its own
-    opening date is strictly newer than the recorded one.
-    """
-    open_dates = [
-        expire - datetime.timedelta(days=_slot_open_day_delta(schedule))
-        for schedule in schedule_entries
-    ]
-    open_dates = [d for d in open_dates if d <= today]
-    return max(open_dates) if open_dates else None
-
-
 def autorenew_account(
     providers=None, throttle_seconds=0, catch_exceptions=False, dry_run=False
 ):
@@ -78,25 +64,32 @@ def autorenew_account(
             datetime.timedelta(days=30),
         )
         # ``expire`` is a DateField, so slot bookkeeping is day-granular by
-        # nature and every comparison must stay on the calendar. Each schedule
-        # entry's slot opens ``_slot_open_day_delta`` whole days before the
-        # expiration date; an entry fires only when its opening date is
-        # strictly newer than the last attempted slot's recorded opening
-        # date. Whole-day arithmetic keeps both sides midnight-exact on every
-        # backend. The timestamp arithmetic this replaces read ``expire``
-        # with two different clocks (the current time zone in the window, the
-        # connection time zone in the guard), and inside the gap between them
-        # a frequently-scheduled task re-charged the same account once per
-        # run -- three attempts per slot in production, for months.
+        # nature and stays on the calendar: each schedule entry's slot opens
+        # ``_slot_open_day_delta`` whole days before the expiration date, and
+        # an entry fires only when no attempt has happened since its slot
+        # opened -- i.e. the local date of ``last_renewal_attempt`` lies
+        # strictly before the slot's opening date. An attempt can only happen
+        # while some slot is open, so this single timestamp also blocks every
+        # older slot, and whole-day arithmetic keeps both comparison sides
+        # midnight-exact on every backend (the strictly-before condition is
+        # expressed as "on or before the previous day" because backends
+        # disagree on date-vs-midnight tie-breaking). The timestamp
+        # arithmetic this replaces read ``expire`` with two different clocks
+        # (the current time zone in the window, the connection time zone in
+        # the guard), and inside the gap between them a frequently-scheduled
+        # task re-charged the same account once per run -- three attempts per
+        # slot in production, for months.
         for schedule in PLANS_AUTORENEW_SCHEDULE:
-            day_delta = datetime.timedelta(days=_slot_open_day_delta(schedule))
+            day_before_slot_opens = datetime.timedelta(
+                days=_slot_open_day_delta(schedule) + 1
+            )
             q |= Q(
-                Q(userplan__recurring__last_renewal_slot_open__isnull=True)
+                Q(userplan__recurring__last_renewal_attempt__isnull=True)
                 | Q(
-                    userplan__expire__gt=F(
-                        "userplan__recurring__last_renewal_slot_open"
+                    userplan__recurring__last_renewal_attempt__date__lte=F(
+                        "userplan__expire"
                     )
-                    + day_delta
+                    - day_before_slot_opens
                 ),
                 userplan__expire__lte=timezone.localdate(now_dt + schedule),
                 userplan__expire__gte=timezone.localdate(
@@ -145,15 +138,7 @@ def autorenew_account(
     for user in accounts_for_renewal:
         if hasattr(user, "userplan") and hasattr(user.userplan, "recurring"):
             user.userplan.recurring.last_renewal_attempt = timezone.now()
-            update_fields = ["last_renewal_attempt"]
-            if PLANS_AUTORENEW_SCHEDULE and user.userplan.expire is not None:
-                user.userplan.recurring.last_renewal_slot_open = _newest_open_slot(
-                    user.userplan.expire,
-                    PLANS_AUTORENEW_SCHEDULE,
-                    timezone.localdate(),
-                )
-                update_fields.append("last_renewal_slot_open")
-            user.userplan.recurring.save(update_fields=update_fields)
+            user.userplan.recurring.save(update_fields=["last_renewal_attempt"])
         if throttle_seconds:
             time.sleep(throttle_seconds)
         if catch_exceptions:

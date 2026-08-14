@@ -444,9 +444,9 @@ Slot bookkeeping
 Because a plan's expiration is stored as a date, renewal-slot bookkeeping is
 day-granular: each ``PLANS_AUTORENEW_SCHEDULE`` entry defines a slot that
 opens on a calendar date (the expiration date shifted by the entry, rounded
-up to whole days), the task records the opening date of the newest open slot
-on every attempt (``RecurringUserPlan.last_renewal_slot_open``), and an entry
-fires only when its own opening date is strictly newer. One slot therefore
-produces one attempt regardless of how often the task itself is scheduled.
-Schedule entries less than a day apart open on the same date and collapse
-into a single attempt.
+up to whole days), and an entry fires only when no renewal attempt has
+happened since its slot opened -- judged by the local date of
+``RecurringUserPlan.last_renewal_attempt``. One slot therefore produces one
+attempt regardless of how often the task itself is scheduled. Schedule
+entries less than a day apart open on the same date and collapse into a
+single attempt.

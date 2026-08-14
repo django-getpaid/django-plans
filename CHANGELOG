@@ -10,11 +10,11 @@ unreleased
   already-attempted guard compared it as a naive timestamp in the connection
   time zone, and inside the gap between the two readings an account
   re-qualified although its attempt was recorded. Slot bookkeeping is now
-  day-granular and clock-free: each schedule entry's slot opens on a calendar
-  date, the newest open slot is recorded on every attempt (new field
-  ``RecurringUserPlan.last_renewal_slot_open``, migration 0020), and an entry
-  fires only when its opening date is strictly newer than the recorded one.
-  The renewal window bounds are explicit local dates as well.
+  day-granular and clock-free: each schedule entry's slot opens on a
+  calendar date, and an entry fires only when no attempt has happened since
+  its slot opened (the local date of ``last_renewal_attempt`` lies before
+  the slot's opening date -- whole-day arithmetic on both sides). The
+  renewal window bounds are explicit local dates as well. No schema change.
 
 2.3.1
 -----
