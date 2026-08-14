@@ -325,3 +325,26 @@ class AutorenewSlotBookkeepingTests(TestCase):
 
         self.assertEqual(sum(first_day), 1, first_day)
         self.assertEqual(sum(next_day), 1, next_day)
+
+    @override_settings(
+        PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=-1)],
+        TIME_ZONE="Europe/Prague",
+    )
+    def test_one_slot_is_never_reattempted_across_its_window_tail(self):
+        # A slot's window stays open for PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY
+        # (30 days by default). One attempt must consume the slot for that
+        # whole tail -- not merely for a day or a spacing interval. A
+        # duration-based guard passes the hourly tests yet re-attempts here
+        # every time the duration elapses, which is how a broken slot guard
+        # once charged the same failing card daily for a month.
+        self.user_plan.expire = datetime.date(2026, 8, 4)
+        self.user_plan.save()
+
+        attempts = self._attempts_at(
+            "2026-08-05 10:01:00",
+            "2026-08-07 10:01:00",
+            "2026-08-14 10:01:00",
+            "2026-08-30 10:01:00",
+        )
+
+        self.assertEqual(attempts, [1, 0, 0, 0])
