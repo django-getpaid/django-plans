@@ -87,14 +87,19 @@ class AutorenewSchedulerTests(TestCase):
     @override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=3)])
     @freeze_time("2023-01-01 12:00:00")
     def test_autorenew_schedule_should_not_renew_recently_attempted(self):
-        """Plan should not renew if a renewal was attempted recently."""
-        self.user_plan.expire = timezone.now().date() + datetime.timedelta(days=2)
-        self.user_plan.recurring.last_renewal_attempt = timezone.now()
-        self.user_plan.save()
-        self.user_plan.recurring.save()
+        """A slot that has already been attempted must not fire again.
 
-        renewed = autorenew_account()
-        self.assertEqual(len(renewed), 0)
+        Driven through the task itself: the first run attempts the slot and
+        records it, the second run finds the same slot already attempted.
+        """
+        self.user_plan.expire = timezone.now().date() + datetime.timedelta(days=2)
+        self.user_plan.save()
+
+        first = autorenew_account()
+        second = autorenew_account()
+
+        self.assertEqual(len(first), 1)
+        self.assertEqual(len(second), 0)
 
     @override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=3)])
     @freeze_time("2023-01-10 12:00:00")
@@ -235,17 +240,19 @@ class AutorenewSchedulerTests(TestCase):
         self.assertEqual(renewed[0], self.user)
 
 
-class AutorenewAttemptSpacingTests(TestCase):
+class AutorenewSlotBookkeepingTests(TestCase):
     """One scheduled slot must produce one attempt, at any task cadence.
 
-    The window test (``expire <= now + offset``) coerces the datetime to a
-    date in the *current time zone*; the guard (``last_renewal_attempt <
-    expire - offset``) is computed in SQL, where ``date - interval`` yields a
-    naive timestamp read in the *connection* time zone. Between the two
-    readings of the same date lies a gap as wide as the UTC offset, and a
-    task run inside it re-qualifies the user even though the previous attempt
-    was recorded. Under an hourly scheduler this charged failing cards three
-    times per slot in production (offset + 1 attempts), for months.
+    ``expire`` is a DateField, so slot bookkeeping is day-granular by nature.
+    The replaced implementation inferred "already attempted" from timestamp
+    arithmetic that read that date with two different clocks: the renewal
+    window coerced it through the *current* time zone while the SQL-side
+    guard read it as a naive timestamp in the *connection* time zone. Inside
+    the gap between the two readings -- as wide as the UTC offset -- an
+    hourly task re-attempted an account whose attempt was already recorded:
+    three charges per slot in production, for months. Slots are now
+    identified by the local calendar date they open on and compared with
+    whole-day arithmetic only.
     """
 
     def setUp(self):

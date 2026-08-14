@@ -1,5 +1,6 @@
 import datetime
 import logging
+import math
 import time
 import warnings
 
@@ -22,6 +23,31 @@ def get_active_plans():
         .filter(userplan__active=True)
         .exclude(userplan__expire=None)
     )
+
+
+def _slot_open_day_delta(schedule):
+    """Whole days between a slot's opening date and the expiration date.
+
+    A slot for schedule offset ``s`` opens at local midnight of the
+    expiration date minus ``s``; on the calendar that is ``expire`` minus
+    ``ceil(s / 1 day)`` days. Whole days keep every comparison midnight-exact
+    on every backend.
+    """
+    return math.ceil(schedule / datetime.timedelta(days=1))
+
+
+def _newest_open_slot(expire, schedule_entries, today):
+    """Opening date of the newest slot already open for ``expire``.
+
+    Recorded on every attempt; a schedule entry fires only when its own
+    opening date is strictly newer than the recorded one.
+    """
+    open_dates = [
+        expire - datetime.timedelta(days=_slot_open_day_delta(schedule))
+        for schedule in schedule_entries
+    ]
+    open_dates = [d for d in open_dates if d <= today]
+    return max(open_dates) if open_dates else None
 
 
 def autorenew_account(
@@ -51,36 +77,31 @@ def autorenew_account(
             "PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY",
             datetime.timedelta(days=30),
         )
-        # The slot guard below compares ``last_renewal_attempt`` against
-        # ``expire - schedule`` in SQL, where the DateField is read as a naive
-        # timestamp in the *connection* time zone -- while the window checks
-        # coerce the same field through the *current* time zone. Between the
-        # two readings of one date lies a gap as wide as the UTC offset, and a
-        # task run inside it re-qualifies a user whose attempt was already
-        # recorded. The minimum spacing closes that gap independently of time
-        # zones and of how often the scheduler fires the task.
-        min_time_between_attempts = getattr(
-            settings,
-            "PLANS_AUTORENEW_MIN_TIME_BETWEEN_ATTEMPTS",
-            datetime.timedelta(hours=23),
-        )
+        # ``expire`` is a DateField, so slot bookkeeping is day-granular by
+        # nature and every comparison must stay on the calendar. Each schedule
+        # entry's slot opens ``_slot_open_day_delta`` whole days before the
+        # expiration date; an entry fires only when its opening date is
+        # strictly newer than the last attempted slot's recorded opening
+        # date. Whole-day arithmetic keeps both sides midnight-exact on every
+        # backend. The timestamp arithmetic this replaces read ``expire``
+        # with two different clocks (the current time zone in the window, the
+        # connection time zone in the guard), and inside the gap between them
+        # a frequently-scheduled task re-charged the same account once per
+        # run -- three attempts per slot in production, for months.
         for schedule in PLANS_AUTORENEW_SCHEDULE:
+            day_delta = datetime.timedelta(days=_slot_open_day_delta(schedule))
             q |= Q(
-                Q(userplan__recurring__last_renewal_attempt__isnull=True)
-                | (
-                    Q(
-                        userplan__recurring__last_renewal_attempt__lt=F(
-                            "userplan__expire"
-                        )
-                        - schedule
+                Q(userplan__recurring__last_renewal_slot_open__isnull=True)
+                | Q(
+                    userplan__expire__gt=F(
+                        "userplan__recurring__last_renewal_slot_open"
                     )
-                    & Q(
-                        userplan__recurring__last_renewal_attempt__lte=now_dt
-                        - min_time_between_attempts
-                    )
+                    + day_delta
                 ),
-                userplan__expire__lte=now_dt + schedule,
-                userplan__expire__gte=now_dt + schedule - max_renew_after,
+                userplan__expire__lte=timezone.localdate(now_dt + schedule),
+                userplan__expire__gte=timezone.localdate(
+                    now_dt + schedule - max_renew_after
+                ),
             )
         accounts_for_renewal = accounts_to_check.filter(q).distinct()
     else:
@@ -124,7 +145,15 @@ def autorenew_account(
     for user in accounts_for_renewal:
         if hasattr(user, "userplan") and hasattr(user.userplan, "recurring"):
             user.userplan.recurring.last_renewal_attempt = timezone.now()
-            user.userplan.recurring.save(update_fields=["last_renewal_attempt"])
+            update_fields = ["last_renewal_attempt"]
+            if PLANS_AUTORENEW_SCHEDULE and user.userplan.expire is not None:
+                user.userplan.recurring.last_renewal_slot_open = _newest_open_slot(
+                    user.userplan.expire,
+                    PLANS_AUTORENEW_SCHEDULE,
+                    timezone.localdate(),
+                )
+                update_fields.append("last_renewal_slot_open")
+            user.userplan.recurring.save(update_fields=update_fields)
         if throttle_seconds:
             time.sleep(throttle_seconds)
         if catch_exceptions:
