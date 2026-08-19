@@ -116,6 +116,15 @@ class AbstractPlan(BaseMixin, OrderedModel):
         verbose_name = _("Plan")
         verbose_name_plural = _("Plans")
 
+    def save(self, *args, **kwargs):
+        # ``default`` is unique-nullable: True at most once, and False means
+        # the same as NULL ("Unknown") per the field's help_text -- but two
+        # stored Falses violate the unique constraint with a bare
+        # IntegrityError (issue #97). Normalize so False is never stored.
+        if self.default is False:
+            self.default = None
+        return super().save(*args, **kwargs)
+
     @classmethod
     def get_default_plan(cls):
         try:
