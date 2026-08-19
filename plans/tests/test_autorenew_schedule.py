@@ -8,6 +8,7 @@ from freezegun import freeze_time
 from model_bakery import baker
 
 from plans.models import AbstractRecurringUserPlan, RecurringUserPlan
+from plans.signals import account_automatic_renewal
 from plans.tasks import autorenew_account
 
 User = get_user_model()
@@ -348,3 +349,94 @@ class AutorenewSlotBookkeepingTests(TestCase):
         )
 
         self.assertEqual(attempts, [1, 0, 0, 0])
+
+
+class AutorenewConcurrentClaimTests(TestCase):
+    """Overlapping task runs must charge each account at most once.
+
+    Two runs can both select the same account before either records its
+    attempt; whichever writes first must win and the other must skip. The
+    claim is a compare-and-swap on ``last_renewal_attempt``: it only
+    records the attempt if the field still holds the value the run selected,
+    which is atomic on every backend as a single conditional UPDATE.
+    """
+
+    def setUp(self):
+        self.user = baker.make(User, username="claimed", email="claimed@example.com")
+        self.plan = baker.make("Plan", name="Test Plan")
+        self.pricing = baker.make("Pricing", period=30)
+        baker.make("PlanPricing", plan=self.plan, pricing=self.pricing, price=10)
+        self.user_plan = baker.make(
+            "UserPlan",
+            user=self.user,
+            plan=self.plan,
+            expire=datetime.date(2026, 8, 6),
+        )
+        baker.make(
+            RecurringUserPlan,
+            user_plan=self.user_plan,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            token_verified=True,
+            pricing=self.pricing,
+            amount=Decimal(10),
+            currency="USD",
+        )
+
+    def _snapshot(self):
+        # A concurrent run's view of the row: read independently, as its
+        # queryset would.
+        return RecurringUserPlan.objects.get(pk=self.user_plan.recurring.pk)
+
+    def test_stale_snapshot_loses_the_claim(self):
+        from plans.tasks import _claim_renewal_attempt
+
+        first_run = self._snapshot()
+        second_run = self._snapshot()
+
+        self.assertTrue(_claim_renewal_attempt(first_run))
+        self.assertFalse(_claim_renewal_attempt(second_run))
+
+    def test_claim_also_races_correctly_on_a_later_slot(self):
+        from plans.tasks import _claim_renewal_attempt
+
+        previous = timezone.now() - datetime.timedelta(days=2)
+        RecurringUserPlan.objects.filter(pk=self.user_plan.recurring.pk).update(
+            last_renewal_attempt=previous
+        )
+
+        first_run = self._snapshot()
+        second_run = self._snapshot()
+
+        self.assertTrue(_claim_renewal_attempt(first_run))
+        self.assertFalse(_claim_renewal_attempt(second_run))
+
+    @override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=1)])
+    @freeze_time("2026-08-05 12:00:00")
+    def test_lost_claim_skips_the_signal(self):
+        signals = []
+
+        def receiver(sender, user, **kwargs):
+            signals.append(user)
+
+        account_automatic_renewal.connect(receiver)
+        self.addCleanup(account_automatic_renewal.disconnect, receiver)
+
+        # Simulate the overlapping run winning between this run's selection
+        # and its claim: the selection sees the account, the claim must not.
+        from plans import tasks as tasks_module
+
+        original_claim = tasks_module._claim_renewal_attempt
+
+        def racing_claim(recurring):
+            RecurringUserPlan.objects.filter(pk=recurring.pk).update(
+                last_renewal_attempt=timezone.now()
+            )
+            return original_claim(recurring)
+
+        tasks_module._claim_renewal_attempt = racing_claim
+        self.addCleanup(setattr, tasks_module, "_claim_renewal_attempt", original_claim)
+
+        attempted = autorenew_account()
+
+        self.assertEqual(signals, [])
+        self.assertEqual(attempted, [])

@@ -36,6 +36,27 @@ def _slot_open_day_delta(schedule):
     return math.ceil(schedule / datetime.timedelta(days=1))
 
 
+def _claim_renewal_attempt(recurring):
+    """Atomically claim one renewal attempt against concurrent task runs.
+
+    Two overlapping runs can both select the same account before either
+    records its attempt -- and then both charge. The claim is a
+    compare-and-swap: record the attempt only if ``last_renewal_attempt``
+    still holds the value this run selected. A single conditional UPDATE is
+    atomic on every backend, so exactly one run wins; the loser skips the
+    account without touching the payment provider.
+    """
+    model = type(recurring)
+    unchanged = model.objects.filter(pk=recurring.pk)
+    if recurring.last_renewal_attempt is None:
+        unchanged = unchanged.filter(last_renewal_attempt__isnull=True)
+    else:
+        unchanged = unchanged.filter(
+            last_renewal_attempt=recurring.last_renewal_attempt
+        )
+    return bool(unchanged.update(last_renewal_attempt=timezone.now()))
+
+
 def autorenew_account(
     providers=None, throttle_seconds=0, catch_exceptions=False, dry_run=False
 ):
@@ -137,8 +158,12 @@ def autorenew_account(
     renewed_accounts = []
     for user in accounts_for_renewal:
         if hasattr(user, "userplan") and hasattr(user.userplan, "recurring"):
-            user.userplan.recurring.last_renewal_attempt = timezone.now()
-            user.userplan.recurring.save(update_fields=["last_renewal_attempt"])
+            if not _claim_renewal_attempt(user.userplan.recurring):
+                logger.info(
+                    f"Renewal of user {user.pk} already claimed by a concurrent "
+                    "run, skipping"
+                )
+                continue
         if throttle_seconds:
             time.sleep(throttle_seconds)
         if catch_exceptions:
