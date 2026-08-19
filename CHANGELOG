@@ -11,6 +11,14 @@ unreleased
   crashed on save with an IntegrityError. ``currency`` is now nullable
   (migration 0021): a disarmed renewal has no currency.
 
+* **Fix**: monthly/annual invoice numbering filtered older invoices with
+  ``issued__year``/``issued__month`` -- extraction lookups the planner
+  cannot serve from the index on ``issued``, so on large invoice tables
+  the ``MAX(number)`` probe degraded to scanning the whole table (or the
+  whole ``number`` index backwards) inside the invoice-save transaction.
+  Plain date-range predicates keep the exact same semantics and let the
+  planner use the existing ``issued`` index.
+
 2.4.0
 -----
 

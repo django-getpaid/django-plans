@@ -1419,13 +1419,24 @@ class AbstractInvoice(BaseMixin, models.Model):
                 older_invoices = older_invoices.filter(issued=self.issued)
             elif invoice_counter_reset == Invoice.NUMBERING.MONTHLY:
                 invoice_counter_value = f"{self.issued.year}_{self.issued.month}"
+                # Range predicates instead of __year/__month: the extraction
+                # lookups are not sargable, so on a large invoice table the
+                # planner walked the `number` index backwards (get_initial_number
+                # orders by number) reading the whole table instead of using
+                # the index on `issued`.
+                month_start = self.issued.replace(day=1)
+                next_month_start = (month_start + timedelta(days=31)).replace(day=1)
                 older_invoices = older_invoices.filter(
-                    issued__year=self.issued.year,
-                    issued__month=self.issued.month,
+                    issued__gte=month_start,
+                    issued__lt=next_month_start,
                 )
             elif invoice_counter_reset == Invoice.NUMBERING.ANNUALLY:
                 invoice_counter_value = f"{self.issued.year}"
-                older_invoices = older_invoices.filter(issued__year=self.issued.year)
+                year_start = self.issued.replace(month=1, day=1)
+                older_invoices = older_invoices.filter(
+                    issued__gte=year_start,
+                    issued__lt=year_start.replace(year=year_start.year + 1),
+                )
             elif callable(invoice_counter_reset):
                 invoice_counter_value, initial_number = invoice_counter_reset(self)
                 invoice_counter_reset_name = "call"
