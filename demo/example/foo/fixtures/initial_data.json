@@ -63,7 +63,8 @@
       "default": true,
       "customized": null,
       "order": 0,
-      "name": "Standard"
+      "name": "Standard",
+      "slug": "standard"
     }
   },
   {
@@ -74,10 +75,11 @@
       "visible": true,
       "description": "Most recommended",
       "created": "2012-05-05T15:36:31Z",
-      "default": false,
+      "default": null,
       "customized": null,
       "order": 1,
-      "name": "Premium"
+      "name": "Premium",
+      "slug": "premium"
     }
   },
   {
@@ -88,10 +90,11 @@
       "visible": true,
       "description": "Professional plan",
       "created": "2012-07-12T13:07:23Z",
-      "default": false,
+      "default": null,
       "customized": null,
       "order": 2,
-      "name": "PRO"
+      "name": "PRO",
+      "slug": "pro"
     }
   },
   {
@@ -102,10 +105,11 @@
       "visible": true,
       "description": "Custom for test1",
       "created": "2012-07-12T17:33:30.112Z",
-      "default": false,
+      "default": null,
       "customized": 1,
       "order": 4,
-      "name": "Custom"
+      "name": "Custom",
+      "slug": "custom"
     }
   },
   {
@@ -116,10 +120,11 @@
       "visible": true,
       "description": "Custom test 2",
       "created": "2012-07-24T12:51:57.438Z",
-      "default": false,
+      "default": null,
       "customized": 2,
       "order": 5,
-      "name": "Custom 2"
+      "name": "Custom 2",
+      "slug": "custom-2"
     }
   },
   {
