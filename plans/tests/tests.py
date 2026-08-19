@@ -2899,34 +2899,34 @@ class TasksTestCase(TestCase):
 
 
 class TimezoneConsistencyTestCase(TestCase):
-    """Regression tests for date.today() vs timezone.now().date() bug.
+    """Regression tests for the business-date clock.
 
-    When USE_TZ=True and the system timezone differs from UTC, date.today()
-    returns the local date while timezone.now().date() returns the UTC date.
-    Near midnight UTC these can differ by one day, causing incorrect plan
-    expiry checks, days_left calculations, and extension logic.
+    Two wrong clocks have shipped historically: date.today() (the server's
+    system-local date, fixed in 2.1.5) and timezone.now().date() (the UTC
+    date, wrong for any active time zone with an offset -- issue #236). The
+    correct clock is timezone.localdate(), the date in the active time zone;
+    plans/tests/test_business_dates.py pins its behavior at a real UTC/local
+    boundary.
 
-    Fixed in 2.1.5: all date calculations now use timezone.now().date().
-
-    These tests mock timezone.now() to return a date far from today. If the
-    code accidentally used date.today() instead, it would return the actual
-    current date and the assertions would fail.
+    These tests mock localdate() to return a date far from today. If the
+    code regressed to either wrong clock, it would return the actual current
+    date and the assertions would fail.
     """
 
-    @patch("plans.base.models.now", return_value=datetime(2020, 1, 15, 12, 0, 0))
-    def test_is_expired_uses_timezone_now(self, mock_now):
+    @patch("plans.base.models.localdate", return_value=date(2020, 1, 15))
+    def test_is_expired_uses_localdate(self, mock_localdate):
         up = baker.make("UserPlan", expire=date(2020, 1, 15))
         self.assertFalse(up.is_expired())
         up.expire = date(2020, 1, 14)
         self.assertTrue(up.is_expired())
 
-    @patch("plans.base.models.now", return_value=datetime(2020, 1, 15, 12, 0, 0))
-    def test_days_left_uses_timezone_now(self, mock_now):
+    @patch("plans.base.models.localdate", return_value=date(2020, 1, 15))
+    def test_days_left_uses_localdate(self, mock_localdate):
         up = baker.make("UserPlan", expire=date(2020, 1, 25))
         self.assertEqual(up.days_left(), 10)
 
-    @patch("plans.base.models.now", return_value=datetime(2020, 1, 15, 12, 0, 0))
-    def test_get_plan_extended_from_uses_timezone_now(self, mock_now):
+    @patch("plans.base.models.localdate", return_value=date(2020, 1, 15))
+    def test_get_plan_extended_from_uses_localdate(self, mock_localdate):
         plan = baker.make("Plan")
         pricing = baker.make("Pricing", period=30)
         baker.make("PlanPricing", plan=plan, pricing=pricing, price=Decimal("10.00"))
@@ -2935,8 +2935,8 @@ class TimezoneConsistencyTestCase(TestCase):
         self.assertEqual(extended_from, date(2020, 1, 15))
 
     @override_settings(PLANS_SEND_EMAILS_PLAN_EXTENDED=False)
-    @patch("plans.base.models.now", return_value=datetime(2020, 1, 15, 12, 0, 0))
-    def test_extend_account_uses_timezone_now(self, mock_now):
+    @patch("plans.base.models.localdate", return_value=date(2020, 1, 15))
+    def test_extend_account_uses_localdate(self, mock_localdate):
         plan = baker.make("Plan")
         pricing = baker.make("Pricing", period=30)
         baker.make("PlanPricing", plan=plan, pricing=pricing, price=Decimal("10.00"))

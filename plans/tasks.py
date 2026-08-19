@@ -169,7 +169,7 @@ def expire_account():
     logger.info("Started account expiration")
 
     expired_accounts = get_active_plans().filter(
-        userplan__expire__lt=timezone.now().date()
+        userplan__expire__lt=timezone.localdate()
     )
 
     for user in expired_accounts.all():
@@ -179,7 +179,7 @@ def expire_account():
 
     if notifications_days_before:
         days = map(
-            lambda x: timezone.now().date() + datetime.timedelta(days=x),
+            lambda x: timezone.localdate() + datetime.timedelta(days=x),
             notifications_days_before,
         )
         for user in User.objects.select_related("userplan").filter(

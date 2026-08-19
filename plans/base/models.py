@@ -22,7 +22,7 @@ from django.template import Context
 from django.template.base import Template
 from django.urls import reverse
 from django.utils import translation
-from django.utils.timezone import now
+from django.utils.timezone import localdate, now
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
 from django_countries.fields import CountryField
@@ -251,13 +251,13 @@ class AbstractUserPlan(BaseMixin, models.Model):
         if self.expire is None:
             return False
         else:
-            return self.expire < now().date()
+            return self.expire < localdate()
 
     def days_left(self):
         if self.expire is None:
             return None
         else:
-            return (self.expire - now().date()).days
+            return (self.expire - localdate()).days
 
     def clean_activation(self):
         errors = plan_validation(self.user)
@@ -297,7 +297,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
             return None
         if not self.is_expired() and self.expire is not None and self.plan == plan:
             return self.expire
-        return now().date()
+        return localdate()
 
     def has_automatic_renewal(self):
         return (
@@ -430,7 +430,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
                 # but just in case we consider a case when user has a different plan
                 if not self.plan.is_free() and self.expire is None:
                     status = True
-                elif not self.plan.is_free() and self.expire > now().date():
+                elif not self.plan.is_free() and self.expire > localdate():
                     status = False
                     accounts_logger.warning(
                         "Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]"
@@ -593,7 +593,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
             if self.expire is None:
                 self.active = order.userplan_active_before
             else:
-                self.active = self.expire >= now().date()
+                self.active = self.expire >= localdate()
             self.save()
             self._shift_orders_stacked_after(order, expire_before_reduction)
             return
@@ -994,7 +994,7 @@ class AbstractOrder(BaseMixin, models.Model):
     # the exact same number of days that were added, which is the only way
     # to undo extensions that started from an expired (or ``None``) state:
     # in those cases ``extend_account`` advances ``expire`` to
-    # ``now().date() + pricing.period`` rather than
+    # ``localdate() + pricing.period`` rather than
     # ``previous_expire + pricing.period`` -> a naive
     # ``expire -= pricing.period`` rewind would land *later* than where the
     # plan was before the order, leaving stale paid-plan time the user no
@@ -1112,7 +1112,7 @@ class AbstractOrder(BaseMixin, models.Model):
             # extension added. extend_account/reduce_account are otherwise
             # asymmetric for plans that were expired (or had expire=None) at
             # completion time: extend_account jumps expire forward to
-            # ``now().date() + pricing.period`` instead of
+            # ``localdate() + pricing.period`` instead of
             # ``previous_expire + pricing.period``, while reduce_account
             # always rewinds by exactly ``pricing.period`` days.
             self.userplan_expire_before = self.user.userplan.expire
@@ -1549,7 +1549,7 @@ class AbstractInvoice(BaseMixin, models.Model):
         except BillingInfo.DoesNotExist:
             return
 
-        day = now().date()
+        day = localdate()
         pday = order.completed
         if invoice_type == cls.INVOICE_TYPES["PROFORMA"]:
             pday = day + timedelta(days=14)
@@ -1622,7 +1622,7 @@ class AbstractInvoice(BaseMixin, models.Model):
         # Copy data from original invoice
         credit_note.user = self.user
         credit_note.order = self.order
-        credit_note.issued = now().date()
+        credit_note.issued = localdate()
         credit_note.payment_date = (
             self.payment_date
         )  # Use original invoice's payment_date
@@ -1669,7 +1669,7 @@ class AbstractInvoice(BaseMixin, models.Model):
             credit_note_for=self,
             user=self.user,
             order=self.order,
-            issued=now().date(),
+            issued=localdate(),
             payment_date=self.payment_date,  # Use original invoice's payment_date
             selling_date=self.selling_date,
             quantity=1,
