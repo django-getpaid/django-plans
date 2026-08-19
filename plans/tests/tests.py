@@ -176,7 +176,9 @@ class PlansTestCase(TestCase):
         self.assertEqual(u.userplan.active, True)
         self.assertEqual(len(mail.outbox), 1)
 
-    @freeze_time("2012-01-14")
+    # Noon, not midnight: midnight UTC is still the previous day in the
+    # test time zone (America/Chicago), and business dates read the local day.
+    @freeze_time("2012-01-14 12:00:00")
     def test_extend_account_other_expire_none(self):
         """
         Tests extending expired=None account with other Plan that user had before and is expired:
@@ -763,7 +765,7 @@ class TestInvoice(TestCase):
         self.assertEqual(invoice.payment_date, original_payment_date)
 
         # Cancel the invoice (create credit note) on a different date
-        with freeze_time("2024-02-20"):
+        with freeze_time("2024-02-20 12:00:00"):
             credit_note = invoice.cancel_invoice(reason="Test cancellation")
 
         # Credit note should use original invoice's payment_date, not today's date
@@ -803,7 +805,7 @@ class TestInvoice(TestCase):
         self.assertEqual(invoice.payment_date, original_payment_date)
 
         # Create partial credit note on a different date
-        with freeze_time("2024-03-10"):
+        with freeze_time("2024-03-10 12:00:00"):
             credit_note = invoice.create_partial_credit_note(
                 net_amount=Decimal("30.00"),
                 tax_amount=Decimal("6.00"),
@@ -1417,7 +1419,7 @@ class OrderTestCase(TestCase):
             plan=plan_pricing_then.plan,
             status=Order.STATUS.NEW,
         )
-        with freeze_time(datetime.combine(u.userplan.expire, time())):
+        with freeze_time(datetime.combine(u.userplan.expire, time(12))):
             order_then.complete_order()
 
         order.return_order()
