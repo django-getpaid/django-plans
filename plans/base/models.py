@@ -720,7 +720,10 @@ class AbstractRecurringUserPlan(BaseMixin, models.Model):
     tax = models.DecimalField(
         _("tax"), max_digits=4, decimal_places=2, db_index=True, null=True, blank=True
     )  # Tax=None is when tax is not applicable
-    currency = models.CharField(_("currency"), max_length=3)
+    # Nullable so ``set_all_fields_default`` can be persisted standalone
+    # (a disarmed renewal has no currency). No ``default=None``: an
+    # unspecified currency keeps storing "" as it always has.
+    currency = models.CharField(_("currency"), max_length=3, null=True, blank=True)
     renewal_triggered_by = models.IntegerField(
         _("renewal triggered by"),
         choices=RENEWAL_TRIGGERED_BY,

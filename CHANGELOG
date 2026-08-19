@@ -1,6 +1,16 @@
 django-plans changelog
 ======================
 
+unreleased
+----------
+
+* **Fix**: ``RecurringUserPlan.set_all_fields_default()`` nulled
+  ``currency``, but the column was NOT NULL -- the method was only safe
+  inside django-plans' own re-arm flow, which immediately assigns a new
+  currency; any external caller disarming a recurring plan standalone
+  crashed on save with an IntegrityError. ``currency`` is now nullable
+  (migration 0021): a disarmed renewal has no currency.
+
 2.4.0
 -----
 

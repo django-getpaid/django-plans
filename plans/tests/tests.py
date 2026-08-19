@@ -2701,6 +2701,9 @@ class RecurringPlansTestCase(TestCase):
             "RecurringUserPlan",
             user_plan__user__billinginfo__country="CZ",
             amount=10,
+            # currency is nullable now (None = disarmed), so baker no longer
+            # invents one; an armed renewal always carries a currency.
+            currency="EUR",
         )
         order = rup.create_renew_order()
         self.assertEqual(order.tax, 21)
@@ -2714,6 +2717,7 @@ class RecurringPlansTestCase(TestCase):
             user_plan__user__billinginfo__tax_number="CZ0123",
             amount=10,
             tax=11,
+            currency="EUR",
         )
         with no_connection():
             order = rup.create_renew_order()
