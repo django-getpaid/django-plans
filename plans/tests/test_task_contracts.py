@@ -97,9 +97,10 @@ class AutorenewDryRunTests(TestCase):
     def setUp(self):
         self.user = _renewable_user("dryrun", datetime.date(2026, 8, 6))
         self.signals = []
-        receiver = lambda sender, user, **kwargs: self.signals.append(
-            user
-        )  # noqa: E731
+
+        def receiver(sender, user, **kwargs):
+            self.signals.append(user)
+
         account_automatic_renewal.connect(receiver)
         self.addCleanup(account_automatic_renewal.disconnect, receiver)
 
