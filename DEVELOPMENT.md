@@ -24,6 +24,11 @@ tox -e py311-django
 
 See [tox.ini](tox.ini).
 
+To run the suite without a local PostgreSQL server (a handful of
+concurrency/constraint tests are expected to fail on SQLite):
+
+
+
 You can also run the tests manually in `demo/` dir (presumably using `venv`):
 
 ```
