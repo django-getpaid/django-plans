@@ -4,6 +4,13 @@ django-plans changelog
 unreleased
 ----------
 
+* **Fix**: business-date calculations used ``timezone.now().date()`` -- the
+  UTC date -- instead of the active time zone's date. For any time zone with
+  an offset there is a nightly window in which plan expiry checks,
+  ``days_left``, account extension anchors, the ``expire_account`` task and
+  invoice issue dates were off by one day (issue #236). All twelve call
+  sites now use ``timezone.localdate()``.
+
 * **Fix**: ``autorenew_account`` retried the same account several times per
   scheduled slot when the task ran more often than daily: the renewal window
   coerced the expiration date through the current time zone while the
