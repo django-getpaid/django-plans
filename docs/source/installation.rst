@@ -60,15 +60,14 @@ Optionally create virtual environment and get required packages to run example p
     $ pip install -r requirements.txt
 
 
-Initialize example project database:
+Initialize the example project database and load the example data (the
+demo is configured for PostgreSQL; if you don't have one running, see
+``DEVELOPMENT.md`` for the SQLite test settings):
 
 .. code-block:: bash
 
-    $ cd ..
     $ python manage.py migrate
-
-
-Initial example data will be loaded automatically.
+    $ python manage.py loaddata initial_data
 
 
 Create `UserPlan` objects for all `User` objects:
