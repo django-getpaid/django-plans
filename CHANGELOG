@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-unreleased
-----------
+2.4.0
+-----
 
 * **Fix**: two overlapping ``autorenew_account`` runs could both select the
   same account before either recorded its attempt, charging it twice. Each
@@ -33,6 +33,15 @@ unreleased
   its slot opened (the local date of ``last_renewal_attempt`` lies before
   the slot's opening date -- whole-day arithmetic on both sides). The
   renewal window bounds are explicit local dates as well. No schema change.
+
+* **Note for upgraders**: business dates now follow the active Django time
+  zone rather than UTC, so plan expiry and invoice issue dates can differ
+  from 2.3.x by one day around midnight -- that is the fix, not a
+  regression. Autorenew retries at most once per configured
+  ``PLANS_AUTORENEW_SCHEDULE`` slot regardless of task cadence. On MySQL
+  with ``USE_TZ = True`` the new attempt bookkeeping uses a date lookup,
+  which requires the MySQL time zone tables to be loaded (a standard Django
+  requirement for ``__date`` lookups).
 
 2.3.1
 -----
