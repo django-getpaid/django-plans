@@ -10,6 +10,11 @@ unreleased
   ``last_renewal_attempt``; the losing run skips the account without
   touching the payment provider.
 
+* **Fix**: saving a second plan with default="No" crashed with a bare
+  IntegrityError -- ``Plan.default`` is unique-nullable and False means the
+  same as NULL ("Unknown"). False is now normalized to NULL on save, and
+  migration 0020 normalizes the at-most-one stored False (issue #97).
+
 * **Fix**: business-date calculations used ``timezone.now().date()`` -- the
   UTC date -- instead of the active time zone's date. For any time zone with
   an offset there is a nightly window in which plan expiry checks,
