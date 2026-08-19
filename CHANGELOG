@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-unreleased
-----------
+2.5.0
+-----
 
 * **Fix**: ``RecurringUserPlan.set_all_fields_default()`` nulled
   ``currency``, but the column was NOT NULL -- the method was only safe
