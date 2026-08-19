@@ -4,6 +4,12 @@ django-plans changelog
 unreleased
 ----------
 
+* **Fix**: two overlapping ``autorenew_account`` runs could both select the
+  same account before either recorded its attempt, charging it twice. Each
+  attempt is now claimed with an atomic compare-and-swap on
+  ``last_renewal_attempt``; the losing run skips the account without
+  touching the payment provider.
+
 * **Fix**: business-date calculations used ``timezone.now().date()`` -- the
   UTC date -- instead of the active time zone's date. For any time zone with
   an offset there is a nightly window in which plan expiry checks,
