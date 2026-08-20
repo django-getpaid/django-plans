@@ -1,6 +1,18 @@
 django-plans changelog
 ======================
 
+unreleased
+----------
+
+* **Fix**: the atomic renewal claim introduced in 2.5.0 updated
+  ``last_renewal_attempt`` in the database but not on the in-memory
+  instance the task holds. Renewal receivers save that instance
+  (``create_renew_order`` stores the recalculated tax with a full save),
+  which wrote the pre-claim timestamp back and un-recorded the attempt --
+  the task then retried the same account on every run (observed in
+  production as hourly charge attempts against the same declined cards).
+  The claim now also syncs the instance.
+
 2.5.0
 -----
 

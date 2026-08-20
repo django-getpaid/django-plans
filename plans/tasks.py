@@ -54,7 +54,17 @@ def _claim_renewal_attempt(recurring):
         unchanged = unchanged.filter(
             last_renewal_attempt=recurring.last_renewal_attempt
         )
-    return bool(unchanged.update(last_renewal_attempt=timezone.now()))
+    claimed_at = timezone.now()
+    claimed = bool(unchanged.update(last_renewal_attempt=claimed_at))
+    if claimed:
+        # Keep the in-memory instance in sync with the row it just claimed.
+        # Renewal receivers save this instance (create_renew_order stores the
+        # recalculated tax with a full save); a stale value here would write
+        # the pre-claim timestamp back, un-recording the attempt -- the task
+        # then retried the same account on every run (hourly card-banging in
+        # production on 2026-08-19).
+        recurring.last_renewal_attempt = claimed_at
+    return claimed
 
 
 def autorenew_account(

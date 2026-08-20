@@ -387,6 +387,45 @@ class AutorenewConcurrentClaimTests(TestCase):
         # queryset would.
         return RecurringUserPlan.objects.get(pk=self.user_plan.recurring.pk)
 
+    @freeze_time("2026-08-19 22:01:00", auto_tick_seconds=1)
+    @override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=1)])
+    def test_receiver_saving_the_recurring_does_not_unrecord_the_claim(self):
+        # The production 2026-08-19 regression: the claim updated the row but
+        # not the in-memory instance, and plans-payments' renewal receiver
+        # ends with a full save of that instance (create_renew_order stores
+        # the recalculated tax) -- writing the pre-claim timestamp back. The
+        # attempt was un-recorded and every later task run retried the same
+        # account (hourly card-banging).
+        self.user_plan.expire = datetime.date(2026, 8, 20)
+        self.user_plan.save()
+        stale = timezone.now() - datetime.timedelta(days=30)
+        RecurringUserPlan.objects.filter(pk=self.user_plan.recurring.pk).update(
+            last_renewal_attempt=stale
+        )
+
+        renewed = []
+
+        def renew_receiver(sender, user, *args, **kwargs):
+            renewed.append(user.pk)
+            user.userplan.recurring.tax = Decimal(21)
+            user.userplan.recurring.save()
+
+        account_automatic_renewal.connect(renew_receiver)
+        try:
+            autorenew_account()
+            autorenew_account()  # the next cron tick inside the same slot
+        finally:
+            account_automatic_renewal.disconnect(renew_receiver)
+
+        self.assertEqual(
+            len(renewed),
+            1,
+            "the second run inside the slot re-attempted: the receiver's save "
+            "clobbered the claimed last_renewal_attempt back to the stale value",
+        )
+        recurring = RecurringUserPlan.objects.get(pk=self.user_plan.recurring.pk)
+        self.assertGreater(recurring.last_renewal_attempt, stale)
+
     def test_stale_snapshot_loses_the_claim(self):
         from plans.tasks import _claim_renewal_attempt
 
