@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-unreleased
-----------
+2.5.1
+-----
 
 * **Fix**: the atomic renewal claim introduced in 2.5.0 updated
   ``last_renewal_attempt`` in the database but not on the in-memory
