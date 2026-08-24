@@ -2237,6 +2237,54 @@ class EUTaxationPolicyTestCase(TestCase):
             self.assertEqual(rate, Decimal("19.0"))
             self.assertFalse(success)  # Indicates fallback was used
 
+    @mock.patch("plans.taxation.eu.time.sleep")
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_vies_transient_fault_retried(self, mock_check, mock_sleep):
+        """
+        MS_MAX_CONCURRENT_REQ is a seconds-scale VIES throttle: a renewal
+        batch fires many checks at once and the member state rejects some.
+        The check must be retried with backoff instead of falling back.
+        """
+        from zeep.exceptions import Fault
+
+        mock_check.side_effect = [
+            Fault("MS_MAX_CONCURRENT_REQ"),
+            Fault("MS_MAX_CONCURRENT_REQ"),
+            {"valid": True},
+        ]
+        with self.settings(PLANS_TAX=Decimal("23.0"), PLANS_TAX_COUNTRY="PL"):
+            self.assertEqual(
+                self.policy.get_tax_rate("AT123456789", "AT"), (None, True)
+            )
+        self.assertEqual(mock_check.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)
+
+    @mock.patch("plans.taxation.eu.time.sleep")
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_vies_transient_fault_exhausted_falls_back(self, mock_check, mock_sleep):
+        from zeep.exceptions import Fault
+
+        mock_check.side_effect = Fault("GLOBAL_MAX_CONCURRENT_REQ")
+        with self.settings(PLANS_TAX=Decimal("23.0"), PLANS_TAX_COUNTRY="PL"):
+            rate, success = self.policy.get_tax_rate("AT123456789", "AT")
+        self.assertEqual(rate, Decimal("20.0"))
+        self.assertFalse(success)
+        self.assertEqual(mock_check.call_count, 3)
+
+    @mock.patch("plans.taxation.eu.time.sleep")
+    @mock.patch("stdnum.eu.vat.check_vies")
+    def test_vies_non_transient_fault_not_retried(self, mock_check, mock_sleep):
+        """An INVALID_INPUT fault is deterministic - retrying is useless."""
+        from zeep.exceptions import Fault
+
+        mock_check.side_effect = Fault("INVALID_INPUT")
+        with self.settings(PLANS_TAX=Decimal("23.0"), PLANS_TAX_COUNTRY="PL"):
+            rate, success = self.policy.get_tax_rate("AT123456789", "AT")
+        self.assertEqual(rate, Decimal("20.0"))
+        self.assertFalse(success)
+        self.assertEqual(mock_check.call_count, 1)
+        mock_sleep.assert_not_called()
+
 
 class BillingInfoTestCase(TestCase):
     def test_clean_tax_number(self):

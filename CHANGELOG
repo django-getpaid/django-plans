@@ -1,6 +1,22 @@
 django-plans changelog
 ======================
 
+unreleased
+----------
+
+* **Fix**: transient VIES faults (``MS_MAX_CONCURRENT_REQ``,
+  ``GLOBAL_MAX_CONCURRENT_REQ``, ``MS_UNAVAILABLE``,
+  ``SERVICE_UNAVAILABLE``, ``TIMEOUT``) are retried with exponential
+  backoff instead of immediately falling back to the last-known tax.
+  Renewal batches fire many VIES checks in a short window and trip the
+  member states' concurrency limits (384 such faults in one production's
+  90-day Sentry window); the throttle clears in seconds, so a retry
+  usually recovers the check. Deterministic faults are not retried.
+* **New**: the live check is extracted into an overridable
+  ``EUTaxationPolicy.validate_vies(tax_id)`` classmethod, so projects can
+  plug in a cached/stored validation source (e.g. a nightly-validated
+  VAT ID table with VIES consultation numbers).
+
 2.5.1
 -----
 

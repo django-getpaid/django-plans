@@ -1,4 +1,5 @@
 import logging
+import time
 from decimal import Decimal
 from urllib.error import URLError
 from xml.sax import SAXParseException
@@ -122,6 +123,47 @@ class EUTaxationPolicy(TaxationPolicy):
             "EUTaxationPolicy requires that issuer country is in EU"
         )
 
+    # Seconds-scale VIES throttling/outage codes worth retrying; anything
+    # else (e.g. INVALID_INPUT) is deterministic and retries are useless.
+    VIES_TRANSIENT_FAULTS = (
+        "MS_MAX_CONCURRENT_REQ",
+        "GLOBAL_MAX_CONCURRENT_REQ",
+        "MS_UNAVAILABLE",
+        "SERVICE_UNAVAILABLE",
+        "TIMEOUT",
+    )
+    VIES_RETRY_ATTEMPTS = 3
+    VIES_RETRY_DELAY = 2  # seconds, doubled after each attempt
+
+    @classmethod
+    def validate_vies(cls, tax_id):
+        """Live VIES registry check with backoff on transient faults.
+
+        Renewal batches fire many checks in a short window and trip the
+        member states' concurrency limits; those faults clear in seconds.
+        Overridable to plug in a cached/stored validation source.
+        """
+        for attempt in range(cls.VIES_RETRY_ATTEMPTS):
+            try:
+                return bool(stdnum.eu.vat.check_vies(tax_id)["valid"])
+            except Fault as fault:
+                transient = any(
+                    code in str(fault) for code in cls.VIES_TRANSIENT_FAULTS
+                )
+                if not transient or attempt == cls.VIES_RETRY_ATTEMPTS - 1:
+                    raise
+                delay = cls.VIES_RETRY_DELAY * 2**attempt
+                logger.warning(
+                    "Transient VIES fault for TAX_ID=%s (attempt %s/%s), "
+                    "retrying in %ss: %s",
+                    tax_id,
+                    attempt + 1,
+                    cls.VIES_RETRY_ATTEMPTS,
+                    delay,
+                    fault,
+                )
+                time.sleep(delay)
+
     @classmethod
     def get_tax_rate(cls, tax_id, country_code, request=None):
         """
@@ -164,7 +206,7 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(country_code):
                 # Company is from other EU country
                 try:
-                    vies_result = bool(stdnum.eu.vat.check_vies(tax_id)["valid"])
+                    vies_result = cls.validate_vies(tax_id)
                     logger.info("TAX_ID=%s RESULT=%s" % (tax_id, vies_result))
                     if tax_id and vies_result:
                         # Company is registered in VIES
