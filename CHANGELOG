@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-unreleased
-----------
+2.6.0 (2026-08-25)
+------------------
 
 * **Fix**: transient VIES faults (``MS_MAX_CONCURRENT_REQ``,
   ``GLOBAL_MAX_CONCURRENT_REQ``, ``MS_UNAVAILABLE``,
