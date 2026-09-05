@@ -2566,6 +2566,83 @@ class BillingInfoViewTestCase(TestCase):
 
 
 class RecurringPlansTestCase(TestCase):
+    def _armed_userplan(self, plan_price=10):
+        plan = baker.make("Plan", name="Basic")
+        pricing = baker.make("Pricing", period=30)
+        baker.make("PlanPricing", plan=plan, pricing=pricing, price=plan_price)
+        up = baker.make("UserPlan", plan=plan)
+        baker.make(
+            "RecurringUserPlan",
+            user_plan=up,
+            pricing=pricing,
+            amount=plan_price,
+            tax=20,
+            currency="USD",
+            token="old-token",
+            token_verified=True,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+        )
+        return up, pricing
+
+    def test_set_plan_renewal_with_plan_change_order_keeps_subscription_terms(self):
+        """A plan-change order (no pricing) must not overwrite an armed
+        renewal's pricing and amount - only the token-related values change."""
+        up, pricing = self._armed_userplan()
+        change_order = baker.make("Order", pricing=None, amount=7, tax=None, currency="EUR")
+
+        up.set_plan_renewal(
+            order=change_order,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            token="new-token",
+            card_masked_number="4321",
+        )
+
+        up.recurring.refresh_from_db()
+        self.assertEqual(up.recurring.pricing, pricing)
+        self.assertEqual(up.recurring.amount, 10)
+        self.assertEqual(up.recurring.tax, 20)
+        self.assertEqual(up.recurring.currency, "USD")
+        self.assertEqual(up.recurring.token, "new-token")
+        self.assertEqual(up.recurring.card_masked_number, "4321")
+
+    def test_set_plan_renewal_fresh_recurring_still_copies_the_order(self):
+        """No armed renewal yet: the order's terms are the only ones known."""
+        up = baker.make("UserPlan")
+        order = baker.make("Order", pricing=None, amount=10)
+
+        up.set_plan_renewal(
+            order=order, renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK
+        )
+
+        self.assertEqual(up.recurring.amount, 10)
+        self.assertIsNone(up.recurring.pricing)
+
+    def test_plan_change_reprices_the_renewal_for_the_new_plan(self):
+        up, pricing = self._armed_userplan(plan_price=10)
+        better = baker.make("Plan", name="Pro")
+        baker.make("PlanPricing", plan=better, pricing=pricing, price=25)
+
+        up.extend_account(better, None)
+
+        up.recurring.refresh_from_db()
+        self.assertEqual(up.plan, better)
+        self.assertEqual(up.recurring.pricing, pricing)
+        self.assertEqual(up.recurring.amount, 25)
+        self.assertEqual(up.recurring.token, "old-token")
+
+    def test_plan_change_without_that_period_keeps_the_renewal_amount(self):
+        """The new plan does not sell the period the account renews on: better
+        to keep renewing on known terms than to invent a price."""
+        up, pricing = self._armed_userplan(plan_price=10)
+        other = baker.make("Plan", name="Yearly only")
+        baker.make("PlanPricing", plan=other, pricing=baker.make("Pricing", period=365), price=99)
+
+        up.extend_account(other, None)
+
+        up.recurring.refresh_from_db()
+        self.assertEqual(up.recurring.amount, 10)
+        self.assertEqual(up.recurring.pricing, pricing)
+
     def test_set_plan_renewal(self):
         """Test that UserPlan.set_plan_renewal() method"""
         up = baker.make("UserPlan")
