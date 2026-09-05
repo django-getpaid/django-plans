@@ -379,21 +379,68 @@ class AbstractUserPlan(BaseMixin, models.Model):
                 else self.recurring.RENEWAL_TRIGGERED_BY.USER
             )
 
+        # A plan-change order carries no pricing (see ``extend_account``): it
+        # changes the plan, not how the account renews. Copying its fields
+        # would leave an armed renewal with ``pricing=None`` and the one-off
+        # difference as its amount - a subscription that renews nothing.
+        # Keep the subscription's own terms and only take the token-related
+        # values the caller passes in ``kwargs``.
+        keep_terms = order.pricing is None and self.recurring.pricing_id is not None
+        if keep_terms:
+            terms = {
+                "pricing": self.recurring.pricing,
+                "amount": self.recurring.amount,
+                "tax": self.recurring.tax,
+                "currency": self.recurring.currency,
+            }
+
         # Erase values of all fields
         # We don't want to mix the old and new values
         self.recurring.set_all_fields_default()
 
         # Set new values
         self.recurring.user_plan = self
-        self.recurring.pricing = order.pricing
-        self.recurring.amount = order.amount
-        self.recurring.tax = order.tax
-        self.recurring.currency = order.currency
+        if keep_terms:
+            for field, value in terms.items():
+                setattr(self.recurring, field, value)
+        else:
+            self.recurring.pricing = order.pricing
+            self.recurring.amount = order.amount
+            self.recurring.tax = order.tax
+            self.recurring.currency = order.currency
         self.recurring.renewal_triggered_by = renewal_triggered_by
         for k, v in kwargs.items():
             setattr(self.recurring, k, v)
         self.recurring.save()
         return self.recurring
+
+    def _reprice_recurring_for_plan(self, plan):
+        """Point an armed renewal at ``plan``'s price for the period it renews on.
+
+        A plan change keeps the billing period (the ``Pricing`` row) and only
+        swaps the plan, so the renewal must bill the new plan's ``PlanPricing``
+        for that same period from now on. Without this the account kept
+        renewing at the price of the plan it left. Nothing is done when the
+        new plan does not sell that period; the ``account_change_plan``
+        signal fires right after and lets projects apply their own policy.
+        """
+        recurring = getattr(self, "recurring", None)
+        if recurring is None or recurring.pricing_id is None:
+            return
+        plan_pricing = plan.planpricing_set.filter(pricing=recurring.pricing).first()
+        if plan_pricing is None:
+            accounts_logger.warning(
+                "Plan '%s' [id=%d] has no pricing for period %s; renewal of "
+                "user '%s' [id=%d] keeps its previous amount",
+                plan,
+                plan.pk,
+                recurring.pricing,
+                self.user,
+                self.user.pk,
+            )
+            return
+        recurring.amount = plan_pricing.price
+        recurring.save(update_fields=["amount"])
 
     def extend_account(self, plan, pricing):
         """
@@ -415,6 +462,7 @@ class AbstractUserPlan(BaseMixin, models.Model):
                 self.expire = None
 
             self.save()
+            self._reprice_recurring_for_plan(plan)
             account_change_plan.send(sender=self, user=self.user)
             if getattr(settings, "PLANS_SEND_EMAILS_PLAN_CHANGED", True):
                 mail_context = {"user": self.user, "userplan": self, "plan": plan}

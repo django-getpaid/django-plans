@@ -1,6 +1,19 @@
 django-plans changelog
 ======================
 
+Unreleased
+----------
+
+* **Fix**: a plan change (``UserPlan.extend_account(plan, pricing=None)``)
+  now re-points an armed ``RecurringUserPlan`` at the new plan's
+  ``PlanPricing`` for the period it already renews on. Previously the
+  account kept renewing at the price of the plan it had left.
+* **Fix**: ``UserPlan.set_plan_renewal()`` called with a plan-change order
+  (one without a pricing) keeps the subscription's own pricing, amount, tax
+  and currency and only takes the token-related values. Copying the change
+  order left the renewal with ``pricing=None`` and the one-off difference as
+  its amount - a subscription that renewed nothing.
+
 2.6.0 (2026-08-25)
 ------------------
 
