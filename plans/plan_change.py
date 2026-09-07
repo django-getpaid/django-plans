@@ -15,21 +15,30 @@ class PlanChangePolicy(object):
             # If plan is free then cost is always 0
             return 0
 
-        plan_pricings = plan.planpricing_set.order_by(
-            "-pricing__period"
-        ).select_related("pricing")
-        selected_pricing = None
-        for plan_pricing in plan_pricings:
-            selected_pricing = plan_pricing
-            if plan_pricing.pricing.period <= period:
-                break
+        # Pricings of the same length (a monthly subscription next to a 30-day
+        # trial) are ordered renewable first, then cheaper, then older, so the
+        # same plan is always priced by the same row.
+        plan_pricings = list(
+            plan.planpricing_set.order_by(
+                "pricing__period", "-has_automatic_renewal", "price", "pk"
+            ).select_related("pricing")
+        )
+        if not plan_pricings:
+            raise ValueError("Plan %s has no pricings." % plan)
 
-        if selected_pricing:
-            return (selected_pricing.price / selected_pricing.pricing.period).quantize(
-                Decimal("1.00")
+        fitting = [pp for pp in plan_pricings if pp.pricing.period <= period]
+        if fitting:
+            # The longest pricing that fits in the period.
+            longest = fitting[-1].pricing.period
+            selected_pricing = next(
+                pp for pp in fitting if pp.pricing.period == longest
             )
-
-        raise ValueError("Plan %s has no pricings." % plan)
+        else:
+            # Nothing fits: the shortest pricing there is.
+            selected_pricing = plan_pricings[0]
+        return (selected_pricing.price / selected_pricing.pricing.period).quantize(
+            Decimal("1.00")
+        )
 
     def _calculate_final_price(self, period, day_cost_diff):
         if day_cost_diff is None:
