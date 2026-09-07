@@ -2588,7 +2588,9 @@ class RecurringPlansTestCase(TestCase):
         """A plan-change order (no pricing) must not overwrite an armed
         renewal's pricing and amount - only the token-related values change."""
         up, pricing = self._armed_userplan()
-        change_order = baker.make("Order", pricing=None, amount=7, tax=None, currency="EUR")
+        change_order = baker.make(
+            "Order", pricing=None, amount=7, tax=None, currency="EUR"
+        )
 
         up.set_plan_renewal(
             order=change_order,
@@ -2611,7 +2613,8 @@ class RecurringPlansTestCase(TestCase):
         order = baker.make("Order", pricing=None, amount=10)
 
         up.set_plan_renewal(
-            order=order, renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK
+            order=order,
+            renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
         )
 
         self.assertEqual(up.recurring.amount, 10)
@@ -2635,7 +2638,12 @@ class RecurringPlansTestCase(TestCase):
         to keep renewing on known terms than to invent a price."""
         up, pricing = self._armed_userplan(plan_price=10)
         other = baker.make("Plan", name="Yearly only")
-        baker.make("PlanPricing", plan=other, pricing=baker.make("Pricing", period=365), price=99)
+        baker.make(
+            "PlanPricing",
+            plan=other,
+            pricing=baker.make("Pricing", period=365),
+            price=99,
+        )
 
         up.extend_account(other, None)
 
