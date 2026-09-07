@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-Unreleased
-----------
+2.6.1 (2026-09-07)
+------------------
 
 * **Fix**: a plan change (``UserPlan.extend_account(plan, pricing=None)``)
   now re-points an armed ``RecurringUserPlan`` at the new plan's
