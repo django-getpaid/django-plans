@@ -13,6 +13,12 @@ Unreleased
   and currency and only takes the token-related values. Copying the change
   order left the renewal with ``pricing=None`` and the one-off difference as
   its amount - a subscription that renewed nothing.
+* **Fix**: ``PlanChangePolicy._calculate_day_cost()`` picked one of two
+  pricings of the same length in undefined order - a plan selling a monthly
+  subscription next to a 30-day trial was priced by whichever row the
+  database returned first, so the same change was quoted differently from
+  one day to the next. Ties now prefer the pricing that can renew
+  (``has_automatic_renewal``), then the cheaper one, then the older one.
 
 2.6.0 (2026-08-25)
 ------------------

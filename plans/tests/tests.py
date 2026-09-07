@@ -2111,6 +2111,47 @@ class PlanChangePolicyTestCase(TestCase):
         plan = Plan.objects.get(pk=5)
         self.assertEqual(self.policy._calculate_day_cost(plan, 13), Decimal("6.67"))
 
+    def test_calculate_day_cost_prefers_the_renewable_pricing_of_equal_length(self):
+        """A plan selling a monthly subscription next to a 30-day trial must
+        always be priced by the subscription, whichever row comes first."""
+        plan = Plan.objects.create(
+            name="Two monthlies", slug="two-monthlies", available=True
+        )
+        monthly = Pricing.objects.create(name="Monthly", period=30)
+        trial = Pricing.objects.create(name="Trial", period=30)
+        PlanPricing.objects.create(
+            plan=plan,
+            pricing=trial,
+            price=Decimal("19.90"),
+            has_automatic_renewal=False,
+        )
+        PlanPricing.objects.create(
+            plan=plan,
+            pricing=monthly,
+            price=Decimal("17.90"),
+            has_automatic_renewal=True,
+        )
+        self.assertEqual(self.policy._calculate_day_cost(plan, 3), Decimal("0.60"))
+
+        cheaper_trial = Plan.objects.create(
+            name="Cheaper trial", slug="cheaper-trial", available=True
+        )
+        PlanPricing.objects.create(
+            plan=cheaper_trial,
+            pricing=monthly,
+            price=Decimal("48.00"),
+            has_automatic_renewal=True,
+        )
+        PlanPricing.objects.create(
+            plan=cheaper_trial,
+            pricing=trial,
+            price=Decimal("40.00"),
+            has_automatic_renewal=False,
+        )
+        self.assertEqual(
+            self.policy._calculate_day_cost(cheaper_trial, 3), Decimal("1.60")
+        )
+
     def test_get_change_price(self):
         p1 = Plan.objects.get(pk=3)
         p2 = Plan.objects.get(pk=4)
