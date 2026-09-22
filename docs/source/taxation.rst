@@ -37,3 +37,54 @@ FIXME: under developement
 .. autoclass:: plans.taxation.ru.RussianTaxationPolicy
     :members:
     :undoc-members:
+
+Tax-inclusive orders
+--------------------
+
+An ``Order`` stores a net ``amount`` and a ``tax`` rate; ``Order.total()``
+multiplies them and rounds to cents, and the invoice copies that split. This
+treats the net price as the primary fact, which it is when the order is
+created from a ``PlanPricing``.
+
+Some payments are the other way round: the payment provider charges a fixed
+tax-inclusive amount (a PayPal subscription, a merchant-of-record checkout,
+a price list quoted with tax included) and the net has to be derived from
+it. Multiplying a net cent value by a rate and rounding leaves gaps - at
+21 % only 100 of every 121 gross cent values can be produced - so a charged
+total such as 14.89 has no net amount that rounds to it (12.30 gives 14.88,
+12.31 gives 14.90). The gap shows up as soon as a fixed-amount subscription
+outlives a change of the customer's tax rate.
+
+For these orders set ``gross_amount`` to the charged total and derive the
+net with ``Order.net_from_gross()``, which applies the coefficient method
+``tax = gross * rate / (100 + rate)`` (rounded half up) and returns
+``gross - tax``::
+
+    gross = Decimal("14.89")
+    tax = Decimal("21")
+    order = Order(
+        amount=Order.net_from_gross(gross, tax),  # 12.31
+        tax=tax,
+        gross_amount=gross,
+        ...
+    )
+    order.total()      # Decimal("14.89")
+    order.tax_total()  # Decimal("2.58")
+
+With ``gross_amount`` set, ``total()`` returns it and ``tax_total()`` is the
+difference to the net amount, so ``amount + tax_total() == total()`` holds
+on the cent grid and the invoice created from the order carries the amount
+that was actually charged. Orders without ``gross_amount`` (the default, and
+every order that predates the field) keep the net-based total.
+
+``gross_amount`` is validated on ``clean()`` and ``save()``: it may differ
+from ``amount * (1 + tax / 100)`` only by the rounding of the tax amount,
+i.e. by less than one cent. A larger difference means the two fields
+describe different prices and is rejected, so an invoice can never be
+issued for a total that does not follow from its own net and rate.
+
+.. note::
+    The coefficient (top-down) computation of VAT is permitted by the EU VAT
+    Directive next to the net-based one. Whether the tax authority of your
+    issuing country accepts invoices split that way is for your accountant
+    to confirm.

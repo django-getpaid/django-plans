@@ -27,6 +27,14 @@ After changing those settings every new order, payment, invoice will use those n
     This  however is not a case with ``PLANS_INVOICE_ISSUER`` change, because those data are taken in the same moment
     of issuing invoice. Even an old order will use new ``PLANS_INVOICE_ISSUER`` when invoicing a new payment.
 
+Tax-inclusive orders
+--------------------
+
+``Invoice.copy_from_order()`` takes the totals from ``Order.total()`` and
+``Order.tax_total()``. For an order priced tax-inclusive (``gross_amount``
+set) the invoice therefore carries the charged total and the tax amount
+derived from it, see :doc:`taxation`.
+
 Billing data
 ------------
 
