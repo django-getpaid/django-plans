@@ -205,16 +205,30 @@ class OrderAdmin(admin.ModelAdmin):
         "completed",
         "tax",
         "amount",
+        "gross_amount",
+        "total",
         "currency",
         "plan",
         "pricing",
         "plan_extended_from",
         "plan_extended_until",
     )
-    readonly_fields = ("created", "updated_at")
+    readonly_fields = ("created", "updated_at", "total", "tax_total")
     list_display_links = list_display
     actions = [make_order_completed, make_order_returned, make_order_invoice]
     inlines = (InvoiceInline,)
+
+    @admin.display(description=_("total"))
+    def total(self, obj):
+        if obj.amount is None:
+            return None
+        return obj.total()
+
+    @admin.display(description=_("tax total"))
+    def tax_total(self, obj):
+        if obj.amount is None:
+            return None
+        return obj.tax_total()
 
     def queryset(self, request):
         return (

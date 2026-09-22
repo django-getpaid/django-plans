@@ -4,7 +4,7 @@ import logging
 import re
 import warnings
 from datetime import timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 import stdnum.eu.vat
 from django.conf import settings
@@ -1106,11 +1106,93 @@ class AbstractOrder(BaseMixin, models.Model):
     tax = models.DecimalField(
         _("tax"), max_digits=4, decimal_places=2, db_index=True, null=True, blank=True
     )  # Tax=None is when tax is not applicable
+    gross_amount = models.DecimalField(
+        _("gross amount"),
+        max_digits=7,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_(
+            "Tax-inclusive total of the order, for orders priced tax-inclusive "
+            "(e.g. a fixed amount charged by the payment provider). When set, "
+            "it is the order total and the tax amount is the difference "
+            "between it and the net amount; the net amount is then expected "
+            "to be derived from it with net_from_gross(). Leave empty to "
+            "compute the total from the net amount and the tax rate."
+        ),
+    )
     currency = models.CharField(_("currency"), max_length=3, default="EUR")
     status = models.IntegerField(_("status"), choices=STATUS, default=STATUS.NEW)
 
     def __str__(self):
         return _("Order #%(id)d") % {"id": self.id}
+
+    @staticmethod
+    def net_from_gross(gross_amount, tax):
+        """Net amount for a tax-inclusive total: gross minus the tax computed
+        from the gross with the coefficient ``tax / (100 + tax)``.
+
+        Rounding the product of a net cent value and a rate leaves gaps: at
+        21 % only 100 of every 121 gross cent values are reachable, so a
+        fixed tax-inclusive price cannot in general be represented by a net
+        amount and a rate. Splitting the gross with the coefficient method
+        (permitted by EU VAT rules next to the net-based one) always yields
+        net + tax == gross on the cent grid. The tax amount is rounded half
+        up.
+
+        ``tax=None`` (tax not applicable) and ``tax=0`` return the gross
+        unchanged.
+        """
+        gross_amount = Decimal(gross_amount)
+        if tax is None:
+            return gross_amount
+        tax = Decimal(tax)
+        tax_amount = (gross_amount * tax / (100 + tax)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        return gross_amount - tax_amount
+
+    def clean(self):
+        super().clean()
+        self.validate_gross_amount()
+
+    def validate_gross_amount(self):
+        """Reject a ``gross_amount`` that is not the tax-inclusive form of
+        ``amount`` and ``tax``.
+
+        The gross may differ from ``amount * (1 + tax / 100)`` only by the
+        rounding of the tax amount, i.e. by less than one cent. A larger
+        difference means the two fields describe different prices, and an
+        invoice made from the order would not add up.
+        """
+        if self.gross_amount is None:
+            return
+        if self.amount is None:
+            raise ValidationError(
+                {"gross_amount": _("Gross amount requires a net amount.")}
+            )
+        tax = Decimal(0) if self.tax is None else Decimal(self.tax)
+        computed_total = Decimal(self.amount) * (100 + tax) / 100
+        if abs(Decimal(self.gross_amount) - computed_total) >= Decimal("0.01"):
+            raise ValidationError(
+                {
+                    "gross_amount": _(
+                        "Gross amount %(gross)s is not the tax-inclusive form of "
+                        "net amount %(net)s at %(tax)s %% tax (expected about "
+                        "%(expected)s)."
+                    )
+                    % {
+                        "gross": self.gross_amount,
+                        "net": self.amount,
+                        "tax": tax,
+                        "expected": computed_total.quantize(Decimal("0.01")),
+                    }
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self.validate_gross_amount()
+        super().save(*args, **kwargs)
 
     @property
     def name(self):
@@ -1249,12 +1331,21 @@ class AbstractOrder(BaseMixin, models.Model):
         )
 
     def tax_total(self):
+        """Tax amount of the order: ``total() - amount``, zero when tax is
+        not applicable."""
         if self.tax is None:
             return Decimal("0.00")
         else:
             return self.total() - self.amount
 
     def total(self):
+        """Tax-inclusive total of the order.
+
+        ``gross_amount`` when the order is priced tax-inclusive, otherwise
+        the net ``amount`` with the ``tax`` rate applied, rounded to cents.
+        """
+        if self.gross_amount is not None:
+            return Decimal(self.gross_amount).quantize(Decimal("1.00"))
         if self.tax is not None:
             return (Decimal(self.amount) * (Decimal(self.tax) + 100) / 100).quantize(
                 Decimal("1.00")

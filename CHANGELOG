@@ -1,6 +1,25 @@
 django-plans changelog
 ======================
 
+Unreleased
+----------
+
+* **New**: tax-inclusive orders. ``Order.gross_amount`` stores the
+  tax-inclusive total for orders whose price is fixed with tax included
+  (a fixed-amount subscription charged by the payment provider, a
+  merchant-of-record checkout). When set, ``Order.total()`` returns it and
+  ``Order.tax_total()`` is the difference to the net ``amount``, so the
+  invoice created from the order carries the charged total. Multiplying a
+  net cent value by a rate and rounding cannot reach every gross cent value
+  (at 21 % one in about six is unreachable), which left such invoices a
+  cent below the charge after the customer's rate changed.
+  ``Order.net_from_gross(gross, tax)`` derives the net with the coefficient
+  method (``tax = gross * rate / (100 + rate)``, rounded half up).
+  ``gross_amount`` is validated on ``clean()`` and ``save()`` to be within
+  a cent of the net-based total. Orders without it are unchanged. The
+  order admin shows the gross amount and the computed total and tax
+  amount. Migration ``0022_order_gross_amount``.
+
 2.6.1 (2026-09-07)
 ------------------
 
