@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-Unreleased
-----------
+2.7.0 (2026-09-22)
+------------------
 
 * **New**: tax-inclusive orders. ``Order.gross_amount`` stores the
   tax-inclusive total for orders whose price is fixed with tax included
