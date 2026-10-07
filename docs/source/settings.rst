@@ -286,24 +286,42 @@ Default: ``True``
 
 Boolean value for enabling (default) or disabling the sending of plan related emails.
 
-``PLANS_CREATE_INVOICES_AFTER_COMMIT``
--------------------------------------
+``PLANS_INVOICING_RUNNER``
+--------------------------
 
 **Optional**
 
-Default: ``False``
+Default: ``None``
 
-Create proforma and invoice documents (and send their e-mails) after the
-transaction that created or completed the order commits, instead of inside it.
+Dotted path to a callable ``runner(job, *args)`` that decides when invoicing
+runs. Without it, the proforma, the invoice and their e-mails are created inside
+the transaction that created or completed the order, as before.
 
 Numbering an invoice locks its series row in ``django-sequences`` until the
-outermost transaction commits, so by default every payment that completes an
-order waits for any other open transaction that has numbered an invoice of the
-same series, and a failure while invoicing rolls the payment back. With this
-setting the order commits first; the invoice is created right after, in its
-own transaction. If that fails, the order stays completed and the error is
-logged (``transaction.on_commit(..., robust=True)``), so monitor for completed
-orders without an invoice.
+outermost transaction commits. Inline, every payment that completes an order
+therefore waits for any other open transaction that has numbered an invoice of
+the same series, and a failure while invoicing rolls the payment back. A runner
+can move the work out of that transaction and out of the request, for example
+into a task queue after commit::
+
+    # myproject/invoicing.py
+    from django.db import transaction
+
+    from myproject.tasks import run_invoicing_job
+
+    def queue_after_commit(job, *args):
+        path = f"{job.__module__}.{job.__qualname__}"
+        transaction.on_commit(lambda: run_invoicing_job.delay(path, *args))
+
+    # settings.py
+    PLANS_INVOICING_RUNNER = "myproject.invoicing.queue_after_commit"
+
+The jobs (``plans.invoicing.create_invoice`` and
+``plans.invoicing.send_invoice_email``) take primary keys, so they can be
+serialized. ``create_invoice`` does nothing when the order already has an
+invoice of that type, so a retried job doesn't number a second one. Pages and
+code that read an order's invoices right after payment see them only once the
+job has run.
 
 ``PLANS_SEND_EMAILS_DISABLED_INVOICE_TYPES``
 --------------------------------------------

@@ -4,13 +4,15 @@ django-plans changelog
 Unreleased
 ----------
 
-* **New**: ``PLANS_CREATE_INVOICES_AFTER_COMMIT`` (default ``False``) creates
-  proforma and invoice documents, and sends their e-mails, after the order's
-  transaction commits. Numbering an invoice locks the invoice series row until
-  the outermost transaction commits, so one long transaction that had numbered
-  an invoice made every other payment wait for it and time out. With the
-  setting on, completing an order never takes that lock, and a failure while
-  invoicing is logged instead of rolling back the completed order.
+* **New**: ``PLANS_INVOICING_RUNNER`` (default ``None``, behaviour unchanged)
+  names a callable that runs the invoicing jobs (proforma, invoice, invoice
+  e-mail) instead of running them inside the order's transaction, e.g. a task
+  queue after commit.
+  Numbering an invoice locks the invoice series row until the outermost
+  transaction commits, so one long transaction that had numbered an invoice
+  made every other payment wait for it and time out. The jobs
+  (``plans.invoicing``) take primary keys and ``create_invoice`` skips an
+  order that already has an invoice of that type, so they can be retried.
 
 2.7.0 (2026-09-22)
 ------------------
