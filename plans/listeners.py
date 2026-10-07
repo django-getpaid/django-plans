@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
 
@@ -17,6 +19,20 @@ UserPlan = AbstractUserPlan.get_concrete_model()
 Plan = AbstractPlan.get_concrete_model()
 
 
+def _run_invoicing(func, *args):
+    """Run ``func`` now, or after the surrounding transaction commits.
+
+    Numbering an invoice locks the invoice series row until the outermost
+    transaction commits. With ``PLANS_CREATE_INVOICES_AFTER_COMMIT`` the order
+    (and the payment that completed it) commits first, so a slow or failing
+    invoice step can no longer hold up or roll back a payment.
+    """
+    if getattr(settings, "PLANS_CREATE_INVOICES_AFTER_COMMIT", False):
+        transaction.on_commit(lambda: func(*args), robust=True)
+    else:
+        func(*args)
+
+
 @receiver(post_save, sender=Order)
 def create_proforma_invoice(sender, instance, created, **kwargs):
     """
@@ -24,18 +40,18 @@ def create_proforma_invoice(sender, instance, created, **kwargs):
     which is an order confirmation document
     """
     if created:
-        Invoice.create(instance, Invoice.INVOICE_TYPES["PROFORMA"])
+        _run_invoicing(Invoice.create, instance, Invoice.INVOICE_TYPES["PROFORMA"])
 
 
 @receiver(order_completed)
 def create_invoice(sender, **kwargs):
-    Invoice.create(sender, Invoice.INVOICE_TYPES["INVOICE"])
+    _run_invoicing(Invoice.create, sender, Invoice.INVOICE_TYPES["INVOICE"])
 
 
 @receiver(post_save, sender=Invoice)
 def send_invoice_by_email(sender, instance, created, **kwargs):
     if created:
-        instance.send_invoice_by_email()
+        _run_invoicing(instance.send_invoice_by_email)
 
 
 @receiver(post_save, sender=User)

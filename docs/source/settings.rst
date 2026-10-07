@@ -286,6 +286,25 @@ Default: ``True``
 
 Boolean value for enabling (default) or disabling the sending of plan related emails.
 
+``PLANS_CREATE_INVOICES_AFTER_COMMIT``
+-------------------------------------
+
+**Optional**
+
+Default: ``False``
+
+Create proforma and invoice documents (and send their e-mails) after the
+transaction that created or completed the order commits, instead of inside it.
+
+Numbering an invoice locks its series row in ``django-sequences`` until the
+outermost transaction commits, so by default every payment that completes an
+order waits for any other open transaction that has numbered an invoice of the
+same series, and a failure while invoicing rolls the payment back. With this
+setting the order commits first; the invoice is created right after, in its
+own transaction. If that fails, the order stays completed and the error is
+logged (``transaction.on_commit(..., robust=True)``), so monitor for completed
+orders without an invoice.
+
 ``PLANS_SEND_EMAILS_DISABLED_INVOICE_TYPES``
 --------------------------------------------
 
