@@ -1,0 +1,4 @@
+# django-concurrent-test-helper 0.7.0 (sdist only, upstream repo gone) imports
+# setuptools.command.test, removed in setuptools 72. Applied to that package only:
+# django-plans itself needs setuptools >= 77 to build.
+setuptools<72

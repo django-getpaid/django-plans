@@ -8,7 +8,6 @@ coverage
 tox
 maxminddb-geolite2
 model_bakery
-django-concurrent-test-helper
 freezegun
 psycopg2-binary
 internet-sabotage3>=0.1.6

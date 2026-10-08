@@ -24,15 +24,13 @@ jobs:
 
     strategy:
       matrix:
-        DJANGO_VERSION: ['4.2.*', '5.0.*', '5.1.*', '5.2.*']
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        DJANGO_VERSION: ['5.2.*', '6.0.*', '6.1.*']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
         exclude:
-          - DJANGO_VERSION: '5.0.*'
-            python-version: '3.9'
-          - DJANGO_VERSION: '5.1.*'
-            python-version: '3.9'
-          - DJANGO_VERSION: '5.2.*'
-            python-version: '3.9'
+          - DJANGO_VERSION: '6.0.*'
+            python-version: '3.11'
+          - DJANGO_VERSION: '6.1.*'
+            python-version: '3.11'
       fail-fast: false
     services:
       postgres:
@@ -61,8 +59,10 @@ jobs:
 
       - name: Install
         run: |
+           pip install -q --upgrade pip
            pip install -q -e .
            pip install -q --upgrade --upgrade-strategy eager -r demo/requirements.txt
+           pip install -q --build-constraint demo/build-constraints.txt django-concurrent-test-helper
            pip install -q Django==${{ matrix.DJANGO_VERSION }} --pre
 
       - name: Run migration check
