@@ -48,6 +48,23 @@ Default: ``False``
 
 If set to True, the country default in billing info will be get from users IP.
 The ``geolite2`` library must be installed for this to work.
+Without it every buyer gets ``PLANS_DEFAULT_COUNTRY``; the system check
+``plans.W001`` warns about that at startup.
+
+
+``PLANS_GET_COUNTRY_CODE``
+--------------------------
+
+**Optional**
+
+Default: ``None``
+
+Dotted path to a callable ``(request) -> country code`` that replaces the
+built-in lookup (``PLANS_GET_COUNTRY_FROM_IP`` and ``PLANS_DEFAULT_COUNTRY``).
+Use it when the country comes from somewhere else, for example a GeoIP
+database the project keeps up to date (the ``maxminddb-geolite2`` package
+ships a 2018 database). It is used for the billing form's initial country and
+for the tax of an order without a billing country.
 
 
 ``PLANS_INVOICE_COUNTER_RESET``
