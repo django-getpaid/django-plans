@@ -8,6 +8,10 @@ Unreleased
   6.x needs Python 3.12+), the versions their projects still support.
   Dropped Python 3.9 and 3.10 (``requires-python`` is now ``>=3.11``) and
   Django 4.2, 5.0 and 5.1, all past end of life.
+* **Fix**: the "Autorenew plan" admin action skips plans without a
+  ``RecurringUserPlan`` (no stored payment method; the renewal receivers
+  crashed with ``RelatedObjectDoesNotExist``) and free plans, with a warning
+  for each, and reports how many renewals it requested.
 * **New**: ``PLANS_INVOICING_RUNNER`` (default ``None``, behaviour unchanged)
   names a callable that runs the invoicing jobs (proforma, invoice, invoice
   e-mail) instead of running them inside the order's transaction, e.g. a task
