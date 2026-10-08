@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-Unreleased
-----------
+2.8.0 (2026-10-08)
+------------------
 
 * **Supported versions**: added Django 6.0 and 6.1 and Python 3.14. Tested
   on Django 4.2-6.1 with Python 3.9-3.14, each Django version on the Python
