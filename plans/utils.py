@@ -16,6 +16,14 @@ def get_client_ip(request):
 
 
 def get_country_code(request):
+    """The buyer's country code for ``request``.
+
+    ``PLANS_GET_COUNTRY_CODE`` names a callable ``(request) -> country code``
+    that replaces the lookup below (e.g. a project's own GeoIP database).
+    """
+    lookup = getattr(settings, "PLANS_GET_COUNTRY_CODE", None)
+    if lookup is not None:
+        return import_name(lookup)(request)
     if getattr(settings, "PLANS_GET_COUNTRY_FROM_IP", False):
         try:
             from geolite2 import geolite2

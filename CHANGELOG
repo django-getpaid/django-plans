@@ -12,6 +12,14 @@ Unreleased
   ``RecurringUserPlan`` (no stored payment method; the renewal receivers
   crashed with ``RelatedObjectDoesNotExist``) and free plans, with a warning
   for each, and reports how many renewals it requested.
+* **New**: ``PLANS_GET_COUNTRY_CODE`` names a callable ``(request) ->
+  country code`` that replaces the built-in IP lookup, e.g. with a GeoIP
+  database the project keeps current (``maxminddb-geolite2`` ships a 2018
+  one).
+* **New**: system check ``plans.W001`` warns when ``PLANS_GET_COUNTRY_FROM_IP``
+  is on but the ``geolite2`` module is missing. ``get_country_code`` then
+  silently returned ``PLANS_DEFAULT_COUNTRY`` for every buyer, so every order
+  without a billing country was taxed as that country.
 * **New**: ``PLANS_INVOICING_RUNNER`` (default ``None``, behaviour unchanged)
   names a callable that runs the invoicing jobs (proforma, invoice, invoice
   e-mail) instead of running them inside the order's transaction, e.g. a task
