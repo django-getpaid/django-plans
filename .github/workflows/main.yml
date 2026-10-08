@@ -24,13 +24,30 @@ jobs:
 
     strategy:
       matrix:
-        DJANGO_VERSION: ['5.2.*', '6.0.*', '6.1.*']
-        python-version: ['3.11', '3.12', '3.13', '3.14']
-        exclude:
-          - DJANGO_VERSION: '6.0.*'
-            python-version: '3.11'
-          - DJANGO_VERSION: '6.1.*'
-            python-version: '3.11'
+        # Each Django version on the Python versions it supports.
+        include:
+          - {DJANGO_VERSION: '4.2.*', python-version: '3.9'}
+          - {DJANGO_VERSION: '4.2.*', python-version: '3.10'}
+          - {DJANGO_VERSION: '4.2.*', python-version: '3.11'}
+          - {DJANGO_VERSION: '4.2.*', python-version: '3.12'}
+          - {DJANGO_VERSION: '5.0.*', python-version: '3.10'}
+          - {DJANGO_VERSION: '5.0.*', python-version: '3.11'}
+          - {DJANGO_VERSION: '5.0.*', python-version: '3.12'}
+          - {DJANGO_VERSION: '5.1.*', python-version: '3.10'}
+          - {DJANGO_VERSION: '5.1.*', python-version: '3.11'}
+          - {DJANGO_VERSION: '5.1.*', python-version: '3.12'}
+          - {DJANGO_VERSION: '5.1.*', python-version: '3.13'}
+          - {DJANGO_VERSION: '5.2.*', python-version: '3.10'}
+          - {DJANGO_VERSION: '5.2.*', python-version: '3.11'}
+          - {DJANGO_VERSION: '5.2.*', python-version: '3.12'}
+          - {DJANGO_VERSION: '5.2.*', python-version: '3.13'}
+          - {DJANGO_VERSION: '5.2.*', python-version: '3.14'}
+          - {DJANGO_VERSION: '6.0.*', python-version: '3.12'}
+          - {DJANGO_VERSION: '6.0.*', python-version: '3.13'}
+          - {DJANGO_VERSION: '6.0.*', python-version: '3.14'}
+          - {DJANGO_VERSION: '6.1.*', python-version: '3.12'}
+          - {DJANGO_VERSION: '6.1.*', python-version: '3.13'}
+          - {DJANGO_VERSION: '6.1.*', python-version: '3.14'}
       fail-fast: false
     services:
       postgres:
