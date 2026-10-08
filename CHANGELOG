@@ -7,6 +7,10 @@ Unreleased
 * **Supported versions**: added Django 6.0 and 6.1 and Python 3.14. Tested
   on Django 4.2-6.1 with Python 3.9-3.14, each Django version on the Python
   versions it supports.
+* **Fix**: a paid order for another plan while the current paid plan is
+  still running is logged at error level instead of warning. The order
+  becomes ``NOT_VALID`` and extends nothing while the payment is kept, so
+  it needs a refund; at warning level it went unnoticed.
 * **Fix**: the "Autorenew plan" admin action skips plans without a
   ``RecurringUserPlan`` (no stored payment method; the renewal receivers
   crashed with ``RelatedObjectDoesNotExist``) and free plans, with a warning

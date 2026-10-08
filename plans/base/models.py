@@ -523,8 +523,12 @@ class AbstractUserPlan(BaseMixin, models.Model):
                     status = True
                 elif not self.plan.is_free() and self.expire > localdate():
                     status = False
-                    accounts_logger.warning(
-                        "Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]"
+                    # Reached by a paid order for another plan while this one is
+                    # still running: the payment is kept and nothing is extended,
+                    # so someone has to refund it.
+                    accounts_logger.error(
+                        "Account '%s' [id=%d] plan NOT changed to '%s' [id=%d]: "
+                        "the paid order extends nothing"
                         % (self.user, self.user.pk, plan, plan.pk)
                     )
                 else:
