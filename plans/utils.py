@@ -1,3 +1,5 @@
+import math
+from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -110,3 +112,14 @@ class TaxCacheService:
         if raw == "None":
             return None
         return Decimal(raw)
+
+
+def slot_open_day_delta(schedule):
+    """Whole days between a slot's opening date and the expiration date.
+
+    A slot for schedule offset ``s`` opens at local midnight of the
+    expiration date minus ``s``; on the calendar that is ``expire`` minus
+    ``ceil(s / 1 day)`` days. Whole days keep every comparison midnight-exact
+    on every backend.
+    """
+    return math.ceil(schedule / timedelta(days=1))

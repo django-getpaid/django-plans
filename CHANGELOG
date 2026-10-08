@@ -20,6 +20,12 @@ Unreleased
   is on but the ``geolite2`` module is missing. ``get_country_code`` then
   silently returned ``PLANS_DEFAULT_COUNTRY`` for every buyer, so every order
   without a billing country was taxed as that country.
+* **Fix**: ``UserPlan.plan_autorenew_at()`` follows
+  ``PLANS_AUTORENEW_SCHEDULE``. It read only the deprecated
+  ``PLANS_AUTORENEW_BEFORE_DAYS/HOURS``, which the schedule makes the task
+  ignore, so with a schedule it returned the expiration date (past dates
+  during retries after expiry). It now returns the day of the next attempt
+  the renewal task will make, and None when none is left.
 * **New**: ``PLANS_INVOICING_RUNNER`` (default ``None``, behaviour unchanged)
   names a callable that runs the invoicing jobs (proforma, invoice, invoice
   e-mail) instead of running them inside the order's transaction, e.g. a task
