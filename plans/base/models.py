@@ -40,7 +40,12 @@ from plans.signals import (
     order_completed,
 )
 from plans.taxation.eu import EUTaxationPolicy
-from plans.utils import country_code_transform, get_country_code, get_currency
+from plans.utils import (
+    country_code_transform,
+    get_country_code,
+    get_currency,
+    slot_open_day_delta,
+)
 from plans.validators import plan_validation
 
 accounts_logger = logging.getLogger("accounts")
@@ -333,7 +338,36 @@ class AbstractUserPlan(BaseMixin, models.Model):
     def plan_autorenew_at(self):
         """
         Helper function which calculates when the plan autorenewal will occur
+
+        With ``PLANS_AUTORENEW_SCHEDULE`` it is the day of the next attempt the
+        renewal task will make, like the task does: a slot opens
+        ``slot_open_day_delta`` days before the expiration date and fires unless
+        an attempt was already made on or after that day, at most
+        ``PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY`` after it opened; a slot that
+        opened without firing is taken by the next run, today. None when no
+        attempt is left.
         """
+        schedule = getattr(settings, "PLANS_AUTORENEW_SCHEDULE", None)
+        if self.expire and schedule is not None:
+            max_renew_after = getattr(
+                settings, "PLANS_AUTORENEW_MAX_DAYS_AFTER_EXPIRY", timedelta(days=30)
+            )
+            recurring = getattr(self, "recurring", None)
+            last_attempt = recurring and recurring.last_renewal_attempt
+            last_attempt_day = last_attempt and localdate(last_attempt)
+            today = localdate()
+            unfired_slots = [
+                slot
+                for slot in (
+                    self.expire - timedelta(days=slot_open_day_delta(offset))
+                    for offset in schedule
+                )
+                if (last_attempt_day is None or last_attempt_day < slot)
+                and today <= slot + max_renew_after
+            ]
+            if not unfired_slots:
+                return None
+            return max(min(unfired_slots), today)
         if self.expire:
             plans_autorenew_before_days = getattr(
                 settings, "PLANS_AUTORENEW_BEFORE_DAYS", 0

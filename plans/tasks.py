@@ -1,6 +1,5 @@
 import datetime
 import logging
-import math
 import time
 import warnings
 
@@ -12,6 +11,7 @@ from django.utils import timezone
 
 from .base.models import AbstractRecurringUserPlan
 from .signals import account_automatic_renewal
+from .utils import slot_open_day_delta
 
 User = get_user_model()
 logger = logging.getLogger("plans.tasks")
@@ -23,17 +23,6 @@ def get_active_plans():
         .filter(userplan__active=True)
         .exclude(userplan__expire=None)
     )
-
-
-def _slot_open_day_delta(schedule):
-    """Whole days between a slot's opening date and the expiration date.
-
-    A slot for schedule offset ``s`` opens at local midnight of the
-    expiration date minus ``s``; on the calendar that is ``expire`` minus
-    ``ceil(s / 1 day)`` days. Whole days keep every comparison midnight-exact
-    on every backend.
-    """
-    return math.ceil(schedule / datetime.timedelta(days=1))
 
 
 def _claim_renewal_attempt(recurring):
@@ -96,7 +85,7 @@ def autorenew_account(
         )
         # ``expire`` is a DateField, so slot bookkeeping is day-granular by
         # nature and stays on the calendar: each schedule entry's slot opens
-        # ``_slot_open_day_delta`` whole days before the expiration date, and
+        # ``slot_open_day_delta`` whole days before the expiration date, and
         # an entry fires only when no attempt has happened since its slot
         # opened -- i.e. the local date of ``last_renewal_attempt`` lies
         # strictly before the slot's opening date. An attempt can only happen
@@ -112,7 +101,7 @@ def autorenew_account(
         # slot in production, for months.
         for schedule in PLANS_AUTORENEW_SCHEDULE:
             day_before_slot_opens = datetime.timedelta(
-                days=_slot_open_day_delta(schedule) + 1
+                days=slot_open_day_delta(schedule) + 1
             )
             q |= Q(
                 Q(userplan__recurring__last_renewal_attempt__isnull=True)
