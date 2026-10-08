@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -439,10 +439,39 @@ class RecurringPlanInline(admin.StackedInline):
 
 def autorenew_payment(modeladmin, request, queryset):
     """
-    Automatically renew payment for this plan
+    Automatically renew payment for the selected plans that can renew.
+
+    A plan without a RecurringUserPlan has no stored payment method, and the
+    renewal receivers crashed on it (RelatedObjectDoesNotExist); a free plan has
+    nothing to renew. Both are skipped with a warning instead.
     """
-    for user_plan in queryset:
+    requested = 0
+    for user_plan in queryset.select_related("user", "plan", "recurring"):
+        if not hasattr(user_plan, "recurring"):
+            modeladmin.message_user(
+                request,
+                _("%(user)s: no recurring payment is set up, nothing to renew.")
+                % {"user": user_plan.user},
+                messages.WARNING,
+            )
+            continue
+        if user_plan.plan.is_free():
+            modeladmin.message_user(
+                request,
+                _("%(user)s: plan %(plan)s is free, nothing to renew.")
+                % {"user": user_plan.user, "plan": user_plan.plan},
+                messages.WARNING,
+            )
+            continue
         account_automatic_renewal.send(sender=None, user=user_plan.user)
+        requested += 1
+    if requested:
+        modeladmin.message_user(
+            request,
+            _("Automatic renewal requested for %(count)d plan(s).")
+            % {"count": requested},
+            messages.SUCCESS,
+        )
 
 
 autorenew_payment.short_description = _("Autorenew plan")
