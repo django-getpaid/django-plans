@@ -1,6 +1,15 @@
 django-plans changelog
 ======================
 
+Unreleased
+----------
+
+* **Fix**: a queued invoicing job whose order or invoice was deleted before
+  it ran (e.g. an abandoned checkout's order) does nothing and logs a
+  warning on ``plans.invoicing``. It raised ``DoesNotExist``, so with a
+  ``PLANS_INVOICING_RUNNER`` task queue the deleted checkout showed up as a
+  failed task.
+
 2.8.0 (2026-10-08)
 ------------------
 
