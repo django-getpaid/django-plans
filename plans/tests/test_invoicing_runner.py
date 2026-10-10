@@ -97,3 +97,47 @@ class InvoicingRunnerTests(TestCase):
             ).count(),
             1,
         )
+
+    @override_settings(PLANS_INVOICING_RUNNER="plans.tests.test_invoicing_runner.queue")
+    def test_jobs_of_an_order_deleted_meanwhile_do_nothing(self):
+        order = self.make_order()
+        order.complete_order()
+        order_id = order.pk
+        order.delete()
+
+        with self.assertLogs("plans.invoicing", "WARNING") as logs:
+            run_queued_jobs()
+
+        self.assertFalse(Invoice.objects.filter(order_id=order_id).exists())
+        self.assertEqual(
+            logs.output,
+            [
+                f"WARNING:plans.invoicing:Order {order_id} no longer exists, "
+                "no invoice created."
+            ]
+            * 2,
+        )
+
+    @override_settings(PLANS_INVOICING_RUNNER="plans.tests.test_invoicing_runner.queue")
+    def test_the_email_job_of_an_invoice_deleted_meanwhile_does_nothing(self):
+        order = self.make_order()
+        order.complete_order()
+        queued_jobs.clear()
+        mail.outbox = []
+        invoicing.create_invoice(order.pk, Invoice.INVOICE_TYPES.INVOICE)
+        invoice = Invoice.objects.get(order=order)
+        invoice_id = invoice.pk
+        self.assertEqual(queued_jobs, [(invoicing.send_invoice_email, (invoice_id,))])
+        invoice.delete()
+
+        with self.assertLogs("plans.invoicing", "WARNING") as logs:
+            run_queued_jobs()
+
+        self.assertEqual(mail.outbox, [])
+        self.assertEqual(
+            logs.output,
+            [
+                f"WARNING:plans.invoicing:Invoice {invoice_id} no longer exists, "
+                "no e-mail sent."
+            ],
+        )
