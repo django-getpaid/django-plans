@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-Unreleased
-----------
+2.8.1 (2026-10-12)
+------------------
 
 * **Fix**: a queued invoicing job whose order or invoice was deleted before
   it ran (e.g. an abandoned checkout's order) does nothing and logs a
