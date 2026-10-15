@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-Unreleased
-----------
+2.8.2 (2026-10-15)
+------------------
 
 * **Fix**: plan change now requires payment when the account has no expiry
   date and the new plan costs more, as the plan change order page already
