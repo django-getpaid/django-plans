@@ -5,6 +5,9 @@ from django.conf import settings
 
 from plans.importer import import_name
 
+# Days a plan change is priced for when the account has no expiry date.
+NO_EXPIRY_CHANGE_PERIOD = 30
+
 
 class PlanChangePolicy(object):
     def _calculate_day_cost(self, plan, period):
@@ -49,8 +52,13 @@ class PlanChangePolicy(object):
     def get_change_price(self, plan_old, plan_new, period):
         """
         Calculates total price of plan change. Returns None if no payment is required.
+
+        ``period`` None (an account without expiry) is priced for
+        ``NO_EXPIRY_CHANGE_PERIOD`` days.
         """
-        if period is None or period < 1:
+        if period is None:
+            period = NO_EXPIRY_CHANGE_PERIOD
+        if period < 1:
             return None
 
         plan_old_day_cost = self._calculate_day_cost(plan_old, period)
@@ -126,7 +134,7 @@ def get_change_price(userplan, plan):
     if userplan.expire is not None:
         period = userplan.days_left()
     else:
-        # Use the default period of the new plan
-        period = 30
+        # Policies overriding get_change_price() may not handle None.
+        period = NO_EXPIRY_CHANGE_PERIOD
 
     return policy.get_change_price(userplan.plan, plan, period)

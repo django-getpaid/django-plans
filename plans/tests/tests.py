@@ -2170,6 +2170,12 @@ class PlanChangePolicyTestCase(TestCase):
         self.assertEqual(self.policy.get_change_price(p1, p2, -53), None)
         self.assertEqual(self.policy.get_change_price(p1, p2, 0), None)
 
+    def test_get_change_price_without_expiry(self):
+        p1 = Plan.objects.get(pk=3)
+        p2 = Plan.objects.get(pk=4)
+        self.assertEqual(self.policy.get_change_price(p1, p2, None), Decimal("10.20"))
+        self.assertEqual(self.policy.get_change_price(p2, p1, None), None)
+
 
 class StandardPlanChangePolicyTestCase(TestCase):
     fixtures = ["initial_plan", "test_django-plans_auth", "test_django-plans_plans"]

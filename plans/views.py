@@ -35,7 +35,6 @@ from plans.base.models import (
     AbstractUserPlan,
 )
 from plans.forms import BillingInfoForm, CreateOrderForm, FakePaymentsForm
-from plans.importer import import_name
 from plans.mixins import LoginRequired
 from plans.plan_change import get_change_price
 from plans.signals import order_started
@@ -207,16 +206,7 @@ class ChangePlanView(LoginRequired, View):
             & (Q(customized=request.user) | Q(customized__isnull=True)),
         )
         if request.user.userplan.plan != plan:
-            policy = import_name(
-                getattr(
-                    settings,
-                    "PLANS_CHANGE_POLICY",
-                    "plans.plan_change.StandardPlanChangePolicy",
-                )
-            )()
-
-            period = request.user.userplan.days_left()
-            price = policy.get_change_price(request.user.userplan.plan, plan, period)
+            price = get_change_price(request.user.userplan, plan)
 
             if price is None:
                 request.user.userplan.extend_account(plan, None)
