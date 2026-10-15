@@ -1,6 +1,15 @@
 django-plans changelog
 ======================
 
+Unreleased
+----------
+
+* **Fix**: plan change now requires payment when the account has no expiry
+  date and the new plan costs more, as the plan change order page already
+  priced it. ``PlanChangePolicy.get_change_price()`` prices ``period=None``
+  (an account without expiry) for ``plans.plan_change.NO_EXPIRY_CHANGE_PERIOD``
+  (30) days.
+
 2.8.1 (2026-10-12)
 ------------------
 

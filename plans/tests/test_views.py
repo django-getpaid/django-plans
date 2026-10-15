@@ -1,9 +1,16 @@
+from datetime import timedelta
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils.timezone import localdate
 from model_bakery import baker
 
+from plans.base.models import AbstractPlan
+
 User = get_user_model()
+Plan = AbstractPlan.get_concrete_model()
 
 
 def print_response(response):
@@ -56,6 +63,95 @@ class ChangePlanViewTests(TestCase):
         self.assertRedirects(response, "/plan/upgrade/")
         user_plan.refresh_from_db()
         self.assertEqual(user_plan.plan, plan)
+
+    def make_paid_plan(self, monthly_price):
+        plan = baker.make("Plan", available=True, visible=True)
+        baker.make(
+            "PlanPricing",
+            plan=plan,
+            pricing__period=30,
+            price=Decimal(monthly_price),
+        )
+        return plan
+
+    def post_change(self, user, plan):
+        self.client.force_login(user)
+        return self.client.post(reverse("change_plan", kwargs={"pk": plan.pk}))
+
+    def test_post_free_plan_to_paid_plan_requires_payment(self):
+        user = baker.make(User)
+        free_plan = baker.make("Plan", default=True)
+        user_plan = baker.make("UserPlan", user=user, plan=free_plan, expire=None)
+        paid_plan = self.make_paid_plan("20.00")
+
+        response = self.post_change(user, paid_plan)
+
+        self.assertEqual(response.status_code, 403)
+        user_plan.refresh_from_db()
+        self.assertEqual(user_plan.plan, free_plan)
+        self.assertIsNone(user_plan.expire)
+
+    def test_post_downgrade_to_cheaper_plan_keeps_expiry(self):
+        user = baker.make(User)
+        expensive_plan = self.make_paid_plan("20.00")
+        cheaper_plan = self.make_paid_plan("10.00")
+        expire = localdate() + timedelta(days=10)
+        user_plan = baker.make(
+            "UserPlan", user=user, plan=expensive_plan, expire=expire
+        )
+
+        response = self.post_change(user, cheaper_plan)
+
+        self.assertRedirects(response, "/plan/upgrade/")
+        user_plan.refresh_from_db()
+        self.assertEqual(user_plan.plan, cheaper_plan)
+        self.assertEqual(user_plan.expire, expire)
+
+    def test_post_expired_account_to_paid_plan_stays_expired(self):
+        """With no days left there is nothing to charge for, and nothing to gain:
+        the expiry stays in the past, so the default plan applies until an
+        order extends the account."""
+        user = baker.make(User)
+        default_plan = baker.make("Plan", default=True)
+        cheaper_plan = self.make_paid_plan("10.00")
+        expensive_plan = self.make_paid_plan("20.00")
+        expire = localdate() - timedelta(days=3)
+        user_plan = baker.make("UserPlan", user=user, plan=cheaper_plan, expire=expire)
+
+        response = self.post_change(user, expensive_plan)
+
+        self.assertRedirects(response, "/plan/upgrade/")
+        user_plan.refresh_from_db()
+        self.assertEqual(user_plan.plan, expensive_plan)
+        self.assertEqual(user_plan.expire, expire)
+        self.assertEqual(
+            Plan.get_current_plan(User.objects.get(pk=user.pk)), default_plan
+        )
+
+    def test_post_paid_plan_without_expiry_to_pricier_plan_requires_payment(self):
+        user = baker.make(User)
+        cheaper_plan = self.make_paid_plan("10.00")
+        expensive_plan = self.make_paid_plan("20.00")
+        user_plan = baker.make("UserPlan", user=user, plan=cheaper_plan, expire=None)
+
+        response = self.post_change(user, expensive_plan)
+
+        self.assertEqual(response.status_code, 403)
+        user_plan.refresh_from_db()
+        self.assertEqual(user_plan.plan, cheaper_plan)
+
+    def test_post_paid_plan_without_expiry_to_cheaper_plan_keeps_no_expiry(self):
+        user = baker.make(User)
+        expensive_plan = self.make_paid_plan("20.00")
+        cheaper_plan = self.make_paid_plan("10.00")
+        user_plan = baker.make("UserPlan", user=user, plan=expensive_plan, expire=None)
+
+        response = self.post_change(user, cheaper_plan)
+
+        self.assertRedirects(response, "/plan/upgrade/")
+        user_plan.refresh_from_db()
+        self.assertEqual(user_plan.plan, cheaper_plan)
+        self.assertIsNone(user_plan.expire)
 
 
 class CreateOrderPlanChangeViewTests(TestCase):
