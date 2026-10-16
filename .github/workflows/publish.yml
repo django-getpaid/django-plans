@@ -12,6 +12,10 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Must match the environment of the trusted publisher configured on PyPI.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/django-plans
     permissions:
       contents: read
       id-token: write  # Required for trusted publishing
@@ -36,6 +40,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          # Note: If password is provided, it will use API token authentication
-          # Otherwise, it will attempt trusted publishing (requires Manager/Owner on PyPI)
