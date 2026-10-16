@@ -10,7 +10,14 @@ on:
                  # This matches our historical tag naming convention
 
 jobs:
+  tests:
+    uses: ./.github/workflows/main.yml
+    permissions:
+      contents: read
+      id-token: write  # Codecov's OIDC upload in the test jobs
+
   publish:
+    needs: tests
     runs-on: ubuntu-latest
     # Must match the environment of the trusted publisher configured on PyPI.
     environment:
