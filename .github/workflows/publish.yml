@@ -1,8 +1,8 @@
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
+  # A tag push is the only trigger: a GitHub release for the same tag would
+  # start a second upload of files PyPI already has, which fails.
   push:
     tags:
       - '*.*.*'  # Matches semantic version tags like 2.0.0, 1.2.0, etc.
