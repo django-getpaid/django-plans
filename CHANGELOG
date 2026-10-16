@@ -1,6 +1,13 @@
 django-plans changelog
 ======================
 
+Unreleased
+----------
+
+* **Supported versions**: dropped Python 3.9 (end of life since October
+  2025); ``requires-python`` is now ``>=3.10``. Django 4.2 stays tested on
+  Python 3.10-3.12.
+
 2.8.2 (2026-10-15)
 ------------------
 
