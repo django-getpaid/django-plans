@@ -1,8 +1,8 @@
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
+  # A tag push is the only trigger: a GitHub release for the same tag would
+  # start a second upload of files PyPI already has, which fails.
   push:
     tags:
       - '*.*.*'  # Matches semantic version tags like 2.0.0, 1.2.0, etc.
@@ -10,8 +10,19 @@ on:
                  # This matches our historical tag naming convention
 
 jobs:
+  tests:
+    uses: ./.github/workflows/main.yml
+    permissions:
+      contents: read
+      id-token: write  # Codecov's OIDC upload in the test jobs
+
   publish:
+    needs: tests
     runs-on: ubuntu-latest
+    # Must match the environment of the trusted publisher configured on PyPI.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/django-plans
     permissions:
       contents: read
       id-token: write  # Required for trusted publishing
@@ -36,6 +47,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          # Note: If password is provided, it will use API token authentication
-          # Otherwise, it will attempt trusted publishing (requires Manager/Owner on PyPI)

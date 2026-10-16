@@ -13,6 +13,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+  # publish.yml runs these jobs on the tagged commit before uploading it
+  workflow_call:
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -26,7 +29,6 @@ jobs:
       matrix:
         # Each Django version on the Python versions it supports.
         include:
-          - {DJANGO_VERSION: '4.2.*', python-version: '3.9'}
           - {DJANGO_VERSION: '4.2.*', python-version: '3.10'}
           - {DJANGO_VERSION: '4.2.*', python-version: '3.11'}
           - {DJANGO_VERSION: '4.2.*', python-version: '3.12'}
@@ -72,7 +74,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ hashFiles('setup.py') }}-${{ hashFiles('demo/requirements.txt') }}-${{ matrix.DJANGO_VERSION }}
+          key: ${{ hashFiles('pyproject.toml') }}-${{ hashFiles('demo/requirements.txt') }}-${{ matrix.DJANGO_VERSION }}
 
       - name: Install
         run: |
@@ -83,15 +85,7 @@ jobs:
            pip install -q Django==${{ matrix.DJANGO_VERSION }} --pre
 
       - name: Run migration check
-        run: |
-          OUTPUT=$(python demo/manage.py makemigrations --dry-run plans)
-          echo $OUTPUT | grep "No changes detected" &>/dev/null &&
-            echo "SUCCESS: Migrations check successful!" ||
-              {
-                echo $OUTPUT
-                echo "ERROR: Migrations check failed! Models' changes not migrated, please run './manage.py makemigrations' to solve the issue!" 1>&2;
-                FAILURE=1
-              }
+        run: python demo/manage.py makemigrations --check --dry-run plans
 
       - name: Test fresh migration from scratch
         run: |
