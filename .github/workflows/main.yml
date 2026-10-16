@@ -71,7 +71,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ hashFiles('setup.py') }}-${{ hashFiles('demo/requirements.txt') }}-${{ matrix.DJANGO_VERSION }}
+          key: ${{ hashFiles('pyproject.toml') }}-${{ hashFiles('demo/requirements.txt') }}-${{ matrix.DJANGO_VERSION }}
 
       - name: Install
         run: |
