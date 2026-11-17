@@ -3,9 +3,10 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+from django.conf import settings
 from django.core.cache import cache
 from requests.exceptions import ConnectionError, Timeout
-from zeep import Client
+from zeep import Client, Transport
 from zeep.exceptions import Fault, TransportError, XMLSyntaxError
 
 logger = logging.getLogger("plans.taxation.tedb")
@@ -20,6 +21,7 @@ class TEDBClient:
     WSDL_URL = "https://ec.europa.eu/taxation_customs/tedb/ws/VatRetrievalService.wsdl"
     CACHE_TIMEOUT = 3600 * 24  # 24 hours
     CACHE_KEY_PREFIX = "tedb_vat_rate"
+    DEFAULT_TIMEOUT = 10
 
     def __init__(self):
         self.client = None
@@ -27,8 +29,10 @@ class TEDBClient:
 
     def _initialize_client(self):
         """Initialize SOAP client with error handling."""
+        timeout = getattr(settings, "PLANS_TEDB_TIMEOUT", self.DEFAULT_TIMEOUT)
+        transport = Transport(timeout=timeout, operation_timeout=timeout)
         try:
-            self.client = Client(self.WSDL_URL)
+            self.client = Client(self.WSDL_URL, transport=transport)
             logger.info("TEDB SOAP client initialized successfully")
         except (ConnectionError, Timeout, TransportError, Fault, XMLSyntaxError) as e:
             logger.error(f"Failed to initialize TEDB SOAP client: {e}")

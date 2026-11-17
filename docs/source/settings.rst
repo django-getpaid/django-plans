@@ -403,6 +403,21 @@ Example::
 
 Further reading: :doc:`taxation`
 
+.. _settings-TEDB_TIMEOUT:
+
+``PLANS_TEDB_TIMEOUT``
+----------------------
+
+**Optional**
+
+Seconds ``EUTaxationPolicy`` waits for the EU TEDB service, for the WSDL download and for each VAT rate request. When TEDB does not answer in time, the static rate table is used. Failed lookups are not cached, so during a TEDB outage every order creation waits up to this long per rate lookup.
+
+Example::
+
+    PLANS_TEDB_TIMEOUT = 5
+
+Default: ``10``
+
 ``PLANS_DEFAULT_COUNTRY``
 -------------------------
 

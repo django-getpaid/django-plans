@@ -1,6 +1,16 @@
 django-plans changelog
 ======================
 
+unreleased
+----------
+
+* **Fix**: requests to the EU TEDB VAT-rate service give up after
+  ``PLANS_TEDB_TIMEOUT`` seconds (default 10) and the static rate table is
+  used. zeep's defaults allowed 300 s for the WSDL download and no limit for
+  the rate request, so a stalled TEDB held every order creation, including
+  subscription renewals inside a payment notification, until the server
+  dropped the connection.
+
 2.9.0 (2026-10-29)
 ------------------
 
