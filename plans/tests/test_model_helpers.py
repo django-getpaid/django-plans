@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 from django.utils import translation
 from django.utils.timezone import make_aware
@@ -101,3 +102,57 @@ class InvoiceLanguageTests(UserLanguageTestCase):
             invoice.send_invoice_by_email()
 
         self.assertEqual(mail.outbox, [])
+
+
+class OrderHelperTests(UserLanguageTestCase):
+    def test_flat_name_replaces_the_plan_name(self):
+        self.assertEqual(
+            self._order(flat_name="Legacy subscription").name, "Legacy subscription"
+        )
+
+    def test_invoices_are_listed_by_type(self):
+        """Saving an order with billing info issues its proforma right away."""
+        self._billing_info()
+        order = self._order()
+        proforma = Invoice.proforma.get(order=order)
+        invoice = Invoice.create(order, Invoice.INVOICE_TYPES.INVOICE)
+        duplicate = Invoice.create(order, Invoice.INVOICE_TYPES.DUPLICATE)
+        credit_note = invoice.cancel_invoice()
+
+        self.assertEqual(list(order.get_invoices()), [invoice])
+        self.assertEqual(list(order.get_invoices_proforma()), [proforma])
+        self.assertEqual(list(Invoice.duplicates.filter(order=order)), [duplicate])
+        self.assertEqual(list(order.get_credit_notes()), [credit_note])
+
+    def test_plan_pricing_of_the_order(self):
+        self.assertEqual(self._order().get_plan_pricing(), self.plan_pricing)
+
+
+class UserPlanHelperTests(UserLanguageTestCase):
+    def test_current_plan_of_an_active_account(self):
+        UserPlan.objects.filter(user=self.customer).update(
+            plan=self.plan_pricing.plan, expire=None
+        )
+
+        self.assertEqual(
+            UserPlan.objects.get(user=self.customer).get_current_plan(),
+            self.plan_pricing.plan,
+        )
+
+    def test_reducing_without_a_pricing_keeps_the_expiry(self):
+        user_plan = UserPlan.objects.get(user=self.customer)
+        user_plan.expire = date(2024, 2, 14)
+
+        self.assertEqual(user_plan.get_plan_reduced_until(None), date(2024, 2, 14))
+
+
+class InvoiceNumberingTests(UserLanguageTestCase):
+    @override_settings(PLANS_INVOICE_COUNTER_RESET="weekly")
+    def test_unknown_counter_reset_is_a_configuration_error(self):
+        self._billing_info()
+
+        with self.assertRaisesMessage(
+            ImproperlyConfigured,
+            "PLANS_INVOICE_COUNTER_RESET can be set only to these values",
+        ):
+            Invoice.create(self._order(), Invoice.INVOICE_TYPES.INVOICE)
