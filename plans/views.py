@@ -4,7 +4,6 @@ from itertools import chain
 
 from django.conf import settings
 from django.contrib import messages
-from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Q
 from django.http import Http404, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -375,12 +374,7 @@ class OrderListView(LoginRequired, ListView):
 
     def get_context_data(self, **kwargs):
         context = super(OrderListView, self).get_context_data(**kwargs)
-        self.CURRENCY = getattr(settings, "PLANS_CURRENCY", None)
-        if len(self.CURRENCY) != 3:
-            raise ImproperlyConfigured(
-                "PLANS_CURRENCY should be configured as 3-letter currency code."
-            )
-        context["CURRENCY"] = self.CURRENCY
+        context["CURRENCY"] = get_currency()
         return context
 
     def get_queryset(self):
@@ -544,9 +538,6 @@ class FakePaymentsView(LoginRequired, SingleObjectMixin, FormView):
     form_class = FakePaymentsForm
     model = Order
     template_name = "plans/fake_payments.html"
-
-    def get_success_url(self):
-        return self.object.get_absolute_url()
 
     def get_queryset(self):
         return (

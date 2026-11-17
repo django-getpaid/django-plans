@@ -3,7 +3,6 @@ import logging
 from django.apps import apps
 from django.conf import settings
 from django.core import mail
-from django.core.exceptions import ImproperlyConfigured
 from django.template import loader
 from django.template.exceptions import TemplateDoesNotExist
 from django.utils import translation
@@ -52,14 +51,9 @@ def send_template_email(recipients, title_template, body_template, context, lang
     except TemplateDoesNotExist:
         html_body = None
 
-    try:
-        email_from = getattr(settings, "DEFAULT_FROM_EMAIL")
-    except AttributeError:
-        raise ImproperlyConfigured(
-            "DEFAULT_FROM_EMAIL setting needed for sending e-mails"
-        )
-
-    mail.send_mail(title, body, email_from, recipients, html_message=html_body)
+    mail.send_mail(
+        title, body, settings.DEFAULT_FROM_EMAIL, recipients, html_message=html_body
+    )
 
     if language is not None:
         translation.deactivate()
