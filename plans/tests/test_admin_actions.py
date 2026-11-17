@@ -344,6 +344,7 @@ class AdminPagesTests(AdminTestCase):
             reverse("admin:plans_invoice_change", args=(invoice.pk,)),
             reverse("admin:plans_order_change", args=(invoice.order.pk,)),
             reverse("admin:plans_plan_change", args=(invoice.order.plan.pk,)),
+            reverse("admin:plans_pricing_change", args=(self.plan_pricing.pricing.pk,)),
         ):
             with self.subTest(url=url):
                 self.assertEqual(self.client.get(url).status_code, 200)
