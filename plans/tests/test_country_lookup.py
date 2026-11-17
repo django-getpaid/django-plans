@@ -32,6 +32,13 @@ class CountryLookupHookTests(SimpleTestCase):
         self.assertEqual(get_country_code(RequestFactory().get("/")), "CZ")
 
 
+class IpCountryLookupTests(SimpleTestCase):
+    @override_settings(PLANS_GET_COUNTRY_FROM_IP=True, PLANS_DEFAULT_COUNTRY="CZ")
+    def test_without_geolite2_the_default_country_applies(self):
+        with mock.patch.dict("sys.modules", {"geolite2": None}):
+            self.assertEqual(get_country_code(RequestFactory().get("/")), "CZ")
+
+
 @mock.patch("plans.checks.find_spec", return_value=None)
 class CountryLookupCheckTests(SimpleTestCase):
     @override_settings(PLANS_GET_COUNTRY_FROM_IP=True)

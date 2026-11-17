@@ -6,7 +6,12 @@ from example.foo.models import Foo
 from example.foo.validators import MaxFoosValidator, max_foos_validator
 from model_bakery import baker
 
-from plans.validators import ModelAttributeValidator, QuotaValidator, plan_validation
+from plans.validators import (
+    ModelAttributeValidator,
+    ModelCountValidator,
+    QuotaValidator,
+    plan_validation,
+)
 
 User = get_user_model()
 
@@ -67,6 +72,29 @@ class ModelCountValidatorTests(QuotaValidatorTestCase):
         ):
             NoCodeValidator().get_quota_value(self.user, {})
 
+    def test_validator_without_a_model_is_a_configuration_error(self):
+        class NoModelValidator(ModelCountValidator):
+            code = "MAX_FOO_COUNT"
+
+        with self.assertRaisesMessage(
+            ImproperlyConfigured, "ModelCountValidator requires model name"
+        ):
+            NoModelValidator()(self.user)
+
+
+class QuotaValidatorDefaultsTests(QuotaValidatorTestCase):
+    def test_base_validator_reports_a_generic_error(self):
+        class AnyQuotaValidator(QuotaValidator):
+            code = "MAX_FOO_COUNT"
+
+        validator = AnyQuotaValidator()
+
+        self.assertEqual(validator.get_error_message(1), "Plan validation error")
+        self.assertEqual(
+            validator.get_error_params(1),
+            {"quota": 1, "validator_codename": "MAX_FOO_COUNT"},
+        )
+
 
 class ModelAttributeValidatorTests(QuotaValidatorTestCase):
     def test_objects_within_the_limit_pass(self):
@@ -74,6 +102,19 @@ class ModelAttributeValidatorTests(QuotaValidatorTestCase):
         baker.make(Foo, user=self.user, name="ten chars!")
 
         self.assertIsNone(LongNameValidator()(self.user))
+
+    def test_validator_without_an_attribute_is_a_configuration_error(self):
+        class NoAttributeValidator(ModelAttributeValidator):
+            code = "MAX_FOO_NAME_LENGTH"
+            model = Foo
+
+        baker.make(Foo, user=self.user)
+
+        with self.assertRaisesMessage(
+            ImproperlyConfigured,
+            "ModelAttributeValidator requires defining attribute name",
+        ):
+            NoAttributeValidator()(self.user)
 
     def test_objects_over_the_limit_are_linked_in_the_error(self):
         baker.make(Foo, user=self.user, name="short")
