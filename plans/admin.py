@@ -148,9 +148,6 @@ class PlanAdmin(OrderedModelAdmin):
         copy_plan,
     ]
 
-    def queryset(self, request):
-        return super(PlanAdmin, self).queryset(request).select_related("customized")
-
 
 class BillingInfoAdmin(UserLinkMixin, admin.ModelAdmin):
     search_fields = ("user__username", "user__email", "tax_number", "name")
@@ -249,13 +246,6 @@ class OrderAdmin(admin.ModelAdmin):
         if obj.amount is None:
             return None
         return obj.tax_total()
-
-    def queryset(self, request):
-        return (
-            super(OrderAdmin, self)
-            .queryset(request)
-            .select_related("plan", "pricing", "user")
-        )
 
 
 def cancel_selected_invoices(modeladmin, request, queryset):

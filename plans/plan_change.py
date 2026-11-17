@@ -26,9 +26,6 @@ class PlanChangePolicy(object):
                 "pricing__period", "-has_automatic_renewal", "price", "pk"
             ).select_related("pricing")
         )
-        if not plan_pricings:
-            raise ValueError("Plan %s has no pricings." % plan)
-
         fitting = [pp for pp in plan_pricings if pp.pricing.period <= period]
         if fitting:
             # The longest pricing that fits in the period.
