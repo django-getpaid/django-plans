@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-unreleased
-----------
+2.10.0 (2026-11-17)
+-------------------
 
 * **Supported versions**: dropped Django 4.2, 5.0 and 5.1 and Python 3.10,
   which no longer get security fixes (Django 4.2 since April 2026, Python
@@ -13,6 +13,13 @@ unreleased
   unfinished stub that returned a 0 % tax for every order.
 * **Removed**: the django-getpaid ``user_data_query`` receiver; current
   django-getpaid no longer sends that signal.
+* **Removed**: ``PlanAdmin.queryset`` and ``OrderAdmin.queryset`` (Django
+  has called ``get_queryset`` since 1.6, so they never ran) and
+  ``FakePaymentsView.get_success_url`` (its ``form_valid`` always redirects
+  itself).
+* **Changed**: ``OrderListView`` reads the currency through
+  ``plans.utils.get_currency``, so an unset or malformed ``PLANS_CURRENCY``
+  raises ``ImproperlyConfigured`` instead of ``TypeError``.
 * **Fix**: requests to the EU TEDB VAT-rate service give up after
   ``PLANS_TEDB_TIMEOUT`` seconds (default 10) and the static rate table is
   used. zeep's defaults allowed 300 s for the WSDL download and no limit for
