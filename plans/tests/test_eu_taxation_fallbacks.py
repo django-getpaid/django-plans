@@ -38,6 +38,29 @@ class EUTaxationFallbackTests(TestCase):
             )
             self.assertEqual(EUTaxationPolicy.get_default_tax(), Decimal("23"))
 
+    def test_static_table_is_used_when_the_rate_lookup_returns_none(self):
+        """``_get_vat_rate_from_tedb`` may return None; overrides and mocks do."""
+        with mock.patch.object(
+            EUTaxationPolicy, "_get_vat_rate_from_tedb", return_value=None
+        ):
+            self.assertEqual(
+                EUTaxationPolicy.get_tax_rate(None, "DE"), (Decimal("19"), True)
+            )
+            with mock.patch.object(
+                EUTaxationPolicy, "validate_vies", return_value=False
+            ):
+                self.assertEqual(
+                    EUTaxationPolicy.get_tax_rate("DE123456789", "DE"),
+                    (Decimal("19"), True),
+                )
+            with mock.patch.object(
+                EUTaxationPolicy, "validate_vies", side_effect=TimeoutError
+            ):
+                self.assertEqual(
+                    EUTaxationPolicy.get_tax_rate("DE123456789", "DE"),
+                    (Decimal("19"), False),
+                )
+
     def test_lower_case_country_codes_are_taxed_like_upper_case_ones(self):
         with tedb_answering(return_value=None):
             self.assertEqual(

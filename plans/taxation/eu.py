@@ -187,7 +187,10 @@ class EUTaxationPolicy(TaxationPolicy):
             if cls.is_in_EU(country_code):
                 # Customer (private person) is from a EU
                 # Customer pays his VAT rate
-                return cls._get_vat_rate_from_tedb(country_code), True
+                rate = cls._get_vat_rate_from_tedb(country_code)
+                if rate is not None:
+                    return rate, True
+                return cls.EU_COUNTRIES_VAT[country_code], True
             else:
                 # Customer (private person) not from EU
                 # VAT n/a
@@ -211,7 +214,10 @@ class EUTaxationPolicy(TaxationPolicy):
                         # Charge back
                         return None, True
                     else:
-                        return cls._get_vat_rate_from_tedb(country_code), True
+                        rate = cls._get_vat_rate_from_tedb(country_code)
+                        if rate is not None:
+                            return rate, True
+                        return cls.EU_COUNTRIES_VAT[country_code], True
                 except (
                     Fault,
                     TransportError,
@@ -236,7 +242,10 @@ class EUTaxationPolicy(TaxationPolicy):
                             ),
                         )
                     logger.exception("TAX_ID=%s" % (tax_id))
-                    return cls._get_vat_rate_from_tedb(country_code), False
+                    rate = cls._get_vat_rate_from_tedb(country_code)
+                    if rate is not None:
+                        return rate, False
+                    return cls.EU_COUNTRIES_VAT[country_code], False
             else:
                 # Company is not from EU
                 # VAT n/a
