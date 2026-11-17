@@ -1738,16 +1738,16 @@ class AbstractInvoice(BaseMixin, models.Model):
 
     @classmethod
     def create(cls, order, invoice_type):
-        language_code = get_user_language(order.user)
-
-        if language_code is not None:
-            translation.activate(language_code)
-
         BillingInfo = AbstractBillingInfo.get_concrete_model()
         try:
             billing_info = BillingInfo.objects.get(user=order.user)
         except BillingInfo.DoesNotExist:
             return
+
+        language_code = get_user_language(order.user)
+
+        if language_code is not None:
+            translation.activate(language_code)
 
         day = localdate()
         pday = order.completed

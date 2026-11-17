@@ -40,6 +40,9 @@ unreleased
 * **Fix**: ``EUTaxationPolicy.get_tax_rate`` raised ``KeyError`` for a
   lower-case EU country code (``"de"``) and treated ``"gr"`` as outside the
   EU; country codes are now upper-cased first.
+* **Fix**: ``Invoice.create`` for a user without billing info left the
+  user's language (from the ``user_language`` signal) active in the thread,
+  so whatever the request or task rendered next came out in that language.
 
 2.9.0 (2026-10-29)
 ------------------
