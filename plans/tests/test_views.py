@@ -2,15 +2,24 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.timezone import localdate
 from model_bakery import baker
 
-from plans.base.models import AbstractPlan
+from plans.base.models import (
+    AbstractOrder,
+    AbstractPlan,
+    AbstractPlanPricing,
+    AbstractUserPlan,
+)
 
 User = get_user_model()
+Order = AbstractOrder.get_concrete_model()
 Plan = AbstractPlan.get_concrete_model()
+PlanPricing = AbstractPlanPricing.get_concrete_model()
+UserPlan = AbstractUserPlan.get_concrete_model()
 
 
 def print_response(response):
@@ -299,3 +308,167 @@ class FakePaymentViewTests(TestCase):
             f"/plan/order/{order.pk}/payment/failure/",
             fetch_redirect_response=False,
         )
+
+
+def message_texts(response):
+    return [str(message) for message in get_messages(response.wsgi_request)]
+
+
+class AccountActivationOverLimitTests(TestCase):
+    def test_account_over_its_plan_limits_stays_inactive(self):
+        user = baker.make(User)
+        plan = baker.make("Plan")
+        quota = baker.make("Quota", codename="MAX_FOO_COUNT")
+        baker.make("PlanQuota", plan=plan, quota=quota, value=1)
+        baker.make("UserPlan", user=user, plan=plan, active=False, expire=None)
+        baker.make("foo.Foo", user=user, _quantity=2)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("account_activation"))
+
+        self.assertContains(response, "<h1>Activation failed</h1>", html=True)
+        self.assertFalse(UserPlan.objects.get(user=user).active)
+        self.assertEqual(
+            message_texts(response), ["Limit of foos exceeded. The limit is 1 items."]
+        )
+
+
+class CreateOrderViewTests(TestCase):
+    fixtures = ["initial_plan", "test_django-plans_auth", "test_django-plans_plans"]
+
+    def setUp(self):
+        self.user = baker.make(User, username="customer")
+        UserPlan.objects.filter(user=self.user).update(
+            plan=Plan.objects.get(name="Free"), expire=None
+        )
+        baker.make(
+            "BillingInfo",
+            user=self.user,
+            name="Customer Ltd",
+            country="US",
+            tax_number="",
+        )
+        self.plan_pricing = PlanPricing.objects.get(
+            plan__name="Standard", pricing__period=30
+        )
+        self.url = reverse("create_order_plan", kwargs={"pk": self.plan_pricing.pk})
+        self.client.force_login(self.user)
+
+    def test_get_shows_the_order_to_confirm_without_creating_it(self):
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "<h1>Confirm order</h1>", html=True)
+        order = response.context["object"]
+        self.assertEqual(order.amount, Decimal("10.00"))
+        self.assertIsNone(order.tax)
+        self.assertFalse(Order.objects.filter(user=self.user).exists())
+
+    def test_post_creates_a_new_order_for_the_plan_price(self):
+        response = self.client.post(self.url)
+
+        order = Order.objects.get(user=self.user)
+        self.assertRedirects(response, reverse("order", kwargs={"pk": order.pk}))
+        self.assertEqual(order.status, Order.STATUS.NEW)
+        self.assertEqual(order.plan, self.plan_pricing.plan)
+        self.assertEqual(order.pricing, self.plan_pricing.pricing)
+        self.assertEqual(order.amount, Decimal("10.00"))
+        self.assertIsNone(order.tax)
+        self.assertEqual(order.currency, "EUR")
+
+    def test_running_paid_plan_is_changed_not_ordered_again(self):
+        UserPlan.objects.filter(user=self.user).update(
+            plan=Plan.objects.get(name="Premium"),
+            expire=localdate() + timedelta(days=10),
+        )
+
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.assertEqual(self.client.post(self.url).status_code, 404)
+        self.assertFalse(Order.objects.filter(user=self.user).exists())
+
+    def test_plan_customized_for_another_user_cannot_be_ordered(self):
+        other_users_pricing = PlanPricing.objects.filter(plan__name="Custom 2").first()
+
+        response = self.client.post(
+            reverse("create_order_plan", kwargs={"pk": other_users_pricing.pk})
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(Order.objects.filter(user=self.user).exists())
+
+    def test_plan_too_small_for_the_account_is_flagged(self):
+        quota = baker.make("Quota", codename="MAX_FOO_COUNT")
+        baker.make("PlanQuota", plan=self.plan_pricing.plan, quota=quota, value=1)
+        baker.make("foo.Foo", user=self.user, _quantity=2)
+
+        response = self.client.get(self.url)
+
+        (message,) = message_texts(response)
+        self.assertIn("The selected plan is insufficient for your account.", message)
+        self.assertIn("Limit of foos exceeded. The limit is 1 items.", message)
+
+
+class PricingViewTests(TestCase):
+    fixtures = ["initial_plan", "test_django-plans_auth", "test_django-plans_plans"]
+
+    def test_anonymous_visitor_sees_only_public_plans(self):
+        response = self.client.get(reverse("pricing"))
+
+        self.assertContains(
+            response, '<span class="plan_name">Premium</span>', html=True
+        )
+        for customized in ("Custom", "Custom 2"):
+            self.assertNotContains(
+                response, f'<span class="plan_name">{customized}</span>', html=True
+            )
+
+    def test_user_sees_the_plan_customized_for_them_only(self):
+        self.client.force_login(User.objects.get(username="test1"))
+
+        response = self.client.get(reverse("pricing"))
+
+        self.assertContains(
+            response, '<span class="plan_name">Custom</span>', html=True
+        )
+        self.assertNotContains(
+            response, '<span class="plan_name">Custom 2</span>', html=True
+        )
+
+
+class InvoiceDetailSuperuserTests(TestCase):
+    def test_superuser_sees_another_users_invoice(self):
+        customer = baker.make(User)
+        order = baker.make("Order", user=customer, plan__name="Foo plan")
+        invoice = baker.make("Invoice", order=order, user=customer, total=123)
+        self.client.force_login(baker.make(User, is_superuser=True))
+
+        response = self.client.get(
+            reverse("invoice_preview_html", kwargs={"pk": invoice.pk})
+        )
+
+        self.assertContains(
+            response, '<td class="number">123.00&nbsp;EUR</td>', html=True
+        )
+
+
+class BillingInfoViewsTests(TestCase):
+    def test_deleting_missing_billing_info_is_not_found(self):
+        self.client.force_login(baker.make(User))
+
+        response = self.client.get(reverse("billing_info_delete"))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_old_billing_urls_redirect_with_the_query_string(self):
+        self.client.force_login(baker.make(User))
+        for name in ("billing_info_create", "billing_info_update"):
+            with self.subTest(name=name):
+                with self.assertWarnsMessage(
+                    DeprecationWarning, "This view URL is deprecated."
+                ):
+                    response = self.client.get(reverse(name) + "?next=/plan/order/")
+
+                self.assertRedirects(
+                    response,
+                    reverse("billing_info") + "?next=/plan/order/",
+                    fetch_redirect_response=False,
+                )
