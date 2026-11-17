@@ -74,15 +74,3 @@ try:
 
 except ImportError:
     pass
-
-
-# Hook to django-getpaid if it is installed
-try:
-    from getpaid.signals import user_data_query
-
-    @receiver(user_data_query)
-    def set_user_email_for_getpaid(sender, order, user_data, **kwargs):
-        user_data["email"] = order.user.email
-
-except ImportError:
-    pass

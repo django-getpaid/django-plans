@@ -29,15 +29,6 @@ The EU taxation policy now includes automatic VAT rate updates via the European 
 .. note::
     This taxation policy requires ``zeep`` and ``python-stdnum`` modules (connecting to `VIES <http://ec.europa.eu/taxation_customs/vies/>`_ and `TEDB <https://ec.europa.eu/taxation_customs/tedb/>`_). These are automatically installed with django-plans.
 
-``RussianTaxationPolicy``
--------------------------
-
-FIXME: under developement
-
-.. autoclass:: plans.taxation.ru.RussianTaxationPolicy
-    :members:
-    :undoc-members:
-
 Tax-inclusive orders
 --------------------
 

@@ -27,7 +27,9 @@ See [tox.ini](tox.ini).
 To run the suite without a local PostgreSQL server (a handful of
 concurrency/constraint tests are expected to fail on SQLite):
 
-
+```
+DJANGO_SETTINGS_MODULE=example.settings_sqlite PYTHONPATH=demo python demo/manage.py test plans
+```
 
 You can also run the tests manually in `demo/` dir (presumably using `venv`):
 

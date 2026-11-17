@@ -25,7 +25,6 @@ Contents:
    invoicing
    templating
    south
-   caveats
 
 
 Indices and tables
