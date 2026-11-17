@@ -47,3 +47,10 @@ class InitializeUserPlanTests(TestCase):
 
         user_plan.refresh_from_db()
         self.assertEqual(user_plan.expire, date(2024, 3, 1))
+
+    def test_activating_a_user_without_a_plan_does_nothing(self):
+        user = baker.make(User)
+
+        activate_user_plan.send(sender=None, user=user)
+
+        self.assertFalse(UserPlan.objects.filter(user=user).exists())

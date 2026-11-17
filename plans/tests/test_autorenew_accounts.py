@@ -1,12 +1,17 @@
 import datetime
 from decimal import Decimal
 from io import StringIO
+from unittest import mock
 
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.utils import timezone
 from model_bakery import baker
 
-from plans.models import AbstractRecurringUserPlan
+from plans.models import AbstractRecurringUserPlan, AbstractUserPlan
+from plans.tasks import autorenew_account
+
+UserPlan = AbstractUserPlan.get_concrete_model()
 
 
 class ManagementCommandTests(TestCase):
@@ -114,3 +119,52 @@ def _make_user(
         recurring__token_verified=userplan__recurring__token_verified,
         expire=userplan__expire,
     )
+    return user
+
+
+@override_settings(PLANS_AUTORENEW_SCHEDULE=[datetime.timedelta(days=3)])
+class AutorenewAccountOptionsTests(TestCase):
+    def setUp(self):
+        self.user = _make_user(
+            userplan__expire=timezone.localdate() + datetime.timedelta(days=1),
+            userplan__recurring__renewal_triggered_by=AbstractRecurringUserPlan.RENEWAL_TRIGGERED_BY.TASK,
+            userplan__recurring__token_verified=True,
+        )
+
+    def test_dry_run_reports_an_inactive_plan_would_be_activated(self):
+        UserPlan.objects.filter(user=self.user).update(active=False)
+
+        with self.assertLogs("plans.tasks", "INFO") as logs:
+            renewed = autorenew_account(dry_run=True)
+
+        self.assertEqual(list(renewed), [self.user])
+        self.assertIn(
+            f"INFO:plans.tasks:DRY RUN: Would activate userplan for user "
+            f"{self.user.pk} ({self.user.email})",
+            logs.output,
+        )
+        self.assertIsNone(
+            AbstractRecurringUserPlan.get_concrete_model()
+            .objects.get(user_plan__user=self.user)
+            .last_renewal_attempt
+        )
+
+    def test_renewals_are_spaced_by_the_throttle(self):
+        with mock.patch("plans.tasks.time.sleep") as sleep:
+            autorenew_account(throttle_seconds=2)
+
+        sleep.assert_called_once_with(2)
+
+    @override_settings(PLANS_AUTORENEW_BEFORE_DAYS=3)
+    def test_schedule_overrides_the_deprecated_before_settings(self):
+        with self.assertLogs("plans.tasks", "WARNING") as logs:
+            renewed = autorenew_account(dry_run=True)
+
+        self.assertEqual(list(renewed), [self.user])
+        self.assertEqual(
+            logs.output,
+            [
+                "WARNING:plans.tasks:PLANS_AUTORENEW_SCHEDULE is set, ignoring "
+                "PLANS_AUTORENEW_BEFORE_DAYS and PLANS_AUTORENEW_BEFORE_HOURS"
+            ],
+        )
