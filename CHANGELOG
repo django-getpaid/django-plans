@@ -37,6 +37,9 @@ unreleased
   checks the extension window from the order's local completion day.
 * **Fix**: ``send_template_email`` raised ``UnboundLocalError`` when
   ``SITE_URL`` was set.
+* **Fix**: ``EUTaxationPolicy.get_tax_rate`` raised ``KeyError`` for a
+  lower-case EU country code (``"de"``) and treated ``"gr"`` as outside the
+  EU; country codes are now upper-cased first.
 
 2.9.0 (2026-10-29)
 ------------------
