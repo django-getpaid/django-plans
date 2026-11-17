@@ -4,6 +4,15 @@ django-plans changelog
 unreleased
 ----------
 
+* **Supported versions**: dropped Django 4.2, 5.0 and 5.1 and Python 3.10,
+  which no longer get security fixes (Django 4.2 since April 2026, Python
+  3.10 since October 2026); ``requires-python`` is now ``>=3.11``. Added
+  Python 3.15 for Django 6.1. Tested on Django 5.2, 6.0 and 6.1, each on the
+  Python versions it supports.
+* **Removed**: ``plans.taxation.ru.RussianTaxationPolicy``. It was an
+  unfinished stub that returned a 0 % tax for every order.
+* **Removed**: the django-getpaid ``user_data_query`` receiver; current
+  django-getpaid no longer sends that signal.
 * **Fix**: requests to the EU TEDB VAT-rate service give up after
   ``PLANS_TEDB_TIMEOUT`` seconds (default 10) and the static rate table is
   used. zeep's defaults allowed 300 s for the WSDL download and no limit for
