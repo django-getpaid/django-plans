@@ -169,7 +169,8 @@ class EUTaxationPolicy(TaxationPolicy):
         """
         returns tax rate and if the request was successful.
         """
-        country_code = country_code_transform(country_code)
+        if country_code:
+            country_code = country_code_transform(country_code.upper())
         issuer_country_code = cls.get_issuer_country_code()
         if not cls.is_in_EU(issuer_country_code):
             raise ImproperlyConfigured(
