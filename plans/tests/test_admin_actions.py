@@ -30,6 +30,7 @@ UserPlan = AbstractUserPlan.get_concrete_model()
 
 INVOICE_CHANGELIST = "admin:plans_invoice_changelist"
 ORDER_CHANGELIST = "admin:plans_order_changelist"
+PLAN_CHANGELIST = "admin:plans_plan_changelist"
 
 
 class AdminTestCase(TestCase):
@@ -126,6 +127,33 @@ class PartialCreditNoteActionTests(AdminTestCase):
                 f"successfully for invoice {invoice.full_number}."
             ],
         )
+
+    def test_apply_returns_to_the_changelist_the_action_was_run_from(self):
+        """The redirect follows the request, not a hard-coded admin URL name.
+
+        A swapped invoice model or another admin site has a different
+        changelist URL name; the hard-coded one raised NoReverseMatch after
+        the credit note had already been saved.
+        """
+        invoice = self._invoice()
+        filtered_changelist = (
+            f"{reverse(INVOICE_CHANGELIST)}?type__exact={Invoice.INVOICE_TYPES.INVOICE}"
+        )
+
+        response = self.client.post(
+            filtered_changelist,
+            {
+                "action": "create_partial_credit_note",
+                "_selected_action": [invoice.pk],
+                "apply": "1",
+                "net_amount": "40.00",
+                "tax_amount": "9.20",
+                "reason": "Discount agreed by e-mail",
+            },
+        )
+
+        self.assertRedirects(response, filtered_changelist)
+        self.assertTrue(Invoice.credit_notes.filter(credit_note_for=invoice).exists())
 
     def test_negative_amounts_create_an_additional_charge(self):
         invoice = self._invoice()
@@ -294,6 +322,55 @@ class OrderActionsTests(AdminTestCase):
         invoice = Invoice.invoices.get(order=order)
         self.assertEqual(invoice.total, Decimal("123.00"))
         self.assertEqual(invoice.buyer_name, "Customer Ltd")
+
+
+class CopyPlanActionTests(AdminTestCase):
+    def _copy(self, plan):
+        return self.client.post(
+            reverse(PLAN_CHANGELIST),
+            {"action": "copy_plan", "_selected_action": [plan.pk]},
+        )
+
+    def test_copy_keeps_pricings_and_quotas_and_is_hidden_until_edited(self):
+        plan = self.plan_pricing.plan
+
+        response = self._copy(plan)
+
+        self.assertRedirects(response, reverse(PLAN_CHANGELIST))
+        plan_copy = Plan.objects.exclude(pk=plan.pk).get(name=plan.name)
+        self.assertNotEqual(plan_copy.slug, plan.slug)
+        self.assertTrue(plan_copy.slug.startswith(f"{plan.slug}-copy-"))
+        self.assertFalse(plan_copy.available)
+        self.assertIsNone(plan_copy.default)
+        self.assertEqual(
+            sorted(plan_copy.planpricing_set.values_list("pricing", "price")),
+            sorted(plan.planpricing_set.values_list("pricing", "price")),
+        )
+        self.assertEqual(
+            sorted(plan_copy.planquota_set.values_list("quota", "value")),
+            sorted(plan.planquota_set.values_list("quota", "value")),
+        )
+
+    def test_a_plan_can_be_copied_more_than_once(self):
+        plan = self.plan_pricing.plan
+
+        self._copy(plan)
+        self._copy(plan)
+
+        self.assertEqual(
+            Plan.objects.exclude(pk=plan.pk).filter(name=plan.name).count(), 2
+        )
+
+    def test_copy_of_a_plan_with_the_longest_slug_fits_the_slug_field(self):
+        max_length = Plan._meta.get_field("slug").max_length
+        plan = self.plan_pricing.plan
+        plan.slug = "s" * max_length
+        plan.save()
+
+        self._copy(plan)
+
+        plan_copy = Plan.objects.exclude(pk=plan.pk).get(name=plan.name)
+        self.assertEqual(len(plan_copy.slug), max_length)
 
 
 class AdminPagesTests(AdminTestCase):

@@ -1318,8 +1318,8 @@ class AbstractOrder(BaseMixin, models.Model):
             if self.status == self.STATUS.COMPLETED:
                 if self.pricing is not None:
                     extended_from = self.plan_extended_from
-                    if extended_from is None:
-                        extended_from = self.completed
+                    if extended_from is None and self.completed is not None:
+                        extended_from = localdate(self.completed)
                     # Should never happen, but make sure we reduce for the same number of days as we extended.
                     if (
                         self.plan_extended_until is None

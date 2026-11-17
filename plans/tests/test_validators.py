@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from example.foo.models import Foo
 from example.foo.validators import MaxFoosValidator, max_foos_validator
 from model_bakery import baker
@@ -73,6 +74,21 @@ class ModelAttributeValidatorTests(QuotaValidatorTestCase):
         baker.make(Foo, user=self.user, name="ten chars!")
 
         self.assertIsNone(LongNameValidator()(self.user))
+
+    def test_objects_over_the_limit_are_linked_in_the_error(self):
+        baker.make(Foo, user=self.user, name="short")
+        too_long = baker.make(Foo, user=self.user, name="eleven char")
+
+        with self.assertRaises(ValidationError) as raised:
+            LongNameValidator()(self.user)
+
+        self.assertEqual(
+            raised.exception.messages,
+            [
+                "Following foos are not in limits: "
+                f'<a href="{reverse("foo_del", args=(too_long.pk,))}">eleven char</a>'
+            ],
+        )
 
 
 class PlanValidationTests(QuotaValidatorTestCase):
