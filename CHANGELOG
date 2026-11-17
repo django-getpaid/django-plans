@@ -19,6 +19,9 @@ unreleased
   the rate request, so a stalled TEDB held every order creation, including
   subscription renewals inside a payment notification, until the server
   dropped the connection.
+* **Fix**: the plan and pricing admin pages no longer raise Django 5.x's
+  ``RemovedInDjango60Warning`` for their URL field; a URL entered without a
+  scheme gets ``https://``, as it does from Django 6.0 on.
 
 2.9.0 (2026-10-29)
 ------------------

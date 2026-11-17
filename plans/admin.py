@@ -1,7 +1,9 @@
 from copy import deepcopy
 
+import django
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
+from django.db import models
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -35,6 +37,12 @@ Pricing = AbstractPricing.get_concrete_model()
 RecurringUserPlan = AbstractRecurringUserPlan.get_concrete_model()
 Order = AbstractOrder.get_concrete_model()
 BillingInfo = AbstractBillingInfo.get_concrete_model()
+
+
+# assume_scheme exists since Django 5.0, which warns that 6.0 makes https the default.
+URL_FIELD_OVERRIDES = (
+    {models.URLField: {"assume_scheme": "https"}} if django.VERSION >= (5, 0) else {}
+)
 
 
 class UserLinkMixin(object):
@@ -99,7 +107,12 @@ def copy_plan(modeladmin, request, queryset):
 copy_plan.short_description = _("Make a plan copy")
 
 
+class PricingAdmin(admin.ModelAdmin):
+    formfield_overrides = URL_FIELD_OVERRIDES
+
+
 class PlanAdmin(OrderedModelAdmin):
+    formfield_overrides = URL_FIELD_OVERRIDES
     search_fields = (
         "name",
         "slug",
@@ -543,7 +556,7 @@ class UserPlanAdmin(UserLinkMixin, admin.ModelAdmin):
 admin.site.register(Quota, QuotaAdmin)
 admin.site.register(Plan, PlanAdmin)
 admin.site.register(UserPlan, UserPlanAdmin)
-admin.site.register(Pricing)
+admin.site.register(Pricing, PricingAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(BillingInfo, BillingInfoAdmin)
 admin.site.register(Invoice, InvoiceAdmin)
