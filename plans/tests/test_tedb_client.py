@@ -1,8 +1,11 @@
+import threading
+import time
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest.mock import ANY, Mock, patch
 
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from requests.exceptions import ConnectionError
 from zeep.exceptions import XMLSyntaxError
 
@@ -25,7 +28,7 @@ class TEDBClientTest(TestCase):
 
         client = TEDBClient()
 
-        mock_client_class.assert_called_once_with(TEDBClient.WSDL_URL)
+        mock_client_class.assert_called_once_with(TEDBClient.WSDL_URL, transport=ANY)
         self.assertEqual(client.client, mock_client)
 
     @patch("plans.taxation.tedb_client.Client")
@@ -218,3 +221,127 @@ class TEDBClientTest(TestCase):
         # Verify: Should be Decimal("21"), not Decimal("21.0")
         self.assertEqual(rate, Decimal("21"))
         self.assertEqual(str(rate), "21")  # Ensure string representation is clean
+
+
+STUB_WSDL = """<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:tns="urn:tedb-stub" targetNamespace="urn:tedb-stub">
+  <wsdl:types>
+    <xs:schema targetNamespace="urn:tedb-stub" elementFormDefault="qualified">
+      <xs:element name="retrieveVatRatesReqMsg">
+        <xs:complexType><xs:sequence>
+          <xs:element name="memberStates"><xs:complexType><xs:sequence>
+            <xs:element name="isoCode" type="xs:string" maxOccurs="unbounded"/>
+          </xs:sequence></xs:complexType></xs:element>
+          <xs:element name="situationOn" type="xs:date"/>
+        </xs:sequence></xs:complexType>
+      </xs:element>
+      <xs:element name="retrieveVatRatesRespMsg"><xs:complexType/></xs:element>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="request">
+    <wsdl:part name="body" element="tns:retrieveVatRatesReqMsg"/>
+  </wsdl:message>
+  <wsdl:message name="response">
+    <wsdl:part name="body" element="tns:retrieveVatRatesRespMsg"/>
+  </wsdl:message>
+  <wsdl:portType name="port">
+    <wsdl:operation name="retrieveVatRates">
+      <wsdl:input message="tns:request"/>
+      <wsdl:output message="tns:response"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="binding" type="tns:port">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="retrieveVatRates">
+      <soap:operation soapAction="retrieveVatRates"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="service">
+    <wsdl:port name="port" binding="tns:binding">
+      <soap:address location="{endpoint}"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+"""
+
+STALL_SECONDS = 10
+
+
+def start_tedb_stub(test, stall=None):
+    """Serve a minimal TEDB WSDL on localhost; leave `stall` requests unanswered.
+
+    `stall` is "GET" (the WSDL download) or "POST" (the rate request). A
+    stalled request is held for STALL_SECONDS and then dropped, like the
+    EU gateway that timed out on 2026-11-12.
+    """
+    release = threading.Event()
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if stall == "GET":
+                release.wait(STALL_SECONDS)
+                return
+            body = STUB_WSDL.format(endpoint=url).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/xml")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_POST(self):
+            release.wait(STALL_SECONDS)
+
+        def log_message(self, format, *args):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    server.daemon_threads = True
+    url = f"http://127.0.0.1:{server.server_port}/"
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    test.addCleanup(server.server_close)
+    test.addCleanup(server.shutdown)
+    test.addCleanup(release.set)
+    return url
+
+
+class TEDBClientTimeoutTest(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    def _client_for(self, url):
+        with patch.object(TEDBClient, "WSDL_URL", url):
+            return TEDBClient()
+
+    @override_settings(PLANS_TEDB_TIMEOUT=0.2)
+    def test_stalled_wsdl_download_gives_up_after_configured_timeout(self):
+        url = start_tedb_stub(self, stall="GET")
+
+        started = time.monotonic()
+        client = self._client_for(url)
+
+        self.assertIsNone(client.client)
+        self.assertLess(time.monotonic() - started, STALL_SECONDS / 2)
+
+    @override_settings(PLANS_TEDB_TIMEOUT=0.2)
+    def test_stalled_rate_request_gives_up_after_configured_timeout(self):
+        client = self._client_for(start_tedb_stub(self, stall="POST"))
+
+        started = time.monotonic()
+        rate = client.get_vat_rate("DE")
+
+        self.assertIsNone(rate)
+        self.assertLess(time.monotonic() - started, STALL_SECONDS / 2)
+
+    def test_timeout_defaults_to_ten_seconds(self):
+        client = self._client_for(start_tedb_stub(self))
+
+        self.assertEqual(client.client.transport.load_timeout, 10)
+        self.assertEqual(client.client.transport.operation_timeout, 10)

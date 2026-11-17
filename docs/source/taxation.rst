@@ -18,7 +18,7 @@ Django-plans application is shipped with some default taxation policies. You can
 
 .. autoclass:: plans.taxation.eu.EUTaxationPolicy
 
-The EU taxation policy now includes automatic VAT rate updates via the European Commission's TEDB (Taxes in Europe Database) service. VAT rates are cached for 24 hours and automatically fall back to updated static rates if the service is unavailable.
+The EU taxation policy now includes automatic VAT rate updates via the European Commission's TEDB (Taxes in Europe Database) service. VAT rates are cached for 24 hours and automatically fall back to updated static rates if the service is unavailable or does not answer within :ref:`settings-TEDB_TIMEOUT`.
 
 **Recent VAT Rate Updates (2024-2025):**
 - Estonia: 22% (increased from 20% in January 2024)
