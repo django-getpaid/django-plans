@@ -100,6 +100,27 @@ class ReturnOrderGuardsTests(InvoiceOrderGuardsTestCase):
         )
         self.assertFalse(Invoice.credit_notes.filter(credit_note_for=invoice).exists())
 
+    def test_order_without_extended_from_is_rewound_from_its_completion_day(self):
+        """Orders completed before ``plan_extended_from`` existed only know ``completed``."""
+        order = self._order(
+            status=Order.STATUS.COMPLETED,
+            plan_extended_from=None,
+            plan_extended_until=date(2024, 2, 14),
+        )
+        invoice = Invoice.create(order, Invoice.INVOICE_TYPES.INVOICE)
+        UserPlan.objects.filter(user=self.customer).update(
+            plan=self.plan_pricing.plan, expire=date(2024, 2, 14)
+        )
+
+        order.return_order()
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.STATUS.RETURNED)
+        self.assertEqual(
+            UserPlan.objects.get(user=self.customer).expire, date(2024, 1, 15)
+        )
+        self.assertTrue(Invoice.credit_notes.filter(credit_note_for=invoice).exists())
+
     def test_new_order_cannot_be_returned(self):
         order = self._order(status=Order.STATUS.NEW, completed=None)
 

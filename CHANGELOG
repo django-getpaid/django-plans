@@ -22,6 +22,21 @@ unreleased
 * **Fix**: the plan and pricing admin pages no longer raise Django 5.x's
   ``RemovedInDjango60Warning`` for their URL field; a URL entered without a
   scheme gets ``https://``, as it does from Django 6.0 on.
+* **Fix**: ``ModelAttributeValidator`` raised ``TypeError`` instead of a
+  ``ValidationError`` as soon as an object was over its limit, and passed its
+  message parameters as the error code, so the message was never filled in.
+* **Fix**: the "Make a plan copy" admin action failed with ``IntegrityError``
+  on the plan's unique slug, and on a second copy also on ``default=False``.
+  The copy now gets ``<slug>-copy-<random>`` and ``default=None``.
+* **Fix**: after saving a partial credit note the admin returns to the
+  changelist the action was run from, filters included. The hard-coded
+  ``admin:plans_invoice_changelist`` raised ``NoReverseMatch`` with a swapped
+  invoice model, after the credit note had already been saved.
+* **Fix**: ``Order.return_order`` raised ``TypeError`` for completed orders
+  without ``plan_extended_from`` (completed before that field existed); it now
+  checks the extension window from the order's local completion day.
+* **Fix**: ``send_template_email`` raised ``UnboundLocalError`` when
+  ``SITE_URL`` was set.
 
 2.9.0 (2026-10-29)
 ------------------

@@ -22,6 +22,7 @@ def send_template_email(recipients, title_template, body_template, context, lang
 
     site_name = getattr(settings, "SITE_NAME", "Please define settings.SITE_NAME")
     domain = getattr(settings, "SITE_URL", None)
+    current_site = None
 
     if domain is None:
         try:

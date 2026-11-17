@@ -1,6 +1,5 @@
-from __future__ import unicode_literals
-
 from django.db import models
+from django.urls import reverse
 
 
 class Foo(models.Model):
@@ -9,3 +8,6 @@ class Foo(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse("foo_del", args=(self.pk,))

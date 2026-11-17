@@ -109,7 +109,7 @@ class ModelAttributeValidator(ModelCountValidator):
     def get_error_message(self, quota_value, **kwargs):
         return _("Following %(model_name_plural)s are not in limits: %(objects)s")
 
-    def get_error_params(self, quota_value, total_count, **kwargs):
+    def get_error_params(self, quota_value, **kwargs):
         return {
             "quota": quota_value,
             "validator_codename": self.code,
@@ -133,10 +133,12 @@ class ModelAttributeValidator(ModelCountValidator):
                     not_valid_objects.append(obj)
         if not_valid_objects:
             raise ValidationError(
-                self.get_error_message(
+                message=self.get_error_message(
                     quota_value, not_valid_objects=not_valid_objects
                 ),
-                self.get_error_params(quota_value, not_valid_objects=not_valid_objects),
+                params=self.get_error_params(
+                    quota_value, not_valid_objects=not_valid_objects
+                ),
             )
 
 

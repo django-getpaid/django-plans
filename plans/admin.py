@@ -1,10 +1,10 @@
 from copy import deepcopy
+from uuid import uuid4
 
 import django
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html
@@ -81,6 +81,12 @@ class QuotaAdmin(OrderedModelAdmin):
     list_display_links = ["codename", "name"]
 
 
+def _copy_slug(slug):
+    suffix = f"-copy-{uuid4().hex[:8]}"
+    max_length = Plan._meta.get_field("slug").max_length
+    return slug[: max_length - len(suffix)] + suffix
+
+
 def copy_plan(modeladmin, request, queryset):
     """
     Admin command for duplicating plans preserving quotas and pricings.
@@ -88,8 +94,9 @@ def copy_plan(modeladmin, request, queryset):
     for plan in queryset:
         plan_copy = deepcopy(plan)
         plan_copy.id = None
+        plan_copy.slug = _copy_slug(plan.slug)
         plan_copy.available = False
-        plan_copy.default = False
+        plan_copy.default = None
         plan_copy.created = None
         plan_copy.save(force_insert=True)
 
@@ -299,7 +306,7 @@ def create_partial_credit_note(modeladmin, request, queryset):
                 "Partial credit note %s created successfully for invoice %s."
                 % (credit_note.full_number, invoice.full_number),
             )
-            return HttpResponseRedirect(reverse("admin:plans_invoice_changelist"))
+            return
     else:
         # Initialize form with default values from invoice
         initial_data = {
