@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.timezone import localdate
 
 from plans.importer import import_name
 
@@ -59,51 +60,58 @@ def country_code_transform(country_code):
     return transform_dict.get(country_code, country_code)
 
 
-def calculate_tax_rate(tax_number, country_code, request=None):
+def calculate_tax_rate(tax_number, country_code, request=None, on=None):
+    """``on``: the day the tax arises, passed to the policy only when given
+    (default: the policy's today), so policies without it keep working."""
     taxation_policy = getattr(settings, "PLANS_TAXATION_POLICY", None)
     if not taxation_policy:
         raise ImproperlyConfigured("PLANS_TAXATION_POLICY is not set")
     taxation_policy = import_name(taxation_policy)
+    day = {} if on is None else {"on": on}
     tax, request_successful = taxation_policy.get_tax_rate(
-        tax_number, country_code, request
+        tax_number, country_code, request, **day
     )
     if request_successful and request:
-        TaxCacheService.cache_tax_rate(request, tax, tax_number, country_code)
+        TaxCacheService.cache_tax_rate(request, tax, tax_number, country_code, on)
     return Decimal(tax) if tax is not None else None, request_successful
 
 
-def get_tax_rate(country_code, tax_number, request=None):
+def get_tax_rate(country_code, tax_number, request=None, on=None):
     """Get tax rate for given country and tax number
     1. Try to get tax rate from cache
     2. If not in cache, calculate it (and possibly cache it)
+
+    ``on`` is the day the tax arises (default: today).
 
     Returns tax rate and if the request was successful (False means default tax rate was used)
     """
     if request:
         try:
             tax_from_cache = TaxCacheService.get_tax_rate(
-                request, tax_number, country_code
+                request, tax_number, country_code, on
             )
             return tax_from_cache, True
         except KeyError:
             pass
 
-    tax, request_successful = calculate_tax_rate(tax_number, country_code, request)
+    tax, request_successful = calculate_tax_rate(tax_number, country_code, request, on)
     return tax, request_successful
 
 
 class TaxCacheService:
-    @classmethod
-    def get_cache_key(cls, tax_number, country):
-        return "tax_%s_%s" % (tax_number, country)
+    """Tax rates kept in the session, per day: rates change at midnight."""
 
     @classmethod
-    def cache_tax_rate(cls, request, tax, tax_number, country):
-        request.session[cls.get_cache_key(tax_number, country)] = str(tax)
+    def get_cache_key(cls, tax_number, country, on=None):
+        return "tax_%s_%s_%s" % (tax_number, country, on or localdate())
 
     @classmethod
-    def get_tax_rate(cls, request, tax_number, country):
-        key = cls.get_cache_key(tax_number, country)
+    def cache_tax_rate(cls, request, tax, tax_number, country, on=None):
+        request.session[cls.get_cache_key(tax_number, country, on)] = str(tax)
+
+    @classmethod
+    def get_tax_rate(cls, request, tax_number, country, on=None):
+        key = cls.get_cache_key(tax_number, country, on)
         if key not in request.session:
             raise KeyError(
                 f"Tax rate for {tax_number} and {country} not found in cache"

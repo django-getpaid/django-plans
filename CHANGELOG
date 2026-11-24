@@ -4,10 +4,33 @@ django-plans changelog
 unreleased
 ----------
 
+* **Added**: EU VAT rates depend on the day the tax arises.
+  ``EUTaxationPolicy.get_tax_rate``, ``get_default_tax`` and
+  ``plans.utils.get_tax_rate`` / ``calculate_tax_rate`` take an optional
+  ``on`` date (default: today, ``timezone.localdate()``); TEDB is asked for
+  that day. ``plans.utils`` passes ``on`` to the taxation policy only when
+  its caller gives one, so custom policies without the argument keep
+  working.
+* **Added**: ``plans.taxation.eu_vat_rates``: the static fallback is now a
+  history of each member state's standard rate since 2023
+  (``standard_vat_rate(country, on)``), checked against TEDB.
+  ``EUTaxationPolicy.EU_COUNTRIES_VAT`` is derived from it (the latest rate
+  of each state); overriding it no longer changes the fallback rates.
+  ``differences_from_tedb(days)`` lists where the history disagrees with
+  TEDB; a live test runs it for the days in ``TEDB_CHECK_OFFSETS`` (today,
+  tomorrow, a week, a month and a year ahead) and is skipped when TEDB does
+  not answer.
+* **Changed**: a TEDB lookup also caches the next day's rate, so a rate
+  change at midnight does not depend on TEDB answering then; cached rates
+  live two days. A failed lookup is not repeated for
+  ``TEDBClient.RETRY_AFTER`` seconds (300), so an outage costs one timeout
+  per date every five minutes instead of one per order.
 * **Fix**: an HTTP error from TEDB (e.g. the EU gateway's 504 while loading
   the WSDL) raised ``requests.HTTPError`` out of ``get_tax_rate`` instead of
   falling back to the static rates. Every ``requests`` error is caught now
   (``plans.taxation.tedb_client.TEDB_ERRORS``).
+* **Fix**: the tax rate cached in the session is kept per day, so a session
+  spanning a rate change no longer keeps the old rate.
 
 2.10.0 (2026-11-17)
 -------------------

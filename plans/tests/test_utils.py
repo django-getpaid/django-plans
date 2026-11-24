@@ -1,8 +1,10 @@
+from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
 from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase, override_settings
+from freezegun import freeze_time
 
 from plans.taxation import TaxationPolicy
 from plans.utils import get_currency, get_tax_rate
@@ -21,6 +23,13 @@ class FixedRatePolicy(TaxationPolicy):
 
 class NoTaxPolicy(FixedRatePolicy):
     rate = None
+
+
+class DatedPolicy(TaxationPolicy):
+    @classmethod
+    def get_tax_rate(cls, tax_id, country_code, request=None, on=None):
+        policy_calls.append((tax_id, country_code, on))
+        return Decimal("25.5") if on >= date(2024, 9, 1) else Decimal("24"), True
 
 
 class CurrencyTests(SimpleTestCase):
@@ -61,6 +70,36 @@ class TaxRateTests(SimpleTestCase):
         self.assertEqual(get_tax_rate("US", "", request), (None, True))
 
         self.assertEqual(policy_calls, [("", "US")])
+
+    @override_settings(PLANS_TAXATION_POLICY="plans.tests.test_utils.DatedPolicy")
+    def test_day_is_passed_to_the_policy_and_cached_per_day(self):
+        request = SimpleNamespace(session={})
+
+        for _ in range(2):
+            self.assertEqual(
+                get_tax_rate("FI", "", request, on=date(2024, 8, 31)),
+                (Decimal("24"), True),
+            )
+            self.assertEqual(
+                get_tax_rate("FI", "", request, on=date(2024, 9, 1)),
+                (Decimal("25.5"), True),
+            )
+
+        self.assertEqual(
+            policy_calls,
+            [("", "FI", date(2024, 8, 31)), ("", "FI", date(2024, 9, 1))],
+        )
+
+    @override_settings(PLANS_TAXATION_POLICY="plans.tests.test_utils.FixedRatePolicy")
+    def test_session_cache_does_not_outlive_the_day(self):
+        request = SimpleNamespace(session={})
+
+        with freeze_time("2026-12-31 12:00:00"):
+            get_tax_rate("DE", "", request)
+        with freeze_time("2027-01-01 12:00:00"):
+            get_tax_rate("DE", "", request)
+
+        self.assertEqual(policy_calls, [("", "DE"), ("", "DE")])
 
     @override_settings(PLANS_TAX=Decimal("23"))
     def test_base_policy_default_tax_is_the_plans_tax_setting(self):
