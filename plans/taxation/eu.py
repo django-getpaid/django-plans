@@ -8,11 +8,11 @@ import stdnum.eu.vat
 from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
-from requests.exceptions import ConnectionError, Timeout
+from requests.exceptions import ConnectionError
 from zeep.exceptions import Fault, TransportError, XMLSyntaxError
 
 from plans.taxation import TaxationPolicy
-from plans.taxation.tedb_client import TEDBClient
+from plans.taxation.tedb_client import TEDB_ERRORS, TEDBClient
 from plans.utils import country_code_transform
 
 logger = logging.getLogger("plans.taxation.eu.vies")
@@ -97,7 +97,7 @@ class EUTaxationPolicy(TaxationPolicy):
             if rate is not None:
                 logger.info(f"Using TEDB VAT rate for {country_code}: {rate}")
                 return rate
-        except (ConnectionError, Timeout, Fault, TransportError, XMLSyntaxError) as e:
+        except TEDB_ERRORS as e:
             logger.warning(f"TEDB service unavailable for {country_code}: {e}")
 
         # Fallback to static table
