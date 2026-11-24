@@ -1,11 +1,14 @@
 from decimal import Decimal
 from unittest import mock
 
+from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 from requests.exceptions import ConnectionError
 
 from plans.taxation.eu import EUTaxationPolicy
+from plans.taxation.tedb_client import TEDBClient
+from plans.tests.test_tedb_client import start_tedb_stub
 
 
 def tedb_answering(**kwargs):
@@ -37,6 +40,26 @@ class EUTaxationFallbackTests(TestCase):
                 EUTaxationPolicy.get_tax_rate(None, "SK"), (Decimal("23"), True)
             )
             self.assertEqual(EUTaxationPolicy.get_default_tax(), Decimal("23"))
+
+    def test_static_table_is_used_when_tedb_answers_http_504(self):
+        """Blendkit #4556: the EU gateway's 504 raised requests.HTTPError."""
+        for request in ("GET", "POST"):
+            with (
+                self.subTest(request),
+                mock.patch.object(
+                    TEDBClient,
+                    "WSDL_URL",
+                    start_tedb_stub(self, gateway_timeout=request),
+                ),
+                mock.patch.object(
+                    EUTaxationPolicy, "_tedb_client", TEDBClient(), create=True
+                ),
+            ):
+                cache.clear()
+                self.assertEqual(
+                    EUTaxationPolicy.get_tax_rate(None, "SK"), (Decimal("23"), True)
+                )
+                self.assertEqual(EUTaxationPolicy.get_default_tax(), Decimal("23"))
 
     def test_static_table_is_used_when_the_rate_lookup_returns_none(self):
         """``_get_vat_rate_from_tedb`` may return None; overrides and mocks do."""

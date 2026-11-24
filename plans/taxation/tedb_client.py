@@ -5,11 +5,15 @@ from typing import Optional
 
 from django.conf import settings
 from django.core.cache import cache
-from requests.exceptions import ConnectionError, Timeout
+from requests.exceptions import RequestException
 from zeep import Client, Transport
 from zeep.exceptions import Fault, TransportError, XMLSyntaxError
 
 logger = logging.getLogger("plans.taxation.tedb")
+
+# What a TEDB call raises when the service is down, slow or answers garbage
+# (HTML error pages, HTTP 5xx from the EU gateway).
+TEDB_ERRORS = (RequestException, Fault, TransportError, XMLSyntaxError)
 
 
 class TEDBClient:
@@ -34,7 +38,7 @@ class TEDBClient:
         try:
             self.client = Client(self.WSDL_URL, transport=transport)
             logger.info("TEDB SOAP client initialized successfully")
-        except (ConnectionError, Timeout, TransportError, Fault, XMLSyntaxError) as e:
+        except TEDB_ERRORS as e:
             logger.error(f"Failed to initialize TEDB SOAP client: {e}")
             self.client = None
 
@@ -129,7 +133,7 @@ class TEDBClient:
                             f"Retrieved standard VAT rate from TEDB for {country_code}: {rate}%"
                         )
                         return rate
-            except (Fault, TransportError, ConnectionError, Timeout) as e:
+            except TEDB_ERRORS as e:
                 logger.warning(f"TEDB service error for {country_code}: {e}")
 
         logger.warning(f"Could not retrieve VAT rate from TEDB for {country_code}")

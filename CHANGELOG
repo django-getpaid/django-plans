@@ -1,6 +1,14 @@
 django-plans changelog
 ======================
 
+unreleased
+----------
+
+* **Fix**: an HTTP error from TEDB (e.g. the EU gateway's 504 while loading
+  the WSDL) raised ``requests.HTTPError`` out of ``get_tax_rate`` instead of
+  falling back to the static rates. Every ``requests`` error is caught now
+  (``plans.taxation.tedb_client.TEDB_ERRORS``).
+
 2.10.0 (2026-11-17)
 -------------------
 

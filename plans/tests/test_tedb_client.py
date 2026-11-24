@@ -272,17 +272,31 @@ STUB_WSDL = """<?xml version="1.0" encoding="UTF-8"?>
 STALL_SECONDS = 10
 
 
-def start_tedb_stub(test, stall=None):
+GATEWAY_TIMEOUT_PAGE = b"<html><body><h1>504 Gateway Time-out</h1></body></html>"
+
+
+def start_tedb_stub(test, stall=None, gateway_timeout=None):
     """Serve a minimal TEDB WSDL on localhost; leave `stall` requests unanswered.
 
     `stall` is "GET" (the WSDL download) or "POST" (the rate request). A
     stalled request is held for STALL_SECONDS and then dropped, like the
-    EU gateway that timed out on 2026-11-12.
+    EU gateway that timed out on 2026-11-12. `gateway_timeout` requests are
+    answered with the gateway's HTTP 504 page instead (Blendkit #4556).
     """
     release = threading.Event()
 
     class Handler(BaseHTTPRequestHandler):
+        def _send_gateway_timeout(self):
+            self.send_response(504)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", str(len(GATEWAY_TIMEOUT_PAGE)))
+            self.end_headers()
+            self.wfile.write(GATEWAY_TIMEOUT_PAGE)
+
         def do_GET(self):
+            if gateway_timeout == "GET":
+                self._send_gateway_timeout()
+                return
             if stall == "GET":
                 release.wait(STALL_SECONDS)
                 return
@@ -294,6 +308,9 @@ def start_tedb_stub(test, stall=None):
             self.wfile.write(body)
 
         def do_POST(self):
+            if gateway_timeout == "POST":
+                self._send_gateway_timeout()
+                return
             release.wait(STALL_SECONDS)
 
         def log_message(self, format, *args):
@@ -345,3 +362,13 @@ class TEDBClientTimeoutTest(TestCase):
 
         self.assertEqual(client.client.transport.load_timeout, 10)
         self.assertEqual(client.client.transport.operation_timeout, 10)
+
+    def test_gateway_timeout_on_wsdl_download_leaves_no_client(self):
+        client = self._client_for(start_tedb_stub(self, gateway_timeout="GET"))
+
+        self.assertIsNone(client.client)
+
+    def test_gateway_timeout_on_rate_request_returns_none(self):
+        client = self._client_for(start_tedb_stub(self, gateway_timeout="POST"))
+
+        self.assertIsNone(client.get_vat_rate("DE"))
