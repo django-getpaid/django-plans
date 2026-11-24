@@ -31,12 +31,15 @@ class TaxationPolicy(object):
         return getattr(settings, "PLANS_TAX_COUNTRY", None)
 
     @classmethod
-    def get_tax_rate(cls, tax_id, country_code):
+    def get_tax_rate(cls, tax_id, country_code, request=None, on=None):
         """
         Methods
 
         :param tax_id: customer tax id
         :param country_code:  customer country in ISO 2-letters format
+        :param request: the buyer's request, if any
+        :param on: the day the tax arises (``plans.utils`` passes it only when
+            its caller does)
         :return: Decimal()
         """
         raise NotImplementedError("Method get_tax_rate should be implemented.")

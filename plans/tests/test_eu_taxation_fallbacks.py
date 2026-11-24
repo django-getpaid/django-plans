@@ -1,10 +1,11 @@
+from datetime import date
 from decimal import Decimal
 from unittest import mock
 
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
-from requests.exceptions import ConnectionError
+from freezegun import freeze_time
 
 from plans.taxation.eu import EUTaxationPolicy
 from plans.taxation.tedb_client import TEDBClient
@@ -33,13 +34,6 @@ class EUTaxationFallbackTests(TestCase):
             self.assertEqual(
                 EUTaxationPolicy.get_tax_rate(None, "DE"), (Decimal("19"), True)
             )
-
-    def test_static_table_is_used_when_tedb_is_unreachable(self):
-        with tedb_answering(side_effect=ConnectionError("TEDB down")):
-            self.assertEqual(
-                EUTaxationPolicy.get_tax_rate(None, "SK"), (Decimal("23"), True)
-            )
-            self.assertEqual(EUTaxationPolicy.get_default_tax(), Decimal("23"))
 
     def test_static_table_is_used_when_tedb_answers_http_504(self):
         """Blendkit #4556: the EU gateway's 504 raised requests.HTTPError."""
@@ -120,3 +114,54 @@ class EUTaxationFallbackTests(TestCase):
                 "EUTaxationPolicy requires that issuer country is in EU",
             ):
                 EUTaxationPolicy.get_tax_rate(None, "DE")
+
+
+@override_settings(PLANS_TAX_COUNTRY="SK")
+class EUTaxationDayTests(TestCase):
+    """The rate is the one in force on the day the tax arises."""
+
+    def test_static_rate_of_the_given_day(self):
+        with tedb_answering(return_value=None):
+            self.assertEqual(
+                EUTaxationPolicy.get_tax_rate(None, "FI", on=date(2024, 8, 31)),
+                (Decimal("24"), True),
+            )
+            self.assertEqual(
+                EUTaxationPolicy.get_tax_rate(None, "FI", on=date(2024, 9, 1)),
+                (Decimal("25.5"), True),
+            )
+            self.assertEqual(
+                EUTaxationPolicy.get_default_tax(on=date(2024, 12, 31)), Decimal("20")
+            )
+            self.assertEqual(
+                EUTaxationPolicy.get_tax_rate(
+                    "SK2020202020", "SK", on=date(2025, 1, 1)
+                ),
+                (Decimal("23"), True),
+            )
+            with mock.patch.object(
+                EUTaxationPolicy, "validate_vies", side_effect=TimeoutError
+            ):
+                self.assertEqual(
+                    EUTaxationPolicy.get_tax_rate(
+                        "RO123456789", "RO", on=date(2025, 7, 31)
+                    ),
+                    (Decimal("19"), False),
+                )
+
+    def test_tedb_is_asked_for_the_given_day(self):
+        with tedb_answering(return_value=Decimal("26")) as client:
+            EUTaxationPolicy.get_tax_rate(None, "FI", on=date(2027, 1, 1))
+
+        client.return_value.get_vat_rate.assert_called_once_with("FI", date(2027, 1, 1))
+
+    @freeze_time("2025-01-01 05:30:00")  # 2024-12-31 in Chicago (TIME_ZONE)
+    def test_default_day_is_the_local_day(self):
+        with tedb_answering(return_value=None) as client:
+            self.assertEqual(
+                EUTaxationPolicy.get_tax_rate(None, "SK"), (Decimal("20"), True)
+            )
+
+        client.return_value.get_vat_rate.assert_called_once_with(
+            "SK", date(2024, 12, 31)
+        )

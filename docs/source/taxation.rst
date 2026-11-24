@@ -18,13 +18,9 @@ Django-plans application is shipped with some default taxation policies. You can
 
 .. autoclass:: plans.taxation.eu.EUTaxationPolicy
 
-The EU taxation policy now includes automatic VAT rate updates via the European Commission's TEDB (Taxes in Europe Database) service. VAT rates are cached for 24 hours and automatically fall back to updated static rates if the service is unavailable or does not answer within :ref:`settings-TEDB_TIMEOUT`.
+The EU taxation policy takes the standard VAT rate in force on the day the tax arises (the ``on`` argument of ``get_tax_rate``, default today) from the European Commission's TEDB (Taxes in Europe Database) service. Rates are cached per day, and the next day's rate is cached along with today's so that a change at midnight does not depend on TEDB answering then. When TEDB is unavailable or does not answer within :ref:`settings-TEDB_TIMEOUT`, the rate comes from the history of standard rates in ``plans.taxation.eu_vat_rates`` (since 2023, e.g. Finland 24 % until 31 August 2024 and 25.5 % from 1 September 2024).
 
-**Recent VAT Rate Updates (2024-2025):**
-- Estonia: 22% (increased from 20% in January 2024)
-- Finland: 25.5% (increased from 24% in September 2024)
-- Slovakia: 23% (increased from 20% in January 2025)
-- Romania: 21% (increased from 19% in August 2025)
+A new rate has to be added to that history before the day it comes into force. ``plans.taxation.eu_vat_rates.differences_from_tedb(days)`` lists where the history disagrees with TEDB; django-plans' test suite runs it for today and the days ahead in ``TEDB_CHECK_OFFSETS``.
 
 .. note::
     This taxation policy requires ``zeep`` and ``python-stdnum`` modules (connecting to `VIES <http://ec.europa.eu/taxation_customs/vies/>`_ and `TEDB <https://ec.europa.eu/taxation_customs/tedb/>`_). These are automatically installed with django-plans.

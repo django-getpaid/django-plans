@@ -410,7 +410,7 @@ Further reading: :doc:`taxation`
 
 **Optional**
 
-Seconds ``EUTaxationPolicy`` waits for the EU TEDB service, for the WSDL download and for each VAT rate request. When TEDB does not answer in time, the static rate table is used. Failed lookups are not cached, so during a TEDB outage every order creation waits up to this long per rate lookup.
+Seconds ``EUTaxationPolicy`` waits for the EU TEDB service, for the WSDL download and for each VAT rate request. When TEDB does not answer in time, the static rate history is used. A failed lookup is not repeated for five minutes (``TEDBClient.RETRY_AFTER``), so during a TEDB outage an order creation waits up to this long only for the first lookup of a country and day in that time.
 
 Example::
 

@@ -1,15 +1,22 @@
 import threading
 import time
+from datetime import date
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from unittest.mock import ANY, Mock, patch
+from types import SimpleNamespace
+from unittest.mock import ANY, Mock, call, patch
 
 from django.core.cache import cache
 from django.test import TestCase, override_settings
-from requests.exceptions import ConnectionError
+from freezegun import freeze_time
+from requests.exceptions import ConnectionError, HTTPError
 from zeep.exceptions import XMLSyntaxError
 
-from plans.taxation.tedb_client import TEDBClient
+from plans.taxation.tedb_client import (
+    StandardRate,
+    TEDBClient,
+    select_standard_rate,
+)
 
 
 class TEDBClientTest(TestCase):
@@ -59,48 +66,22 @@ class TEDBClientTest(TestCase):
         expected = "tedb_vat_rate_DE_2025-01-01"
         self.assertEqual(key, expected)
 
-    def test_cache_key_generation_default_date(self):
-        """Test cache key generation with default date."""
-        key = self.client._get_cache_key("DE")
-        self.assertTrue(key.startswith("tedb_vat_rate_DE_"))
+    def test_cache_key_default_date_is_the_local_day(self):
+        # 05:30 UTC on 1 January is still 31 December in Chicago (TIME_ZONE)
+        with freeze_time("2026-01-01 05:30:00"):
+            key = self.client._get_cache_key("DE")
+        self.assertEqual(key, "tedb_vat_rate_DE_2025-12-31")
 
-    @patch("plans.taxation.tedb_client.cache")
-    def test_get_vat_rate_from_cache(self, mock_cache):
-        """Test retrieving VAT rate from cache."""
-        mock_cache.get.return_value = Decimal("19")
+    def test_get_vat_rate_from_cache(self):
+        """Today's and tomorrow's cached rates need no TEDB request."""
+        cache.set(self.client._get_cache_key("DE", "2025-11-01"), Decimal("19"))
+        cache.set(self.client._get_cache_key("DE", "2025-11-02"), Decimal("19"))
+        self.client.client = Mock()
 
-        rate = self.client.get_vat_rate("DE")
+        rate = self.client.get_vat_rate("DE", date(2025, 11, 1))
 
         self.assertEqual(rate, Decimal("19"))
-        mock_cache.get.assert_called_once()
-
-    def test_get_vat_rate_soap_success(self):
-        """Test successful VAT rate retrieval from SOAP service."""
-        # Mock the client to simulate no SOAP client available
-        self.client.client = None
-
-        rate = self.client.get_vat_rate("DE")
-
-        # Should return None (will use static table fallback)
-        self.assertIsNone(rate)
-
-    def test_get_vat_rate_soap_network_error(self):
-        """Test VAT rate retrieval with network error."""
-        # Mock the client to simulate no SOAP client available
-        self.client.client = None
-
-        rate = self.client.get_vat_rate("DE")
-
-        self.assertIsNone(rate)
-
-    def test_get_vat_rate_soap_fault_error(self):
-        """Test VAT rate retrieval with SOAP fault."""
-        # Mock the client to simulate no SOAP client available
-        self.client.client = None
-
-        rate = self.client.get_vat_rate("DE")
-
-        self.assertIsNone(rate)
+        self.client.client.service.retrieveVatRates.assert_not_called()
 
     def test_get_vat_rate_no_client(self):
         """Test VAT rate retrieval when SOAP client is not available."""
@@ -110,8 +91,91 @@ class TEDBClientTest(TestCase):
 
         self.assertIsNone(rate)
 
-    @patch("plans.taxation.tedb_client.datetime")
-    def test_regional_rate_filtering_spain(self, mock_datetime):
+    def test_rate_is_asked_for_the_given_day(self):
+        self.client.client = tedb_soap(vat_row("FI", 25.5))
+
+        rate = self.client.get_vat_rate("FI", date(2024, 9, 1))
+
+        self.assertEqual(rate, Decimal("25.5"))
+        self.assertEqual(
+            self.client.client.service.retrieveVatRates.call_args_list[0],
+            call(memberStates={"isoCode": ["FI"]}, situationOn=date(2024, 9, 1)),
+        )
+
+    def test_default_day_is_the_local_day(self):
+        self.client.client = tedb_soap(vat_row("FI", 25.5))
+
+        with freeze_time("2026-01-01 05:30:00"):
+            self.client.get_vat_rate("FI")
+
+        self.assertEqual(
+            situation_days(self.client.client),
+            [date(2025, 12, 31), date(2026, 1, 1)],
+        )
+
+    def test_tomorrows_rate_is_cached_before_tomorrow(self):
+        """A change at midnight does not need TEDB to answer at midnight."""
+        new_year = date(2027, 1, 1)
+        finland = {
+            True: vat_row("FI", 26, situation_on=new_year),
+            False: vat_row("FI", 25.5),
+        }
+        soap = Mock()
+        soap.service.retrieveVatRates.side_effect = lambda **request: SimpleNamespace(
+            vatRateResults=[finland[request["situationOn"] >= new_year]]
+        )
+        self.client.client = soap
+
+        self.assertEqual(
+            self.client.get_vat_rate("FI", date(2026, 12, 31)), Decimal("25.5")
+        )
+        soap.service.retrieveVatRates.side_effect = HTTPError("504 Gateway Time-out")
+
+        self.assertEqual(self.client.get_vat_rate("FI", new_year), Decimal("26"))
+
+    def test_http_error_returns_none_and_is_not_retried_at_once(self):
+        soap = Mock()
+        soap.service.retrieveVatRates.side_effect = HTTPError("504 Gateway Time-out")
+        self.client.client = soap
+
+        self.assertIsNone(self.client.get_vat_rate("DE", date(2025, 11, 1)))
+        self.assertIsNone(self.client.get_vat_rate("DE", date(2025, 11, 1)))
+
+        self.assertEqual(situation_days(soap), [date(2025, 11, 1)])
+
+    def test_failed_lookup_is_retried_after_retry_after(self):
+        soap = Mock()
+        soap.service.retrieveVatRates.side_effect = HTTPError("504 Gateway Time-out")
+        self.client.client = soap
+        with freeze_time("2025-11-01 12:00:00") as frozen:
+            self.client.get_vat_rate("DE")
+            soap.service.retrieveVatRates.side_effect = None
+            soap.service.retrieveVatRates.return_value = SimpleNamespace(
+                vatRateResults=[vat_row("DE", 19)]
+            )
+            frozen.tick(TEDBClient.RETRY_AFTER + 1)
+
+            self.assertEqual(self.client.get_vat_rate("DE"), Decimal("19"))
+
+    def test_failing_tomorrow_lookup_keeps_todays_rate_and_is_not_repeated(self):
+        cache.set(self.client._get_cache_key("DE", "2025-11-01"), Decimal("19"))
+        soap = Mock()
+        soap.service.retrieveVatRates.side_effect = HTTPError("504 Gateway Time-out")
+        self.client.client = soap
+
+        for _ in range(2):
+            self.assertEqual(
+                self.client.get_vat_rate("DE", date(2025, 11, 1)), Decimal("19")
+            )
+
+        self.assertEqual(situation_days(soap), [date(2025, 11, 2)])
+
+    def test_missing_standard_rate_returns_none(self):
+        self.client.client = tedb_soap(vat_row("DE", 7, type="REDUCED"))
+
+        self.assertIsNone(self.client.get_vat_rate("DE", date(2025, 11, 1)))
+
+    def test_regional_rate_filtering_spain(self):
         """
         Test that regional rates are filtered correctly (Spain case).
 
@@ -121,36 +185,12 @@ class TEDBClientTest(TestCase):
 
         This test verifies we return 21% (mainland), not 7% (regional).
         """
-        # Mock current date
-        mock_datetime.now.return_value.strftime.return_value = "2025-11-01"
+        self.client.client = tedb_soap(
+            vat_row("ES", 7.0, comment="VAT - Canary Islands - "),
+            vat_row("ES", 21.0),
+        )
 
-        # Create mock SOAP response structure for Spain
-        mock_rate_canary = Mock()
-        mock_rate_canary.memberState = "ES"
-        mock_rate_canary.type = "STANDARD"
-        mock_rate_canary.rate = Mock()
-        mock_rate_canary.rate.type = "DEFAULT"
-        mock_rate_canary.rate.value = 7.0
-        mock_rate_canary.comment = "VAT - Canary Islands - "
-
-        mock_rate_mainland = Mock()
-        mock_rate_mainland.memberState = "ES"
-        mock_rate_mainland.type = "STANDARD"
-        mock_rate_mainland.rate = Mock()
-        mock_rate_mainland.rate.type = "DEFAULT"
-        mock_rate_mainland.rate.value = 21.0
-        mock_rate_mainland.comment = None
-
-        mock_response = Mock()
-        mock_response.vatRateResults = [mock_rate_canary, mock_rate_mainland]
-
-        # Mock the SOAP client
-        mock_soap_client = Mock()
-        mock_soap_client.service.retrieveVatRates.return_value = mock_response
-        self.client.client = mock_soap_client
-
-        # Execute
-        rate = self.client.get_vat_rate("ES")
+        rate = self.client.get_vat_rate("ES", date(2025, 11, 1))
 
         # Verify: Should return 21 (mainland), not 7 (Canary Islands)
         self.assertEqual(rate, Decimal("21"))
@@ -159,68 +199,76 @@ class TEDBClientTest(TestCase):
         cached = cache.get(self.client._get_cache_key("ES", "2025-11-01"))
         self.assertEqual(cached, Decimal("21"))
 
-    @patch("plans.taxation.tedb_client.datetime")
-    def test_all_rates_have_comments_use_highest(self, mock_datetime):
+    def test_all_rates_have_comments_use_highest(self):
         """
         Test fallback when all rates have comments (e.g., France).
 
         When all STANDARD+DEFAULT rates have comments, we should use the highest.
         """
-        # Mock current date
-        mock_datetime.now.return_value.strftime.return_value = "2025-11-01"
+        self.client.client = tedb_soap(
+            vat_row("FR", 20.0, comment="Article 278 of the General Tax Code")
+        )
 
-        # Create mock response with single rate with comment
-        mock_rate = Mock()
-        mock_rate.memberState = "FR"
-        mock_rate.type = "STANDARD"
-        mock_rate.rate = Mock()
-        mock_rate.rate.type = "DEFAULT"
-        mock_rate.rate.value = 20.0
-        mock_rate.comment = "Article 278 of the General Tax Code"
-
-        mock_response = Mock()
-        mock_response.vatRateResults = [mock_rate]
-
-        # Mock the SOAP client
-        mock_soap_client = Mock()
-        mock_soap_client.service.retrieveVatRates.return_value = mock_response
-        self.client.client = mock_soap_client
-
-        # Execute
-        rate = self.client.get_vat_rate("FR")
+        rate = self.client.get_vat_rate("FR", date(2025, 11, 1))
 
         # Verify: Should return 20 (the only/highest rate)
         self.assertEqual(rate, Decimal("20"))
 
-    @patch("plans.taxation.tedb_client.datetime")
-    def test_decimal_normalization(self, mock_datetime):
+    def test_highest_of_several_commented_rates(self):
+        rows = [
+            vat_row("PT", 16, comment="Azores"),
+            vat_row("PT", 23, comment="Mainland, Art. 18"),
+            vat_row("PT", 22, comment="Madeira"),
+        ]
+
+        self.assertEqual(
+            select_standard_rate(rows, "PT"),
+            StandardRate(Decimal("23"), date(2025, 1, 1)),
+        )
+
+    def test_decimal_normalization(self):
         """Test that whole number rates are normalized (21.0 → 21)."""
-        # Mock current date
-        mock_datetime.now.return_value.strftime.return_value = "2025-11-01"
+        self.client.client = tedb_soap(vat_row("ES", 21.0))
 
-        # Create mock response with 21.0 (float from SOAP)
-        mock_rate = Mock()
-        mock_rate.memberState = "ES"
-        mock_rate.type = "STANDARD"
-        mock_rate.rate = Mock()
-        mock_rate.rate.type = "DEFAULT"
-        mock_rate.rate.value = 21.0  # Float value
-        mock_rate.comment = None
-
-        mock_response = Mock()
-        mock_response.vatRateResults = [mock_rate]
-
-        # Mock the SOAP client
-        mock_soap_client = Mock()
-        mock_soap_client.service.retrieveVatRates.return_value = mock_response
-        self.client.client = mock_soap_client
-
-        # Execute
-        rate = self.client.get_vat_rate("ES")
+        rate = self.client.get_vat_rate("ES", date(2025, 11, 1))
 
         # Verify: Should be Decimal("21"), not Decimal("21.0")
         self.assertEqual(rate, Decimal("21"))
         self.assertEqual(str(rate), "21")  # Ensure string representation is clean
+
+
+def vat_row(
+    state,
+    value,
+    comment=None,
+    type="STANDARD",
+    rate_type="DEFAULT",
+    situation_on=date(2025, 1, 1),
+):
+    """One entry of TEDB's ``vatRateResults``."""
+    return SimpleNamespace(
+        memberState=state,
+        type=type,
+        rate=SimpleNamespace(type=rate_type, value=value),
+        comment=comment,
+        situationOn=situation_on,
+    )
+
+
+def tedb_soap(*rows):
+    """A zeep client whose TEDB answers ``rows`` to every request."""
+    soap = Mock()
+    soap.service.retrieveVatRates.return_value = SimpleNamespace(
+        vatRateResults=list(rows)
+    )
+    return soap
+
+
+def situation_days(soap):
+    return [
+        request.kwargs["situationOn"]
+        for request in soap.service.retrieveVatRates.call_args_list
+    ]
 
 
 STUB_WSDL = """<?xml version="1.0" encoding="UTF-8"?>
