@@ -1,8 +1,8 @@
 django-plans changelog
 ======================
 
-unreleased
-----------
+2.11.0 (2026-11-24)
+-------------------
 
 * **Added**: EU VAT rates depend on the day the tax arises.
   ``EUTaxationPolicy.get_tax_rate``, ``get_default_tax`` and
